@@ -1,4 +1,3 @@
-#![feature(iter_next_chunk)]
 use std::env;
 use std::fs;
 use std::io::Read;
@@ -6,6 +5,7 @@ use std::io::Read;
 use crate::roland::RD300NX;
 
 mod roland;
+mod bits;
 
 fn main() {
     let mut args = env::args().skip(1);
