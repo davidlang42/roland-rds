@@ -69,22 +69,25 @@ impl<const N: usize> FromStr for Bits<N> {
     }
 }
 
-impl From<u8> for Bits<8> {
-    fn from(byte: u8) -> Self {
-        Self::from_byte(byte)
+impl<const N: usize> Bits<N> {
+    fn to_u8(&self) -> u8 {
+        if N > 8 {
+            panic!("Bits size ({}) is too big for a u8 value", N);
+        }
+        let mut num = 0;
+        let mut bit_value = 2u8.pow((self.0.len() - 1) as u32);
+        for bit in self.0 {
+            if bit.on() {
+                num += bit_value;
+            }
+            bit_value /= 2;
+        }
+        num
     }
-}
 
-impl<const N: usize> Into<u8> for Bits<N> {
-    fn into(self) -> u8 {
-        Self::to_byte(self.0)
-    }
-}
-
-impl<const N: usize> Into<u16> for Bits<N> {
-    fn into(self) -> u16 { //TODO basically duplicated
+    fn to_u16(&self) -> u16 {
         if N > 16 {
-            panic!("Too big"); //TODO enforce compiler & better message
+            panic!("Bits size ({}) is too big for a u16 value", N);
         }
         let mut num = 0;
         let mut bit_value = 2u16.pow((self.0.len() - 1) as u32);
@@ -96,30 +99,13 @@ impl<const N: usize> Into<u16> for Bits<N> {
         }
         num
     }
-}
 
-impl<const N: usize> Bits<N> {
-    fn to_byte(bits: [Bit; N]) -> u8 {
+    fn from_u8(mut byte: u8) -> Bits<N> {
         if N > 8 {
-            panic!("Too big"); //TODO enforce compiler & better message
-        }
-        let mut num = 0;
-        let mut bit_value = 2u8.pow((bits.len() - 1) as u32);
-        for bit in bits {
-            if bit.on() {
-                num += bit_value;
-            }
-            bit_value /= 2;
-        }
-        num
-    }
-
-    pub fn from_byte(mut byte: u8) -> Bits<N> {
-        if N > 8 {
-            panic!("Too big"); //TODO enforce compiler & better message
+            panic!("Bits size ({}) is too big for a u8 value", N);
         }
         if N != 8 && byte >= 2u8.pow(N as u32) {
-            panic!("Too small"); //TODO enforce compiler & better msg
+            panic!("Bits size ({}) is too small for u8 value {}", N, byte);
         }
         let mut bits = [Bit::ZERO; N];
         let mut bit_value = 2u8.pow((bits.len() - 1) as u32);
@@ -135,22 +121,24 @@ impl<const N: usize> Bits<N> {
 
     pub fn to_bytes(&self) -> Vec<u8> {
         if N % 8 != 0 {
-            panic!("Incomplete bytes");//TODO better msg + compiler enforse
+            panic!("Bits size ({}) must be a multiple of 8 to avoid incomplete bytes", N);
         }
         let mut start = 0;
         let mut bytes = Vec::new();
         while start < self.0.len() {
             let end = start + 8;
-            bytes.push(Bits::<8>::to_byte(self.0[start..end].try_into().unwrap()));
+            bytes.push(Bits::<8>(self.0[start..end].try_into().unwrap()).to_u8());
             start = end;
         }
         bytes
     }
+}
 
+impl Bits<7> {
     pub fn compress(text: [char; 16]) -> Bits<112> {
         let mut bits = Vec::new();
         for ch in text {
-            for bit in Bits::<7>::from_byte(ch as u8).0 {
+            for bit in Self::from_u8(ch as u8).0 {
                 bits.push(bit);
             }
         }
@@ -181,7 +169,7 @@ impl BitStream {
     pub fn read<I: IntoIterator<Item = u8>>(bytes: I) -> Self {
         let mut bits = Vec::new();
         for byte in bytes {
-            for bit in Bits::from(byte).0 {
+            for bit in Bits::<8>::from_u8(byte).0 {
                 bits.push(bit);
             }
         }
@@ -224,7 +212,7 @@ impl BitStream {
             panic!("Cannot get u8 from {} bits", N);
         }
         let bits = self.get_bits::<N>();
-        bits.into()
+        bits.to_u8()
     }
 
     pub fn get_u16<const N: usize>(&mut self) -> u16 {
@@ -232,7 +220,7 @@ impl BitStream {
             panic!("Cannot get u16 from {} bits", N);
         }
         let bits = self.get_bits::<N>();
-        bits.into()
+        bits.to_u16()
     }
 
     pub fn get_char(&mut self) -> char {
