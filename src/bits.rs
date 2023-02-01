@@ -119,7 +119,7 @@ impl<const N: usize> Bits<N> {
         bytes
     }
 
-    pub fn compress(text: [char; 16]) -> Bits<112> { //TODO I really should be able to make this generic
+    pub fn compress(text: [char; 16]) -> Bits<112> {
         let mut bits = Vec::new();
         for ch in text {
             for bit in Bits::<7>::from_byte(ch as u8).0 {
@@ -149,8 +149,8 @@ impl Iterator for BitStream {
     }
 }
 
-impl<I: Iterator<Item = u8>> From<I> for BitStream {
-    fn from(bytes: I) -> Self {
+impl BitStream {
+    pub fn read<I: IntoIterator<Item = u8>>(bytes: I) -> Self {
         let mut bits = Vec::new();
         for byte in bytes {
             for bit in Bits::from(byte).0 {
@@ -162,88 +162,53 @@ impl<I: Iterator<Item = u8>> From<I> for BitStream {
             index: 0
         }
     }
-}
-
-impl Display for BitStream {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for i in self.index..self.bits.len() {
-            write!(f, "{}", self.bits[i])?;
-        }
-        Ok(())
-    }
-}
-
-impl BitStream {
-    pub fn len(&self) -> usize {
-        self.bits.len()
-    }
-
-    pub fn offset(&self) -> usize {
-        self.index
-    }
 
     pub fn eof(&self) -> bool {
         self.index >= self.bits.len()
     }
 
-    pub fn set_offset(&mut self, offset: usize) {
-        self.index = offset;
-    }
-
-    pub fn get_bool(&mut self) -> Option<bool> {
-        let bit = self.next()?;
-        Some(bit.on())
-    }
-
-    pub fn get_bits<const N: usize>(&mut self) -> Option<Bits<N>> {
-        let mut result = Vec::new();
+    pub fn get_bits<const N: usize>(&mut self) -> Bits<N> {
+        let mut bits = Vec::new();
         for _ in 0..N {
-            result.push(self.next()?);
+            if let Some(bit) = self.next() {
+                bits.push(bit);
+            } else {
+                panic!("Tried to read past end of stream");
+            }
         }
-        Some(Bits(result.try_into().unwrap()))
+        Bits(bits.try_into().unwrap())
     }
 
-    pub fn get_u8<const N: usize>(&mut self) -> Option<u8> {
-        if N > 8 { //TODO enfore this with compiler
+    pub fn get_bytes<const N: usize>(&mut self) -> [u8; N] {
+        let mut bytes = Vec::new();
+        for _ in 0..N {
+            bytes.push(self.get_u8::<8>());
+        }
+        bytes.try_into().unwrap()
+    }
+
+    pub fn get_bool(&mut self) -> bool {
+        self.get_bits::<1>().0[0].on()
+    }
+
+    pub fn get_u8<const N: usize>(&mut self) -> u8 {
+        if N > 8 {
             panic!("Cannot get u8 from {} bits", N);
         }
-        let bits = self.get_bits::<N>()?;
-        Some(bits.into())
+        let bits = self.get_bits::<N>();
+        bits.into()
     }
 
-    pub fn get_u16<const N: usize>(&mut self) -> Option<u16> {
-        if N > 16 { //TODO enfore this with compiler
+    pub fn get_u16<const N: usize>(&mut self) -> u16 {
+        if N > 16 {
             panic!("Cannot get u16 from {} bits", N);
         }
-        let bits = self.get_bits::<N>()?;
-        Some(bits.into())
+        let bits = self.get_bits::<N>();
+        bits.into()
     }
 
-    pub fn get_char(&mut self) -> Option<char> {
-        let ascii = self.get_u8::<7>()?;
-        Some(ascii as char)
-    }
-
-    pub fn search(&mut self, find: &str) -> Option<usize> {
-        let original_index = self.index;
-        let mut search_index = self.index;
-        while search_index < self.len() {
-            let mut success = true;
-            for ch in find.chars() {
-                if self.get_char().unwrap() != ch { //TODO this will crash
-                    success = false;
-                    break;
-                }
-            }
-            if success {
-                self.set_offset(original_index);
-                return Some(search_index);
-            } else {
-                search_index += 1;
-                self.set_offset(search_index);
-            }
-        }
-        self.set_offset(original_index);
-        None
+    pub fn get_char(&mut self) -> char {
+        let ascii = self.get_u8::<7>();
+        ascii as char
     }
 }

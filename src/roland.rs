@@ -1,14 +1,25 @@
-use crate::bits::{Bits, BitStream};
+use std::fmt::Debug;
 
-// 183762 bytes
+use crate::bits::{Bits, BitStream};
+use crate::bytes::{Bytes, ParseError};
+
 pub struct RD300NX {
-    //TODO make this fixed length 85
-    pub live_sets: Vec<LiveSet>, // 183600 bytes
-    footer: Bits<1280> // 160 bytes
+    //TODO make these fixed length
+    // pub user_sets: [LiveSet; Self::USER_SETS],
+    // pub bank_a: [LiveSet; Self::FAVOURITES_PER_BANK],
+    // pub bank_b: [LiveSet; Self::FAVOURITES_PER_BANK],
+    // pub bank_c: [LiveSet; Self::FAVOURITES_PER_BANK],
+    // pub bank_d: [LiveSet; Self::FAVOURITES_PER_BANK],
+    pub user_sets: Vec<LiveSet>,
+    pub bank_a: Vec<LiveSet>,
+    pub bank_b: Vec<LiveSet>,
+    pub bank_c: Vec<LiveSet>,
+    pub bank_d: Vec<LiveSet>,
+    pub current: LiveSet,
+    footer: Footer
     // checksum: 2 bytes
 }
 
-// 2160 bytes
 #[derive(Debug)]
 pub struct LiveSet {
     name: [char; 16], // 14 bytes
@@ -16,36 +27,32 @@ pub struct LiveSet {
     // checksum: 1 byte
 }
 
-#[derive(Debug)]
-pub enum ParseError {
-    UnexpectedEndOfStream(usize),
-    IncorrectCheckSum {
-        expected: Vec<u8>,
-        found: Vec<u8>
-    },
-    UnnessesaryTrailingBits(String)
-}
-
-impl RD300NX {
-    const LIVE_SETS: usize = 85;
-
-    pub fn parse(data: &mut BitStream) -> Result<Self, ParseError> {
-        let mut live_sets = Vec::new();
-        for _ in 0..Self::LIVE_SETS {
-            live_sets.push(LiveSet::parse(data)?);
-        }
-        let footer = data.get_bits().unwrap();
+impl Bytes<183762> for RD300NX {
+    fn parse(bytes: [u8; Self::BYTE_SIZE]) -> Result<Self, ParseError> {
+        let mut data = BitStream::read(bytes);
+        let user_sets = parse_many(&mut data, Self::USER_SETS)?;
+        let bank_a = parse_many(&mut data, Self::FAVOURITES_PER_BANK)?;
+        let bank_b = parse_many(&mut data, Self::FAVOURITES_PER_BANK)?;
+        let bank_c = parse_many(&mut data, Self::FAVOURITES_PER_BANK)?;
+        let bank_d = parse_many(&mut data, Self::FAVOURITES_PER_BANK)?;
+        let current = LiveSet::parse(data.get_bytes())?;
+        let footer = Footer::parse(data.get_bytes())?;
         let found_check_sum = [
-            data.get_u8::<8>().ok_or(ParseError::UnexpectedEndOfStream(data.offset()))?,
-            data.get_u8::<8>().ok_or(ParseError::UnexpectedEndOfStream(data.offset()))?
+            data.get_u8::<8>(),
+            data.get_u8::<8>(),
         ];
+        if !data.eof() {
+            panic!("Failed to read all {} bytes", Self::BYTE_SIZE);
+        }
         let rds = Self {
-            live_sets: live_sets.try_into().unwrap(),
+            user_sets,
+            bank_a,
+            bank_b,
+            bank_c,
+            bank_d,
+            current,
             footer
         };
-        if !data.eof() {
-            return Err(ParseError::UnnessesaryTrailingBits(format!("{}", data)));
-        }
         let bytes = rds.to_bytes();
         let expected_check_sum: [u8; 2] = bytes[(bytes.len()-2)..bytes.len()].try_into().unwrap();
         if found_check_sum != expected_check_sum {
@@ -57,10 +64,12 @@ impl RD300NX {
         Ok(rds)
     }
 
-    pub fn to_bytes(&self) -> Vec<u8> {//TODO make this a Bytes<N> trait
+    fn to_bytes(&self) -> [u8; Self::BYTE_SIZE] {
         let mut bytes = Vec::new();
-        for i in 0..Self::LIVE_SETS {
-            bytes.append(&mut self.live_sets[i].to_bytes());
+        for live_set in self.all_live_sets() {
+            for byte in live_set.to_bytes() {
+                bytes.push(byte);
+            }
         }
         for byte in self.footer.to_bytes() {
             bytes.push(byte);
@@ -69,8 +78,13 @@ impl RD300NX {
         for byte in check_sum.to_be_bytes() {
             bytes.push(byte);
         }
-        bytes
+        bytes.try_into().unwrap()
     }
+}
+
+impl RD300NX {
+    const USER_SETS: usize = 60;
+    const FAVOURITES_PER_BANK: usize = 6;
 
     fn check_sum(bytes_without_checksum: &Vec<u8>) -> u16 {
         let mut sum: u16 = 0;
@@ -79,6 +93,12 @@ impl RD300NX {
         }
         sum
     }
+
+    fn all_live_sets(&self) -> Vec<&LiveSet> {
+        let mut all: Vec<&LiveSet> = self.user_sets.iter().chain(self.bank_a.iter()).chain(self.bank_b.iter()).chain(self.bank_c.iter()).chain(self.bank_d.iter()).collect();
+        all.push(&self.current);
+        all
+    }
 }
 
 impl LiveSet {
@@ -86,13 +106,24 @@ impl LiveSet {
         self.name.iter().collect()
     }
 
-    pub fn parse(data: &mut BitStream) -> Result<Self, ParseError> {
+    fn check_sum(bytes_without_checksum: &Vec<u8>) -> u8 {
+        let mut sum: u8 = 0;
+        for byte in bytes_without_checksum {
+            sum = sum.wrapping_add(*byte);
+        }
+        u8::MAX - sum + 1
+    }
+}
+
+impl Bytes<2160> for LiveSet {
+    fn parse(bytes: [u8; Self::BYTE_SIZE]) -> Result<Self, ParseError> {
+        let mut data = BitStream::read(bytes);
         let mut name = [char::default(); 16];
         for i in 0..name.len() {
-            name[i] = data.get_char().ok_or(ParseError::UnexpectedEndOfStream(data.offset()))?;
+            name[i] = validate(data.get_char())?;
         }
-        let other = data.get_bits().ok_or(ParseError::UnexpectedEndOfStream(data.offset()))?;
-        let found_check_sum = data.get_u8::<8>().ok_or(ParseError::UnexpectedEndOfStream(data.offset()))?;
+        let other = data.get_bits();
+        let found_check_sum = data.get_u8::<8>();
         let live_set = Self {
             name,
             other
@@ -108,19 +139,43 @@ impl LiveSet {
         Ok(live_set)
     }
 
-    pub fn to_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> [u8; Self::BYTE_SIZE] {
         let mut bytes = Bits::<7>::compress(self.name).to_bytes();
         bytes.append(&mut self.other.to_bytes());
         let check_sum = Self::check_sum(&bytes);
         bytes.push(check_sum);
-        bytes
+        bytes.try_into().unwrap()
+    }
+}
+
+pub struct Footer(Bits<1280>);
+
+impl Bytes<160> for Footer {
+    fn parse(bytes: [u8; Self::BYTE_SIZE]) -> Result<Self, ParseError> {
+        let mut data = BitStream::read(bytes);
+        let bits = data.get_bits();
+        Ok(Self(bits.into()))
     }
 
-    fn check_sum(bytes_without_checksum: &Vec<u8>) -> u8 {
-        let mut sum: u8 = 0;
-        for byte in bytes_without_checksum {
-            sum = sum.wrapping_add(*byte);
-        }
-        u8::MAX - sum + 1
+    fn to_bytes(&self) -> [u8; Self::BYTE_SIZE] {
+        self.0.to_bytes().try_into().unwrap()
     }
+}
+
+fn validate(ch: char) -> Result<char, ParseError> {
+    // Roland keyboards use chars 32 ' ' through 126 '~' inclusive
+    let ascii = ch as u8;
+    if ascii < 32 || ascii > 126 {
+        Err(ParseError::InvalidCharacter(ch))
+    } else {
+        Ok(ch)
+    }
+}
+
+fn parse_many<const B: usize, T: Bytes<B> + Debug>(data: &mut BitStream, n: usize) -> Result<Vec<T>, ParseError> {
+    let mut parsed = Vec::new();
+    for _ in 0..n {
+        parsed.push(T::parse(data.get_bytes())?);
+    }
+    Ok(parsed)
 }
