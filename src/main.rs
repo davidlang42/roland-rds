@@ -15,8 +15,8 @@ fn main() {
     let mut f = fs::File::options().read(true).open(&filename).expect(&format!("File could not be read: {}", filename));
     let size = f.read_to_end(&mut bytes).unwrap();
     println!("Read {} bytes", size);
-    let stream: BitStream = bytes.into_iter().into();
-    let rds = RD300NX::parse(stream).unwrap();
+    let mut stream: BitStream = bytes.into_iter().into();
+    let rds = RD300NX::parse(&mut stream).unwrap();
     for (i, ls) in rds.live_sets.iter().enumerate() {
         println!("#{} {}", i, ls.name_string());
     }

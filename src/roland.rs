@@ -2,7 +2,8 @@ use crate::bits::{Bits, BitStream};
 
 // 183762 bytes
 pub struct RD300NX {
-    pub live_sets: [LiveSet; Self::LIVE_SETS], // 183600 bytes
+    //TODO make this fixed length 85
+    pub live_sets: Vec<LiveSet>, // 183600 bytes
     footer: Bits<1280> // 160 bytes
     // checksum: 2 bytes
 }
@@ -28,10 +29,10 @@ pub enum ParseError {
 impl RD300NX {
     const LIVE_SETS: usize = 85;
 
-    pub fn parse(mut data: BitStream) -> Result<Self, ParseError> {
+    pub fn parse(data: &mut BitStream) -> Result<Self, ParseError> {
         let mut live_sets = Vec::new();
         for _ in 0..Self::LIVE_SETS {
-            live_sets.push(LiveSet::parse(&mut data)?);
+            live_sets.push(LiveSet::parse(data)?);
         }
         let footer = data.get_bits().unwrap();
         let found_check_sum = [
@@ -42,6 +43,9 @@ impl RD300NX {
             live_sets: live_sets.try_into().unwrap(),
             footer
         };
+        if !data.eof() {
+            return Err(ParseError::UnnessesaryTrailingBits(format!("{}", data)));
+        }
         let bytes = rds.to_bytes();
         let expected_check_sum: [u8; 2] = bytes[(bytes.len()-2)..bytes.len()].try_into().unwrap();
         if found_check_sum != expected_check_sum {
@@ -49,9 +53,6 @@ impl RD300NX {
                 expected: expected_check_sum.into_iter().collect(),
                 found: found_check_sum.into_iter().collect()
             });
-        }
-        if !data.eof() {
-            return Err(ParseError::UnnessesaryTrailingBits(format!("{}", data)));
         }
         Ok(rds)
     }
@@ -74,7 +75,7 @@ impl RD300NX {
     fn check_sum(bytes_without_checksum: &Vec<u8>) -> u16 {
         let mut sum: u16 = 0;
         for byte in bytes_without_checksum {
-            sum += *byte as u16; //intentional overflow
+            sum = sum.wrapping_add(*byte as u16);
         }
         sum
     }
@@ -91,10 +92,20 @@ impl LiveSet {
             name[i] = data.get_char().ok_or(ParseError::UnexpectedEndOfStream(data.offset()))?;
         }
         let other = data.get_bits().ok_or(ParseError::UnexpectedEndOfStream(data.offset()))?;
-        Ok(Self {
+        let found_check_sum = data.get_u8::<8>().ok_or(ParseError::UnexpectedEndOfStream(data.offset()))?;
+        let live_set = Self {
             name,
             other
-        })
+        };
+        let bytes = live_set.to_bytes();
+        let expected_check_sum = bytes[bytes.len() - 1];
+        if found_check_sum != expected_check_sum {
+            return Err(ParseError::IncorrectCheckSum {
+                expected: vec![expected_check_sum],
+                found: vec![found_check_sum]
+            });
+        }
+        Ok(live_set)
     }
 
     pub fn to_bytes(&self) -> Vec<u8> {
@@ -108,8 +119,8 @@ impl LiveSet {
     fn check_sum(bytes_without_checksum: &Vec<u8>) -> u8 {
         let mut sum: u8 = 0;
         for byte in bytes_without_checksum {
-            sum += *byte as u8; //intentional overflow
+            sum = sum.wrapping_add(*byte);
         }
-        sum
+        u8::MAX - sum + 1
     }
 }

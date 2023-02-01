@@ -113,7 +113,7 @@ impl<const N: usize> Bits<N> {
         let mut bytes = Vec::new();
         while start < self.0.len() {
             let end = start + 8;
-            bytes.push(Self::to_byte(self.0[start..end].try_into().unwrap()));
+            bytes.push(Bits::<8>::to_byte(self.0[start..end].try_into().unwrap()));
             start = end;
         }
         bytes
