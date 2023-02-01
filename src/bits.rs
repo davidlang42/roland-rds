@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{fmt::Display, str::FromStr};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Bit(bool);
@@ -38,6 +38,34 @@ impl<const N: usize> Display for Bits<N> {
             write!(f, "{}", bit)?;
         }
         Ok(())
+    }
+}
+
+pub enum BitsError {
+    IncompleteByteBeforeEnd(String),
+    InvalidDigit(char)
+}
+
+impl<const N: usize> FromStr for Bits<N> {
+    type Err = BitsError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let bytes: Vec<&str> = s.split(" ").collect();
+        let mut bits = Vec::new();
+        for i in 0..bytes.len() {
+            if i != bytes.len() - 1 && bytes[i].len() != 8 {
+                return Err(BitsError::IncompleteByteBeforeEnd(bytes[i].to_string()));
+            }
+            for c in bytes[i].chars() {
+                let bit = match c {
+                    '0' => Bit::ZERO,
+                    '1' => Bit::ONE,
+                    _ => return Err(BitsError::InvalidDigit(c))
+                };
+                bits.push(bit);
+            }
+        }
+        Ok(Bits(bits.try_into().unwrap()))
     }
 }
 
