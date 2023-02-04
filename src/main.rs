@@ -20,7 +20,7 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 struct JsonData {
     version: String,
     last_updated: String,
-    rd300nx: RD300NX
+    rd300nx: Box<RD300NX>
 }
 
 fn main() {
@@ -59,7 +59,7 @@ fn decode(rds_path: Option<String>) {
         let json = JsonData {
             version: VERSION.to_string(),
             last_updated: chrono::offset::Local::now().format("%Y-%m-%d %H:%M:%S").to_string(),
-            rd300nx: rds
+            rd300nx: Box::new(rds)
         };
         println!("{}", serde_json::to_string(&json).expect("Error serializing JSON"));
     }

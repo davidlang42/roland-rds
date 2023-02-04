@@ -3,11 +3,12 @@ use std::fmt::Debug;
 use crate::bits::{Bits, BitStream};
 use crate::bytes::{Bytes, ParseError};
 use crate::json::serialize_chars_as_string;
+use crate::json::serialize_array_as_vec;
 
 #[derive(Serialize, Deserialize)]
 pub struct RD300NX {
-    //TODO pub user_sets: Box<[LiveSet; Self::USER_SETS]>,
-    pub user_sets: Vec<LiveSet>,
+    #[serde(with = "serialize_array_as_vec")]
+    pub user_sets: Box<[LiveSet; Self::USER_SETS]>,
     pub bank_a: Box<[LiveSet; Self::FAVOURITES_PER_BANK]>,
     pub bank_b: Box<[LiveSet; Self::FAVOURITES_PER_BANK]>,
     pub bank_c: Box<[LiveSet; Self::FAVOURITES_PER_BANK]>,
@@ -28,11 +29,7 @@ pub struct LiveSet {
 impl Bytes<183762> for RD300NX {
     fn parse(bytes: [u8; Self::BYTE_SIZE]) -> Result<Self, ParseError> {
         let mut data = BitStream::read(bytes);
-        let mut user_sets = Vec::new();
-        for _ in 0..Self::USER_SETS {
-            user_sets.push(LiveSet::parse(data.get_bytes())?);
-        }
-        //TODO let user_sets = parse_many(&mut data, Self::USER_SETS)?;
+        let user_sets = parse_many(&mut data)?;
         let bank_a = parse_many(&mut data)?;
         let bank_b = parse_many(&mut data)?;
         let bank_c = parse_many(&mut data)?;
