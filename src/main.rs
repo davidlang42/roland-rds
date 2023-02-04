@@ -13,6 +13,8 @@ mod bytes;
 
 #[macro_use] extern crate serde_derive;
 
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 fn main() {
     let mut args = env::args();
     let cmd = args.next().unwrap();
@@ -32,6 +34,7 @@ fn main() {
 }
 
 fn help(cmd: &str) {
+    println!("roland-rds (v{})", VERSION);
     println!("Usage:");
     println!("  {} decode FILENAME -- decode RDS file and print JSON to std out", cmd);
     println!("  {} decode          -- decode RDS data from std in and print JSON to std out", cmd);
