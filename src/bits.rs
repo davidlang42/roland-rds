@@ -31,9 +31,15 @@ pub struct Bits<const N: usize>([Bit; N]);
 
 impl<const N: usize> Display for Bits<N> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        const BITS_PER_BYTE: usize = 8;
+        const BYTES_PER_LINE: usize = 10;
         for (i, bit) in self.0.iter().enumerate() {
-            if i % 8 == 0 && i != 0 {
-                write!(f, " ")?;
+            if i % BITS_PER_BYTE == 0 && i != 0 {
+                if i % (BITS_PER_BYTE * BYTES_PER_LINE) == 0 {
+                    writeln!(f)?;
+                } else {
+                    write!(f, " ")?;
+                }
             }
             write!(f, "{}", bit)?;
         }
@@ -60,6 +66,9 @@ impl<const N: usize> FromStr for Bits<N> {
                 let bit = match c {
                     '0' => Bit::ZERO,
                     '1' => Bit::ONE,
+                    ' ' => continue, // valid byte separator
+                    '\r' => continue, // valid line separator
+                    '\n' => continue, // valid line separator
                     _ => return Err(BitsError::InvalidDigit(c))
                 };
                 bits.push(bit);
