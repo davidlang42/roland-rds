@@ -17,7 +17,7 @@ pub struct RD300NX {
     pub bank_c: Vec<LiveSet>,
     pub bank_d: Vec<LiveSet>,
     pub current: LiveSet,
-    footer: Footer
+    footer: Footer //TODO contains hardware version as 8-bit chars rather than 7-bit
     // checksum: 2 bytes
 }
 

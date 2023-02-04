@@ -35,7 +35,7 @@ impl<'de, const N: usize> Deserialize<'de> for Bits<N> {//TODO make this generic
     where
         D: serde::Deserializer<'de> {
         let s = String::deserialize(deserializer)?;
-        Bits::from_str(&s).map_err(serde::de::Error::custom)//TODO use Self, dont escape new lines, confirm custom errors
+        Self::from_str(&s).map_err(serde::de::Error::custom)
     }
 }
 
@@ -50,16 +50,9 @@ impl<const N: usize> Serialize for Bits<N> {
 
 impl<const N: usize> Display for Bits<N> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        const BITS_PER_BYTE: usize = 8;
-        const BYTES_PER_LINE: usize = 10;
         for (i, bit) in self.0.iter().enumerate() {
-            if i % BITS_PER_BYTE == 0 && i != 0 {
-                if i % (BITS_PER_BYTE * BYTES_PER_LINE) == 0 {
-                    //TODO writeln!(f)?;
-                    write!(f, "    ")?;
-                } else {
-                    write!(f, " ")?;
-                }
+            if i % Self::BITS_PER_BYTE == 0 && i != 0 {
+                write!(f, " ")?;
             }
             write!(f, "{}", bit)?;
         }
@@ -72,11 +65,11 @@ pub enum BitsError {
     InvalidDigit(char)
 }
 
-impl Display for BitsError {//TODO is this required?
+impl Display for BitsError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::IncompleteByteBeforeEnd(s) => write!(f, "Incomplete byte before end: {}", s),
-            Self::InvalidDigit(c) => write!(f, "Invalid digit: {}", c),
+            Self::InvalidDigit(c) => write!(f, "Invalid bit digit: {}", c),
         }
     }
 }
@@ -85,22 +78,16 @@ impl<const N: usize> FromStr for Bits<N> {
     type Err = BitsError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let bytes: Vec<&str> = s.split(" ").collect();//TODO handle new lines
+        let bytes: Vec<&str> = s.split(" ").collect();
         let mut bits = Vec::new();
         for i in 0..bytes.len() {
-            if bytes[i].len() == 0 {//TODO avoid this dodgyness
-                continue;
-            }
-            if i != bytes.len() - 1 && bytes[i].len() != 8 {
+            if i != bytes.len() - 1 && bytes[i].len() != Self::BITS_PER_BYTE {
                 return Err(BitsError::IncompleteByteBeforeEnd(bytes[i].to_string()));
             }
             for c in bytes[i].chars() {
                 let bit = match c {
                     '0' => Bit::ZERO,
                     '1' => Bit::ONE,
-                    ' ' => continue, // valid byte separator
-                    '\r' => continue, // valid line separator
-                    '\n' => continue, // valid line separator
                     _ => return Err(BitsError::InvalidDigit(c))
                 };
                 bits.push(bit);
@@ -111,6 +98,8 @@ impl<const N: usize> FromStr for Bits<N> {
 }
 
 impl<const N: usize> Bits<N> {
+    const BITS_PER_BYTE: usize = 8;
+
     fn to_u8(&self) -> u8 {
         if N > 8 {
             panic!("Bits size ({}) is too big for a u8 value", N);
