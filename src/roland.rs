@@ -4,17 +4,11 @@ use crate::bits::{Bits, BitStream};
 use crate::bytes::{Bytes, ParseError};
 
 pub struct RD300NX {
-    //TODO make these fixed length
-    // pub user_sets: [LiveSet; Self::USER_SETS],
-    // pub bank_a: [LiveSet; Self::FAVOURITES_PER_BANK],
-    // pub bank_b: [LiveSet; Self::FAVOURITES_PER_BANK],
-    // pub bank_c: [LiveSet; Self::FAVOURITES_PER_BANK],
-    // pub bank_d: [LiveSet; Self::FAVOURITES_PER_BANK],
-    pub user_sets: Vec<LiveSet>,
-    pub bank_a: Vec<LiveSet>,
-    pub bank_b: Vec<LiveSet>,
-    pub bank_c: Vec<LiveSet>,
-    pub bank_d: Vec<LiveSet>,
+    pub user_sets: Box<[LiveSet; Self::USER_SETS]>,
+    pub bank_a: Box<[LiveSet; Self::FAVOURITES_PER_BANK]>,
+    pub bank_b: Box<[LiveSet; Self::FAVOURITES_PER_BANK]>,
+    pub bank_c: Box<[LiveSet; Self::FAVOURITES_PER_BANK]>,
+    pub bank_d: Box<[LiveSet; Self::FAVOURITES_PER_BANK]>,
     pub current: LiveSet,
     footer: Footer
     // checksum: 2 bytes
@@ -30,11 +24,11 @@ pub struct LiveSet {
 impl Bytes<183762> for RD300NX {
     fn parse(bytes: [u8; Self::BYTE_SIZE]) -> Result<Self, ParseError> {
         let mut data = BitStream::read(bytes);
-        let user_sets = parse_many(&mut data, Self::USER_SETS)?;
-        let bank_a = parse_many(&mut data, Self::FAVOURITES_PER_BANK)?;
-        let bank_b = parse_many(&mut data, Self::FAVOURITES_PER_BANK)?;
-        let bank_c = parse_many(&mut data, Self::FAVOURITES_PER_BANK)?;
-        let bank_d = parse_many(&mut data, Self::FAVOURITES_PER_BANK)?;
+        let user_sets = parse_many(&mut data)?;
+        let bank_a = parse_many(&mut data)?;
+        let bank_b = parse_many(&mut data)?;
+        let bank_c = parse_many(&mut data)?;
+        let bank_d = parse_many(&mut data)?;
         let current = LiveSet::parse(data.get_bytes())?;
         let footer = Footer::parse(data.get_bytes())?;
         let found_check_sum = [
@@ -172,10 +166,10 @@ fn validate(ch: char) -> Result<char, ParseError> {
     }
 }
 
-fn parse_many<const B: usize, T: Bytes<B> + Debug>(data: &mut BitStream, n: usize) -> Result<Vec<T>, ParseError> {
+fn parse_many<const N: usize, const B: usize, T: Bytes<B> + Debug>(data: &mut BitStream) -> Result<Box<[T; N]>, ParseError> {
     let mut parsed = Vec::new();
-    for _ in 0..n {
+    for _ in 0..N {
         parsed.push(T::parse(data.get_bytes())?);
     }
-    Ok(parsed)
+    Ok(Box::new(parsed.try_into().unwrap()))
 }
