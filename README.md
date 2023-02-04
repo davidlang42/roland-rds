@@ -16,18 +16,23 @@ Due to these reasons, a way of editing these RDS files would be very valuable, e
 ## Usage
 
 To decode an RDS file, and output plain text JSON (which can be easily manipulated in a text editor):
+
 `roland-rds decode FILE.RDS`
 
 If you would like to save the output (rather than see it on the screen):
+
 `roland-rds decode FILE.RDS > FILE.JSON`
 
 If you would like the JSON to be formatted nicely, I recommend chaining with jq:
+
 `roland-rds decode FILE.RDS | jq > FILE.JSON`
 
 Once you have made the required changes to your JSON file, to re-encode it to an RDS file:
+
 `roland-rds encode FILE.JSON`
 
 To save the output of this encoding (to transfer back to the keyboard):
+
 `roland-rds encode FILE.JSON > NEW_FILE.RDS`
 
 In both `encode` and `decode` operations, if you omit the input filename, it will read from std in. The output is always written to std out.
