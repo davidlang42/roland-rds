@@ -88,7 +88,7 @@ impl RD300NX {
         sum
     }
 
-    fn all_live_sets(&self) -> Vec<&LiveSet> {
+    pub fn all_live_sets(&self) -> Vec<&LiveSet> {
         let mut all: Vec<&LiveSet> = self.user_sets.iter().chain(self.bank_a.iter()).chain(self.bank_b.iter()).chain(self.bank_c.iter()).chain(self.bank_d.iter()).collect();
         all.push(&self.current);
         all

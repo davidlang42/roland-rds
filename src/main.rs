@@ -19,7 +19,7 @@ fn main() {
         println!("File should be {} bytes", RD300NX::BYTE_SIZE);
     } else {
         let rds = RD300NX::parse(bytes.try_into().unwrap()).unwrap();
-        for (i, ls) in rds.user_sets.iter().enumerate() {
+        for (i, ls) in rds.all_live_sets().iter().enumerate() {
             println!("#{} {}", i + 1, ls.name_string());
         }
     }
