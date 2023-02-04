@@ -15,6 +15,13 @@ mod bytes;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
+#[derive(Serialize, Deserialize)]
+struct JsonData {
+    version: String,
+    last_updated: String,
+    rd300nx: RD300NX
+}
+
 fn main() {
     let mut args = env::args();
     let cmd = args.next().unwrap();
@@ -48,16 +55,21 @@ fn decode(rds_path: Option<String>) {
         println!("File should be {} bytes but found {}", RD300NX::BYTE_SIZE, size);
     } else {
         let rds = RD300NX::parse(bytes.try_into().unwrap()).expect("Error decoding RDS data");
-        println!("{}", serde_json::to_string(&rds).expect("Error serializing JSON"));
+        let json = JsonData {
+            version: VERSION.to_string(),
+            last_updated: chrono::offset::Local::now().format("%Y-%m-%d %H:%M:%S").to_string(),
+            rd300nx: rds
+        };
+        println!("{}", serde_json::to_string(&json).expect("Error serializing JSON"));
     }
 }
 
 fn encode(json_path: Option<String>) {
     let (_, bytes) = read_data(json_path);
-    let json: String = bytes.into_iter().map(|u| u as char).collect();
-    let rds: RD300NX = serde_json::from_str(&json).expect("Error deserializing JSON");
+    let text: String = bytes.into_iter().map(|u| u as char).collect();
+    let json: JsonData = serde_json::from_str(&text).expect("Error deserializing JSON");
     let mut stdout = io::stdout().lock();
-    stdout.write_all(&rds.to_bytes()).expect("Error writing to std out");
+    stdout.write_all(&json.rd300nx.to_bytes()).expect("Error writing to std out");
     stdout.flush().expect("Error flushing std out");
 }
 
