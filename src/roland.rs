@@ -14,7 +14,7 @@ pub struct RD300NX {
     pub bank_c: Box<[LiveSet; Self::FAVOURITES_PER_BANK]>,
     pub bank_d: Box<[LiveSet; Self::FAVOURITES_PER_BANK]>,
     pub current: LiveSet,
-    footer: Footer //TODO contains hardware version as 8-bit chars rather than 7-bit
+    footer: Footer
     // checksum: 2 bytes
 }
 
@@ -148,17 +148,32 @@ impl Bytes<2160> for LiveSet {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct Footer(Bits<1280>);
+pub struct Footer {
+    other: Bits<1152>,
+    #[serde(with = "serialize_chars_as_string")]
+    hardware_version: [char; 16]
+}
 
 impl Bytes<160> for Footer {
     fn parse(bytes: [u8; Self::BYTE_SIZE]) -> Result<Self, ParseError> {
         let mut data = BitStream::read(bytes);
-        let bits = data.get_bits();
-        Ok(Self(bits.into()))
+        let other = data.get_bits();
+        let mut hardware_version = [char::default(); 16];
+        for i in 0..hardware_version.len() {
+            hardware_version[i] = validate(data.get_u8::<8>() as char)?;
+        }
+        Ok(Self {
+            other,
+            hardware_version
+        })
     }
 
     fn to_bytes(&self) -> [u8; Self::BYTE_SIZE] {
-        self.0.to_bytes().try_into().unwrap()
+        let mut bytes = self.other.to_bytes();
+        for ch in self.hardware_version {
+            bytes.push(ch as u8);
+        }
+        bytes.try_into().unwrap()
     }
 }
 
