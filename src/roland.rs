@@ -2,6 +2,7 @@ use std::fmt::Debug;
 
 use crate::bits::{Bits, BitStream};
 use crate::bytes::{Bytes, ParseError};
+use crate::json::serialize_chars_as_string;
 
 #[derive(Serialize, Deserialize)]
 pub struct RD300NX {
@@ -23,7 +24,7 @@ pub struct RD300NX {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct LiveSet {
-    //TODO serialize as string
+    #[serde(with = "serialize_chars_as_string")]
     name: [char; 16], // 14 bytes
     other: Bits<17160>, // 2145 bytes
     // checksum: 1 byte

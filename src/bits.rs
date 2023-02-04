@@ -1,6 +1,8 @@
 use std::{fmt::Display, str::FromStr};
 use serde::{Serialize, Deserialize};
 
+use crate::json::serialize_fromstr_display;
+
 #[derive(Debug, Copy, Clone)]
 pub struct Bit(bool);
 
@@ -30,21 +32,15 @@ impl Bit {
 #[derive(Debug)]
 pub struct Bits<const N: usize>([Bit; N]);
 
-impl<'de, const N: usize> Deserialize<'de> for Bits<N> {//TODO make this generic
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de> {
-        let s = String::deserialize(deserializer)?;
-        Self::from_str(&s).map_err(serde::de::Error::custom)
+impl<'de, const N: usize> Deserialize<'de> for Bits<N> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: serde::Deserializer<'de> {
+        serialize_fromstr_display::deserialize(deserializer)
     }
 }
 
 impl<const N: usize> Serialize for Bits<N> {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer {
-        let s = format!("{}", self);
-        s.serialize(serializer)
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer {
+        serialize_fromstr_display::serialize(self, serializer)
     }
 }
 

@@ -10,6 +10,7 @@ use crate::roland::RD300NX;
 mod roland;
 mod bits;
 mod bytes;
+mod json;
 
 #[macro_use] extern crate serde_derive;
 
