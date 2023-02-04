@@ -2,6 +2,7 @@ use std::env;
 use std::fs;
 use std::io;
 use std::io::Read;
+use std::io::Write;
 
 use crate::bytes::Bytes;
 use crate::roland::RD300NX;
@@ -36,7 +37,6 @@ fn help(cmd: &str) {
     println!("  {} decode          -- decode RDS data from std in and print JSON to std out", cmd);
     println!("  {} encode FILENAME -- encode JSON file and print RDS data to std out", cmd);
     println!("  {} encode          -- encode JSON data from std in and print RDS data to std out", cmd);
-    
 }
 
 fn decode(rds_path: Option<String>) {
@@ -53,9 +53,9 @@ fn encode(json_path: Option<String>) {
     let (_, bytes) = read_data(json_path);
     let json: String = bytes.into_iter().map(|u| u as char).collect();
     let rds: RD300NX = serde_json::from_str(&json).expect("Error deserializing JSON");
-    for byte in rds.to_bytes() {
-        print!("{}", byte as char);
-    }
+    let mut stdout = io::stdout().lock();
+    stdout.write_all(&rds.to_bytes()).expect("Error writing to std out");
+    stdout.flush().expect("Error flushing std out");
 }
 
 fn read_data(path: Option<String>) -> (usize, Vec<u8>) {
