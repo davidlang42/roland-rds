@@ -6,6 +6,7 @@ use std::io::Write;
 use std::path::PathBuf;
 
 use crate::bytes::Bytes;
+use crate::bytes::StructuredJson;
 use crate::roland::RD300NX;
 
 mod roland;
@@ -54,22 +55,6 @@ fn help(cmd: &str) {
     println!("  {} split FILENAME FOLDER -- split JSON file into a folder structure of nested JSON files", cmd);
     println!("  {} split FOLDER          -- split JSON data fro std in into a folder structure of nested JSON files", cmd);
     println!("  {} merge FOLDER          -- merge folder structure of nested JSON files and print the combined JSON data to std out", cmd);
-    /*
-    //TODO
-    - add verb: roland-rds split FILE.JSON FOLDER
-** if FILE omitted, read std in
-** FOLDER must not exist
-** separate structure into folders and json files eg:
-/FOLDER/user_sets/00-Name.json ... 60-Name.json
-/FOLDER/bank_a/0-Name.json ... 5-Name.json
-...
-/FOLDER/bank_d/0-Name.json ... 5-Name.json
-/FOLDER/footer.json
-** all files are valid json, names dont matter (just for ordering by strict alpha)
-- add verb: roland-rds merge FOLDER
-** FOLDER must exist & be a folder
-** compiles json based on folder structure as split above
-** outputs to std out */
 }
 
 fn decode(rds_path: Option<String>) {
@@ -127,5 +112,12 @@ fn split(arg1: String, arg2: Option<String>) {
 }
 
 fn merge(folder: String) {
-    todo!();//TODO
+    let structure = StructuredJson::load(PathBuf::from(&folder)).expect("Error loading structured JSON");
+    let rds = RD300NX::from_structured_json(structure);
+    let json = JsonData {//TODO duplicated code
+        version: VERSION.to_string(),
+        last_updated: chrono::offset::Local::now().format("%Y-%m-%d %H:%M:%S").to_string(),
+        rd300nx: Box::new(rds)
+    };
+    println!("{}", serde_json::to_string(&json).expect("Error serializing JSON"));
 }

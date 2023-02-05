@@ -92,8 +92,24 @@ impl Bytes<183762> for RD300NX {
         ])
     }
 
-    fn from_structured_json(structured_json: crate::bytes::StructuredJson) -> Self {
-        todo!()//TODO
+    fn from_structured_json(mut structured_json: StructuredJson) -> Self {
+        let user_sets = structured_json.extract("user_sets").to_array();
+        let bank_a = structured_json.extract("bank_a").to_array();
+        let bank_b = structured_json.extract("bank_b").to_array();
+        let bank_c = structured_json.extract("bank_c").to_array();
+        let bank_d = structured_json.extract("bank_d").to_array();
+        let current = structured_json.extract("current").to();
+        let footer = structured_json.extract("footer").to();
+        structured_json.done();
+        Self {
+            user_sets,
+            bank_a,
+            bank_b,
+            bank_c,
+            bank_d,
+            current,
+            footer
+        }
     }
 }
 
@@ -163,11 +179,12 @@ impl Bytes<2160> for LiveSet {
     }
 
     fn to_structured_json(&self) -> StructuredJson {
-        StructuredJson::SingleJson(serde_json::to_string(&self).expect("Error serializing JSON"))
+        StructuredJson::SingleJson(serde_json::to_string(&self).expect("Error serializing JSON"))//TODO duplicated code
     }
 
-    fn from_structured_json(structured_json: crate::bytes::StructuredJson) -> Self {
-        todo!()//TODO
+    fn from_structured_json(structured_json: StructuredJson) -> Self {
+        let text = structured_json.to_single_json();
+        serde_json::from_str(&text).expect("Error deserializing JSON") //TODO duplicated code
     }
 }
 
@@ -201,11 +218,12 @@ impl Bytes<160> for Footer {
     }
 
     fn to_structured_json(&self) -> StructuredJson {
-        StructuredJson::SingleJson(serde_json::to_string(&self).expect("Error serializing JSON"))
+        StructuredJson::SingleJson(serde_json::to_string(&self).expect("Error serializing JSON"))//TODO duplicated code
     }
 
-    fn from_structured_json(structured_json: crate::bytes::StructuredJson) -> Self {
-        todo!()//TODO
+    fn from_structured_json(structured_json: StructuredJson) -> Self {
+        let text = structured_json.to_single_json();
+        serde_json::from_str(&text).expect("Error deserializing JSON") //TODO duplicated code
     }
 }
 

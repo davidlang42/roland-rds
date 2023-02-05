@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use std::fmt::Display;
 use std::ops::AddAssign;
 use std::path::PathBuf;
@@ -20,6 +21,7 @@ pub trait Bytes<const N: usize> {
     fn from_bytes(bytes: [u8; N]) -> Result<Self, ParseError> where Self: Sized;
     fn to_structured_json(&self) -> StructuredJson;
     fn from_structured_json(structured_json: StructuredJson) -> Self;
+    //TODO to_json/from_json
 }
 
 pub enum StructuredJson {
@@ -56,9 +58,75 @@ impl StructuredJson {
         let mut vec = Vec::new();
         let pad_length = digits(items.len());
         for (i, item) in items.iter().enumerate() {
-            vec.push((format!("{}-{}", pad(i, pad_length, '0'), clean_filename(namer(item))), item.to_structured_json()))
+            vec.push((format!("{}-{}", pad(i, pad_length, '0'), alphanumeric(namer(item))), item.to_structured_json()))
         }
         Self::NestedCollection(vec)
+    }
+
+    pub fn load(path: PathBuf) -> Result<Self, io::Error> {
+        if !path.exists() {
+            panic!("Cannot load structured json, '{}' does not exist", path.display());
+        }
+        Ok(if path.is_dir() {
+            let mut vec = Vec::new();
+            for entry in path.read_dir().expect(&format!("Error reading directory '{}'", path.display())) {
+                let e = entry?;
+                vec.push((e.file_name().to_string_lossy().to_string(), Self::load(e.path())?));
+            }
+            vec.sort_by(|(a, _), (b, _)| a.cmp(b));
+            Self::NestedCollection(vec)
+        } else {
+            Self::SingleJson(fs::read_to_string(path)?)
+        })
+    }
+
+    pub fn extract(&mut self, name: &str) -> Self {
+        match self {
+            Self::SingleJson(_) => panic!("Cannot extract from StructuredJson::SingleJson"),
+            Self::NestedCollection(vec) => {
+                if let Some(i) = vec.iter().position(|(n, _)| n == name) {
+                    vec.remove(i).1
+                } else {
+                    panic!("'{}' not found in StructuredJson::NestedCollection", name);
+                }
+            }
+        }
+    }
+
+    pub fn done(self) {
+        match self {
+            Self::SingleJson(_) => panic!("Cannot call done on StructuredJson::SingleJson"),
+            Self::NestedCollection(vec) => {
+                if vec.len() > 0 {
+                    let unused: Vec<String> = vec.into_iter().map(|(n, _)| n).collect();
+                    panic!("Unused items in StructuredJson::NestedCollection {:?}", unused)
+                }
+            }
+        }
+    }
+
+    pub fn to<T: Bytes<B>, const B: usize>(self) -> T {
+        T::from_structured_json(self)
+    }
+
+    pub fn to_vec<T: Bytes<N>, const N: usize>(self) -> Vec<T> {
+        match self {
+            Self::SingleJson(_) => panic!("Cannot create collection from StructuredJson::SingleJson"),
+            Self::NestedCollection(vec) => vec.into_iter().map(|(_, s)| T::from_structured_json(s)).collect()
+        }
+    }
+
+    pub fn to_array<T: Bytes<B> + Debug, const B: usize, const N: usize>(self) -> Box<[T; N]> {
+        let vec = self.to_vec();
+        let array: [T; N] = vec.try_into().unwrap();
+        Box::new(array)
+    }
+
+    pub fn to_single_json(self) -> String {
+        match self {
+            Self::SingleJson(json) => json,
+            Self::NestedCollection(_) => panic!("Cannot call to_single_json on StructuredJson::NestedCollection")
+        }
     }
 }
 
@@ -100,7 +168,7 @@ fn pad<T: Display>(item: T, length: usize, pad_with: char) -> String {
     s
 }
 
-fn clean_filename(mut s: String) -> String {
+fn alphanumeric(mut s: String) -> String {
     let mut i = 0;
     while i < s.len() {
         let c = s.chars().nth(i).unwrap();
