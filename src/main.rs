@@ -55,7 +55,7 @@ fn decode(rds_path: Option<String>) {
     if size != RD300NX::BYTE_SIZE {
         println!("File should be {} bytes but found {}", RD300NX::BYTE_SIZE, size);
     } else {
-        let rds = RD300NX::parse(bytes.try_into().unwrap()).expect("Error decoding RDS data");
+        let rds = RD300NX::from_bytes(bytes.try_into().unwrap()).expect("Error decoding RDS data");
         let json = JsonData {
             version: VERSION.to_string(),
             last_updated: chrono::offset::Local::now().format("%Y-%m-%d %H:%M:%S").to_string(),

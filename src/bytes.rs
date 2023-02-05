@@ -11,5 +11,5 @@ pub trait Bytes<const N: usize> {
     const BYTE_SIZE: usize = N;
 
     fn to_bytes(&self) -> [u8; N];
-    fn parse(bytes: [u8; N]) -> Result<Self, ParseError> where Self: Sized;
+    fn from_bytes(bytes: [u8; N]) -> Result<Self, ParseError> where Self: Sized;
 }

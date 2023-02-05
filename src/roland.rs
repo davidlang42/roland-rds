@@ -27,15 +27,15 @@ pub struct LiveSet {
 }
 
 impl Bytes<183762> for RD300NX {
-    fn parse(bytes: [u8; Self::BYTE_SIZE]) -> Result<Self, ParseError> {
+    fn from_bytes(bytes: [u8; Self::BYTE_SIZE]) -> Result<Self, ParseError> {
         let mut data = BitStream::read(bytes);
         let user_sets = parse_many(&mut data)?;
         let bank_a = parse_many(&mut data)?;
         let bank_b = parse_many(&mut data)?;
         let bank_c = parse_many(&mut data)?;
         let bank_d = parse_many(&mut data)?;
-        let current = LiveSet::parse(data.get_bytes())?;
-        let footer = Footer::parse(data.get_bytes())?;
+        let current = LiveSet::from_bytes(data.get_bytes())?;
+        let footer = Footer::from_bytes(data.get_bytes())?;
         let found_check_sum = [
             data.get_u8::<8>(),
             data.get_u8::<8>(),
@@ -115,7 +115,7 @@ impl LiveSet {
 }
 
 impl Bytes<2160> for LiveSet {
-    fn parse(bytes: [u8; Self::BYTE_SIZE]) -> Result<Self, ParseError> {
+    fn from_bytes(bytes: [u8; Self::BYTE_SIZE]) -> Result<Self, ParseError> {
         let mut data = BitStream::read(bytes);
         let mut name = [char::default(); 16];
         for i in 0..name.len() {
@@ -155,7 +155,7 @@ pub struct Footer {
 }
 
 impl Bytes<160> for Footer {
-    fn parse(bytes: [u8; Self::BYTE_SIZE]) -> Result<Self, ParseError> {
+    fn from_bytes(bytes: [u8; Self::BYTE_SIZE]) -> Result<Self, ParseError> {
         let mut data = BitStream::read(bytes);
         let other = data.get_bits();
         let mut hardware_version = [char::default(); 16];
@@ -190,7 +190,7 @@ fn validate(ch: char) -> Result<char, ParseError> {
 fn parse_many<const B: usize, T: Bytes<B> + Debug, const N: usize>(data: &mut BitStream) -> Result<Box<[T; N]>, ParseError> {
     let mut parsed = Vec::new();
     for _ in 0..N {
-        parsed.push(T::parse(data.get_bytes())?);
+        parsed.push(T::from_bytes(data.get_bytes())?);
     }
     Ok(Box::new(parsed.try_into().unwrap()))
 }
