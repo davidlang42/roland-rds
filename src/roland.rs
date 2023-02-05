@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
 use crate::bits::{Bits, BitStream};
-use crate::bytes::{Bytes, ParseError, StructuredJson};
+use crate::bytes::{Bytes, BytesError, StructuredJson};
 use crate::json::serialize_chars_as_string;
 use crate::json::serialize_array_as_vec;
 
@@ -27,7 +27,7 @@ pub struct LiveSet {
 }
 
 impl Bytes<183762> for RD300NX {
-    fn from_bytes(bytes: [u8; Self::BYTE_SIZE]) -> Result<Self, ParseError> {
+    fn from_bytes(bytes: [u8; Self::BYTE_SIZE]) -> Result<Self, BytesError> {
         let mut data = BitStream::read(bytes);
         let user_sets = parse_many(&mut data)?;
         let bank_a = parse_many(&mut data)?;
@@ -55,7 +55,7 @@ impl Bytes<183762> for RD300NX {
         let bytes = rds.to_bytes();
         let expected_check_sum: [u8; 2] = bytes[(bytes.len()-2)..bytes.len()].try_into().unwrap();
         if found_check_sum != expected_check_sum {
-            return Err(ParseError::IncorrectCheckSum {
+            return Err(BytesError::IncorrectCheckSum {
                 expected: expected_check_sum.into_iter().collect(),
                 found: found_check_sum.into_iter().collect()
             });
@@ -111,6 +111,14 @@ impl Bytes<183762> for RD300NX {
             footer
         }
     }
+
+    fn to_json(&self) -> String {
+        serde_json::to_string(&self).expect("Error serializing JSON")
+    }
+
+    fn from_json(json: String) -> Self {
+        serde_json::from_str(&json).expect("Error deserializing JSON")
+    }
 }
 
 impl RD300NX {
@@ -147,7 +155,7 @@ impl LiveSet {
 }
 
 impl Bytes<2160> for LiveSet {
-    fn from_bytes(bytes: [u8; Self::BYTE_SIZE]) -> Result<Self, ParseError> {
+    fn from_bytes(bytes: [u8; Self::BYTE_SIZE]) -> Result<Self, BytesError> {
         let mut data = BitStream::read(bytes);
         let mut name = [char::default(); 16];
         for i in 0..name.len() {
@@ -162,7 +170,7 @@ impl Bytes<2160> for LiveSet {
         let bytes = live_set.to_bytes();
         let expected_check_sum = bytes[bytes.len() - 1];
         if found_check_sum != expected_check_sum {
-            return Err(ParseError::IncorrectCheckSum {
+            return Err(BytesError::IncorrectCheckSum {
                 expected: vec![expected_check_sum],
                 found: vec![found_check_sum]
             });
@@ -179,12 +187,19 @@ impl Bytes<2160> for LiveSet {
     }
 
     fn to_structured_json(&self) -> StructuredJson {
-        StructuredJson::SingleJson(serde_json::to_string(&self).expect("Error serializing JSON"))//TODO duplicated code
+        StructuredJson::SingleJson(self.to_json())
     }
 
     fn from_structured_json(structured_json: StructuredJson) -> Self {
-        let text = structured_json.to_single_json();
-        serde_json::from_str(&text).expect("Error deserializing JSON") //TODO duplicated code
+        Self::from_json(structured_json.to_single_json())
+    }
+
+    fn to_json(&self) -> String {
+        serde_json::to_string(&self).expect("Error serializing JSON")
+    }
+
+    fn from_json(json: String) -> Self {
+        serde_json::from_str(&json).expect("Error deserializing JSON")
     }
 }
 
@@ -196,7 +211,7 @@ pub struct Footer {
 }
 
 impl Bytes<160> for Footer {
-    fn from_bytes(bytes: [u8; Self::BYTE_SIZE]) -> Result<Self, ParseError> {
+    fn from_bytes(bytes: [u8; Self::BYTE_SIZE]) -> Result<Self, BytesError> {
         let mut data = BitStream::read(bytes);
         let other = data.get_bits();
         let mut hardware_version = [char::default(); 16];
@@ -218,26 +233,33 @@ impl Bytes<160> for Footer {
     }
 
     fn to_structured_json(&self) -> StructuredJson {
-        StructuredJson::SingleJson(serde_json::to_string(&self).expect("Error serializing JSON"))//TODO duplicated code
+        StructuredJson::SingleJson(self.to_json())
     }
 
     fn from_structured_json(structured_json: StructuredJson) -> Self {
-        let text = structured_json.to_single_json();
-        serde_json::from_str(&text).expect("Error deserializing JSON") //TODO duplicated code
+        Self::from_json(structured_json.to_single_json())
+    }
+
+    fn to_json(&self) -> String {
+        serde_json::to_string(&self).expect("Error serializing JSON")
+    }
+
+    fn from_json(json: String) -> Self {
+        serde_json::from_str(&json).expect("Error deserializing JSON")
     }
 }
 
-fn validate(ch: char) -> Result<char, ParseError> {
+fn validate(ch: char) -> Result<char, BytesError> {
     // Roland keyboards use chars 32 ' ' through 126 '~' inclusive
     let ascii = ch as u8;
     if ascii < 32 || ascii > 126 {
-        Err(ParseError::InvalidCharacter(ch))
+        Err(BytesError::InvalidCharacter(ch))
     } else {
         Ok(ch)
     }
 }
 
-fn parse_many<const B: usize, T: Bytes<B> + Debug, const N: usize>(data: &mut BitStream) -> Result<Box<[T; N]>, ParseError> {
+fn parse_many<const B: usize, T: Bytes<B> + Debug, const N: usize>(data: &mut BitStream) -> Result<Box<[T; N]>, BytesError> {
     let mut parsed = Vec::new();
     for _ in 0..N {
         parsed.push(T::from_bytes(data.get_bytes())?);

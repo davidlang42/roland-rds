@@ -18,13 +18,6 @@ mod json;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-#[derive(Serialize, Deserialize)]
-struct JsonData {
-    version: String,
-    last_updated: String,
-    rd300nx: Box<RD300NX>
-}
-
 fn main() {
     let mut args = env::args();
     let cmd = args.next().unwrap();
@@ -63,19 +56,14 @@ fn decode(rds_path: Option<String>) {
         println!("File should be {} bytes but found {}", RD300NX::BYTE_SIZE, size);
     } else {
         let rds = RD300NX::from_bytes(bytes.try_into().unwrap()).expect("Error decoding RDS data");
-        let json = JsonData {
-            version: VERSION.to_string(),
-            last_updated: chrono::offset::Local::now().format("%Y-%m-%d %H:%M:%S").to_string(),
-            rd300nx: Box::new(rds)
-        };
-        println!("{}", serde_json::to_string(&json).expect("Error serializing JSON"));
+        println!("{}", rds.to_json());
     }
 }
 
 fn encode(json_path: Option<String>) {
-    let json = load_json(json_path);
+    let rds = load_json(json_path);
     let mut stdout = io::stdout().lock();
-    stdout.write_all(&json.rd300nx.to_bytes()).expect("Error writing to std out");
+    stdout.write_all(&rds.to_bytes()).expect("Error writing to std out");
     stdout.flush().expect("Error flushing std out");
 }
 
@@ -92,11 +80,11 @@ fn read_data(path: Option<String>) -> (usize, Vec<u8>) {
     (size, bytes)
 }
 
-fn load_json(path: Option<String>) -> JsonData {
+fn load_json(path: Option<String>) -> Box<RD300NX> {
     let (_, bytes) = read_data(path);
     let text: String = bytes.into_iter().map(|u| u as char).collect();
-    let json: JsonData = serde_json::from_str(&text).expect("Error deserializing JSON");
-    json
+    let rds = RD300NX::from_json(text);
+    Box::new(rds)
 }
 
 fn split(arg1: String, arg2: Option<String>) {
@@ -105,8 +93,8 @@ fn split(arg1: String, arg2: Option<String>) {
     } else {
         (None, arg1)
     };
-    let json = load_json(filename);
-    let structure = json.rd300nx.to_structured_json();
+    let rds = load_json(filename);
+    let structure = rds.to_structured_json();
     let count = structure.save(PathBuf::from(&folder)).expect("Error saving structured JSON");
     println!("Split JSON into {} files in '{}'", count.files, folder);
 }
@@ -114,10 +102,5 @@ fn split(arg1: String, arg2: Option<String>) {
 fn merge(folder: String) {
     let structure = StructuredJson::load(PathBuf::from(&folder)).expect("Error loading structured JSON");
     let rds = RD300NX::from_structured_json(structure);
-    let json = JsonData {//TODO duplicated code
-        version: VERSION.to_string(),
-        last_updated: chrono::offset::Local::now().format("%Y-%m-%d %H:%M:%S").to_string(),
-        rd300nx: Box::new(rds)
-    };
-    println!("{}", serde_json::to_string(&json).expect("Error serializing JSON"));
+    println!("{}", rds.to_json());
 }

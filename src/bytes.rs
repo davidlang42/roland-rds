@@ -6,7 +6,7 @@ use std::fs;
 use std::io;
 
 #[derive(Debug)]
-pub enum ParseError {
+pub enum BytesError {
     IncorrectCheckSum {
         expected: Vec<u8>,
         found: Vec<u8>
@@ -18,10 +18,11 @@ pub trait Bytes<const N: usize> {
     const BYTE_SIZE: usize = N;
 
     fn to_bytes(&self) -> [u8; N];
-    fn from_bytes(bytes: [u8; N]) -> Result<Self, ParseError> where Self: Sized;
+    fn from_bytes(bytes: [u8; N]) -> Result<Self, BytesError> where Self: Sized;
+    fn to_json(&self) -> String;
+    fn from_json(json: String) -> Self;
     fn to_structured_json(&self) -> StructuredJson;
     fn from_structured_json(structured_json: StructuredJson) -> Self;
-    //TODO to_json/from_json
 }
 
 pub enum StructuredJson {
