@@ -3,6 +3,7 @@ use std::fs;
 use std::io;
 use std::io::Read;
 use std::io::Write;
+use std::path::PathBuf;
 
 use crate::bytes::Bytes;
 use crate::roland::RD300NX;
@@ -30,6 +31,8 @@ fn main() {
         match verb.as_str() {
             "encode" => encode(args.next()),
             "decode" => decode(args.next()),
+            "split" => split(args.next().expect("The 2nd argument should be the FILENAME to split or the FOLDER to output to"), args.next()),
+            "merge" => merge(args.next().expect("The 2nd argument should be the FOLDER containing the JSON data to combine")),
             "help" => help(&cmd),
             _ => {
                 println!("Unrecognised command: {}", verb);
@@ -44,10 +47,29 @@ fn main() {
 fn help(cmd: &str) {
     println!("roland-rds (v{})", VERSION);
     println!("Usage:");
-    println!("  {} decode FILENAME -- decode RDS file and print JSON to std out", cmd);
-    println!("  {} decode          -- decode RDS data from std in and print JSON to std out", cmd);
-    println!("  {} encode FILENAME -- encode JSON file and print RDS data to std out", cmd);
-    println!("  {} encode          -- encode JSON data from std in and print RDS data to std out", cmd);
+    println!("  {} decode FILENAME       -- decode RDS file and print JSON to std out", cmd);
+    println!("  {} decode                -- decode RDS data from std in and print JSON to std out", cmd);
+    println!("  {} encode FILENAME       -- encode JSON file and print RDS data to std out", cmd);
+    println!("  {} encode                -- encode JSON data from std in and print RDS data to std out", cmd);
+    println!("  {} split FILENAME FOLDER -- split JSON file into a folder structure of nested JSON files", cmd);
+    println!("  {} split FOLDER          -- split JSON data fro std in into a folder structure of nested JSON files", cmd);
+    println!("  {} merge FOLDER          -- merge folder structure of nested JSON files and print the combined JSON data to std out", cmd);
+    /*
+    //TODO
+    - add verb: roland-rds split FILE.JSON FOLDER
+** if FILE omitted, read std in
+** FOLDER must not exist
+** separate structure into folders and json files eg:
+/FOLDER/user_sets/00-Name.json ... 60-Name.json
+/FOLDER/bank_a/0-Name.json ... 5-Name.json
+...
+/FOLDER/bank_d/0-Name.json ... 5-Name.json
+/FOLDER/footer.json
+** all files are valid json, names dont matter (just for ordering by strict alpha)
+- add verb: roland-rds merge FOLDER
+** FOLDER must exist & be a folder
+** compiles json based on folder structure as split above
+** outputs to std out */
 }
 
 fn decode(rds_path: Option<String>) {
@@ -66,9 +88,7 @@ fn decode(rds_path: Option<String>) {
 }
 
 fn encode(json_path: Option<String>) {
-    let (_, bytes) = read_data(json_path);
-    let text: String = bytes.into_iter().map(|u| u as char).collect();
-    let json: JsonData = serde_json::from_str(&text).expect("Error deserializing JSON");
+    let json = load_json(json_path);
     let mut stdout = io::stdout().lock();
     stdout.write_all(&json.rd300nx.to_bytes()).expect("Error writing to std out");
     stdout.flush().expect("Error flushing std out");
@@ -85,4 +105,27 @@ fn read_data(path: Option<String>) -> (usize, Vec<u8>) {
         lock.read_to_end(&mut bytes).expect("Error reading std in")
     };
     (size, bytes)
+}
+
+fn load_json(path: Option<String>) -> JsonData {
+    let (_, bytes) = read_data(path);
+    let text: String = bytes.into_iter().map(|u| u as char).collect();
+    let json: JsonData = serde_json::from_str(&text).expect("Error deserializing JSON");
+    json
+}
+
+fn split(arg1: String, arg2: Option<String>) {
+    let (filename, folder) = if let Some(folder) = arg2 {
+        (Some(arg1), folder)
+    } else {
+        (None, arg1)
+    };
+    let json = load_json(filename);
+    let structure = json.rd300nx.to_structured_json();
+    let count = structure.save(PathBuf::from(&folder)).expect("Error saving structured JSON");
+    println!("Split JSON into {} files in '{}'", count.files, folder);
+}
+
+fn merge(folder: String) {
+    todo!();//TODO
 }

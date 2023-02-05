@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
 use crate::bits::{Bits, BitStream};
-use crate::bytes::{Bytes, ParseError};
+use crate::bytes::{Bytes, ParseError, StructuredJson};
 use crate::json::serialize_chars_as_string;
 use crate::json::serialize_array_as_vec;
 
@@ -79,6 +79,22 @@ impl Bytes<183762> for RD300NX {
         }
         bytes.try_into().unwrap()
     }
+
+    fn to_structured_json(&self) -> StructuredJson {
+        StructuredJson::NestedCollection(vec![
+            ("user_sets".to_string(), StructuredJson::from_collection(self.user_sets.as_slice(), |ls| ls.name_string())),
+            ("bank_a".to_string(), StructuredJson::from_collection(self.bank_a.as_slice(), |ls| ls.name_string())),
+            ("bank_b".to_string(), StructuredJson::from_collection(self.bank_b.as_slice(), |ls| ls.name_string())),
+            ("bank_c".to_string(), StructuredJson::from_collection(self.bank_c.as_slice(), |ls| ls.name_string())),
+            ("bank_d".to_string(), StructuredJson::from_collection(self.bank_d.as_slice(), |ls| ls.name_string())),
+            ("current".to_string(), self.current.to_structured_json()),
+            ("footer".to_string(), self.footer.to_structured_json())
+        ])
+    }
+
+    fn from_structured_json(structured_json: crate::bytes::StructuredJson) -> Self {
+        todo!()//TODO
+    }
 }
 
 impl RD300NX {
@@ -145,6 +161,14 @@ impl Bytes<2160> for LiveSet {
         bytes.push(check_sum);
         bytes.try_into().unwrap()
     }
+
+    fn to_structured_json(&self) -> StructuredJson {
+        StructuredJson::SingleJson(serde_json::to_string(&self).expect("Error serializing JSON"))
+    }
+
+    fn from_structured_json(structured_json: crate::bytes::StructuredJson) -> Self {
+        todo!()//TODO
+    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -174,6 +198,14 @@ impl Bytes<160> for Footer {
             bytes.push(ch as u8);
         }
         bytes.try_into().unwrap()
+    }
+
+    fn to_structured_json(&self) -> StructuredJson {
+        StructuredJson::SingleJson(serde_json::to_string(&self).expect("Error serializing JSON"))
+    }
+
+    fn from_structured_json(structured_json: crate::bytes::StructuredJson) -> Self {
+        todo!()//TODO
     }
 }
 
