@@ -35,7 +35,19 @@ To save the output of this encoding (to transfer back to the keyboard):
 
 `roland-rds encode FILE.JSON > NEW_FILE.RDS`
 
-In both `encode` and `decode` operations, if you omit the input filename, it will read from std in. The output is always written to std out.
+To split a decoded JSON file into a folder structure (with each live set as a separate file for easy modification):
+
+`roland-rds split FILE.JSON FOLDER`
+
+To re-combine a folder structure of JSON files into a single JSON file:
+
+`roland-rds merge FOLDER`
+
+If you would like to save the output (rather than see it on the screen):
+
+`roland-rds merge FOLDER > NEW_FILE.JSON`
+
+In the `encode`, `decode` and `split` operations, if you omit the input filename, it will read from std in. The output of `encode`, `decode` and `merge` is always written to std out.
 
 If you run `roland-rds help` or without args, you will see usage instructions.
 
