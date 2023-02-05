@@ -7,7 +7,7 @@ use std::path::PathBuf;
 
 use crate::bytes::Bytes;
 use crate::bytes::StructuredJson;
-use crate::roland::RD300NX;
+use crate::roland::rd300nx::RD300NX;
 
 mod roland;
 mod bits;
