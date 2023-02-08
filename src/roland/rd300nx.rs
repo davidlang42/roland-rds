@@ -9,11 +9,8 @@ use super::{parse_many, validate};
 pub struct RD300NX {
     #[serde(with = "serialize_array_as_vec")]
     pub user_sets: Box<[LiveSet; Self::USER_SETS]>,
-    pub bank_a: Box<[LiveSet; Self::FAVOURITES_PER_BANK]>,
-    pub bank_b: Box<[LiveSet; Self::FAVOURITES_PER_BANK]>,
-    pub bank_c: Box<[LiveSet; Self::FAVOURITES_PER_BANK]>,
-    pub bank_d: Box<[LiveSet; Self::FAVOURITES_PER_BANK]>,
-    pub current: LiveSet,
+    pub piano: Box<[LiveSet; Self::PIANO_SETS]>,
+    pub e_piano: Box<[LiveSet; Self::E_PIANO_SETS]>,
     footer: Footer
     // checksum: 2 bytes
 }
@@ -22,11 +19,8 @@ impl Bytes<183762> for RD300NX {
     fn from_bytes(bytes: [u8; Self::BYTE_SIZE]) -> Result<Self, BytesError> {
         let mut data = BitStream::read(bytes);
         let user_sets = parse_many(&mut data)?;
-        let bank_a = parse_many(&mut data)?;
-        let bank_b = parse_many(&mut data)?;
-        let bank_c = parse_many(&mut data)?;
-        let bank_d = parse_many(&mut data)?;
-        let current = LiveSet::from_bytes(data.get_bytes())?;
+        let piano = parse_many(&mut data)?;
+        let e_piano = parse_many(&mut data)?;
         let footer = Footer::from_bytes(data.get_bytes())?;
         let found_check_sum = [
             data.get_u8::<8>(),
@@ -37,11 +31,8 @@ impl Bytes<183762> for RD300NX {
         }
         let rds = Self {
             user_sets,
-            bank_a,
-            bank_b,
-            bank_c,
-            bank_d,
-            current,
+            piano,
+            e_piano,
             footer
         };
         let bytes = rds.to_bytes();
@@ -75,31 +66,22 @@ impl Bytes<183762> for RD300NX {
     fn to_structured_json(&self) -> StructuredJson {
         StructuredJson::NestedCollection(vec![
             ("user_sets".to_string(), StructuredJson::from_collection(self.user_sets.as_slice(), |ls| ls.name_string())),
-            ("bank_a".to_string(), StructuredJson::from_collection(self.bank_a.as_slice(), |ls| ls.name_string())),
-            ("bank_b".to_string(), StructuredJson::from_collection(self.bank_b.as_slice(), |ls| ls.name_string())),
-            ("bank_c".to_string(), StructuredJson::from_collection(self.bank_c.as_slice(), |ls| ls.name_string())),
-            ("bank_d".to_string(), StructuredJson::from_collection(self.bank_d.as_slice(), |ls| ls.name_string())),
-            ("current".to_string(), self.current.to_structured_json()),
+            ("piano".to_string(), StructuredJson::from_collection(self.piano.as_slice(), |ls| ls.name_string())),
+            ("e_piano".to_string(), StructuredJson::from_collection(self.e_piano.as_slice(), |ls| ls.name_string())),
             ("footer".to_string(), self.footer.to_structured_json())
         ])
     }
 
     fn from_structured_json(mut structured_json: StructuredJson) -> Self {
         let user_sets = structured_json.extract("user_sets").to_array();
-        let bank_a = structured_json.extract("bank_a").to_array();
-        let bank_b = structured_json.extract("bank_b").to_array();
-        let bank_c = structured_json.extract("bank_c").to_array();
-        let bank_d = structured_json.extract("bank_d").to_array();
-        let current = structured_json.extract("current").to();
+        let piano = structured_json.extract("bank_a").to_array();
+        let e_piano = structured_json.extract("bank_b").to_array();
         let footer = structured_json.extract("footer").to();
         structured_json.done();
         Self {
             user_sets,
-            bank_a,
-            bank_b,
-            bank_c,
-            bank_d,
-            current,
+            piano,
+            e_piano,
             footer
         }
     }
@@ -115,7 +97,8 @@ impl Bytes<183762> for RD300NX {
 
 impl RD300NX {
     const USER_SETS: usize = 60;
-    const FAVOURITES_PER_BANK: usize = 6;
+    const PIANO_SETS: usize = 10;
+    const E_PIANO_SETS: usize = 15;
 
     fn check_sum(bytes_without_checksum: &Vec<u8>) -> u16 {
         let mut sum: u16 = 0;
@@ -126,9 +109,7 @@ impl RD300NX {
     }
 
     pub fn all_live_sets(&self) -> Vec<&LiveSet> {
-        let mut all: Vec<&LiveSet> = self.user_sets.iter().chain(self.bank_a.iter()).chain(self.bank_b.iter()).chain(self.bank_c.iter()).chain(self.bank_d.iter()).collect();
-        all.push(&self.current);
-        all
+        self.user_sets.iter().chain(self.piano.iter()).chain(self.e_piano.iter()).collect()
     }
 }
 
