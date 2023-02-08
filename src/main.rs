@@ -64,7 +64,7 @@ fn decode(rds_path: Option<String>) {
 fn encode(json_path: Option<String>) {
     let rds = load_json(json_path);
     let mut stdout = io::stdout().lock();
-    stdout.write_all(&rds.to_bytes()).expect("Error writing to std out");
+    stdout.write_all(&*rds.to_bytes()).expect("Error writing to std out");
     stdout.flush().expect("Error flushing std out");
 }
 

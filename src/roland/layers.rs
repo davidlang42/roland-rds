@@ -41,7 +41,7 @@ pub struct InternalLayer {
 }
 
 impl Bytes<14> for InternalLayer {
-    fn to_bytes(&self) -> [u8; Self::BYTE_SIZE] {
+    fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {
         let mut bits = BitStream::new();
         bits.set_u8::<7>(self.volume);
         bits.set_u8::<7>(self.pan);
@@ -75,10 +75,10 @@ impl Bytes<14> for InternalLayer {
         bits.set_bool(self.receive_expression);
         bits.set_bits(&self.unused);
         bits.reset();
-        bits.get_bytes()
+        Box::new(bits.get_bytes())
     }
 
-    fn from_bytes(bytes: [u8; Self::BYTE_SIZE]) -> Result<Self, BytesError> where Self: Sized {
+    fn from_bytes(bytes: Box<[u8; Self::BYTE_SIZE]>) -> Result<Self, BytesError> where Self: Sized {
         let mut data = BitStream::read(bytes);
         Ok(Self {
             volume: data.get_u8::<7>(),
@@ -148,7 +148,7 @@ pub struct ToneLayer {
 }
 
 impl Bytes<12> for ToneLayer {
-    fn to_bytes(&self) -> [u8; Self::BYTE_SIZE] {
+    fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {
         let mut bits = BitStream::new();
         let tone = self.tone_number.details();
         bits.set_u8::<7>(tone.msb);
@@ -167,10 +167,10 @@ impl Bytes<12> for ToneLayer {
         bits.set_u8::<7>(self.release_time);
         bits.set_bits(&self.unused);
         bits.reset();
-        bits.get_bytes()
+        Box::new(bits.get_bytes())
     }
 
-    fn from_bytes(bytes: [u8; Self::BYTE_SIZE]) -> Result<Self, BytesError> where Self: Sized {
+    fn from_bytes(bytes: Box<[u8; Self::BYTE_SIZE]>) -> Result<Self, BytesError> where Self: Sized {
         let mut data = BitStream::read(bytes);
         let msb = data.get_u8::<7>();
         let lsb = data.get_u8::<7>();

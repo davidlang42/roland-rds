@@ -16,12 +16,12 @@ pub struct RD300NX {
 }
 
 impl Bytes<183762> for RD300NX {
-    fn from_bytes(bytes: [u8; Self::BYTE_SIZE]) -> Result<Self, BytesError> {
+    fn from_bytes(bytes: Box<[u8; Self::BYTE_SIZE]>) -> Result<Self, BytesError> {
         let mut data = BitStream::read(bytes);
         let user_sets = parse_many(&mut data)?;
         let piano = parse_many(&mut data)?;
         let e_piano = parse_many(&mut data)?;
-        let footer = Footer::from_bytes(data.get_bytes())?;
+        let footer = Footer::from_bytes(Box::new(data.get_bytes()))?;
         let found_check_sum = [
             data.get_u8::<8>(),
             data.get_u8::<8>(),
@@ -46,14 +46,14 @@ impl Bytes<183762> for RD300NX {
         Ok(rds)
     }
 
-    fn to_bytes(&self) -> [u8; Self::BYTE_SIZE] {
+    fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {
         let mut bytes = Vec::new();
         for live_set in self.all_live_sets() {
-            for byte in live_set.to_bytes() {
+            for byte in *live_set.to_bytes() {
                 bytes.push(byte);
             }
         }
-        for byte in self.footer.to_bytes() {
+        for byte in *self.footer.to_bytes() {
             bytes.push(byte);
         }
         let check_sum = Self::check_sum(&bytes);
@@ -121,7 +121,7 @@ pub struct Footer {
 }
 
 impl Bytes<160> for Footer {
-    fn from_bytes(bytes: [u8; Self::BYTE_SIZE]) -> Result<Self, BytesError> {
+    fn from_bytes(bytes: Box<[u8; Self::BYTE_SIZE]>) -> Result<Self, BytesError> {
         let mut data = BitStream::read(bytes);
         let other = data.get_bits();
         let mut hardware_version = [char::default(); 16];
@@ -134,7 +134,7 @@ impl Bytes<160> for Footer {
         })
     }
 
-    fn to_bytes(&self) -> [u8; Self::BYTE_SIZE] {
+    fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {
         let mut bytes = self.other.to_bytes();
         for ch in self.hardware_version {
             bytes.push(ch as u8);

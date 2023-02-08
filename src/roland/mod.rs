@@ -35,7 +35,7 @@ fn in_range(value: u8, min: u8, max: u8) -> u8 {
 fn parse_many<const B: usize, T: Bytes<B> + Debug, const N: usize>(data: &mut BitStream) -> Result<Box<[T; N]>, BytesError> {
     let mut parsed = Vec::new();
     for _ in 0..N {
-        parsed.push(T::from_bytes(data.get_bytes())?);
+        parsed.push(T::from_bytes(Box::new(data.get_bytes()))?);
     }
-    Ok(Box::new(parsed.try_into().unwrap()))
+    Ok(parsed.try_into().unwrap())
 }

@@ -45,7 +45,7 @@ impl LiveSet {
 }
 
 impl Bytes<2160> for LiveSet {
-    fn from_bytes(bytes: [u8; Self::BYTE_SIZE]) -> Result<Self, BytesError> {
+    fn from_bytes(bytes: Box<[u8; Self::BYTE_SIZE]>) -> Result<Self, BytesError> {
         let mut data = BitStream::read(bytes);
         let mut name = [char::default(); 16];
         for i in 0..name.len() {
@@ -76,17 +76,17 @@ impl Bytes<2160> for LiveSet {
         Ok(live_set)
     }
 
-    fn to_bytes(&self) -> [u8; Self::BYTE_SIZE] {
+    fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {
         let mut bytes = Bits::<7>::compress(self.name).to_bytes();
         bytes.append(&mut self.other1.to_bytes());
         for internal_layer in self.internal_layers.iter() {
-            for byte in internal_layer.to_bytes() {
+            for byte in *internal_layer.to_bytes() {
                 bytes.push(byte);
             }
         }
         bytes.append(&mut self.external_layers.to_bytes());
         for tone_layer in self.tone_layers.iter() {
-            for byte in tone_layer.to_bytes() {
+            for byte in *tone_layer.to_bytes() {
                 bytes.push(byte);
             }
         }

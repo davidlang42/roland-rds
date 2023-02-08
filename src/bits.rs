@@ -192,10 +192,10 @@ impl Iterator for BitStream {
 }
 
 impl BitStream {
-    pub fn read<I: IntoIterator<Item = u8>>(bytes: I) -> Self {
+    pub fn read<const N: usize>(bytes: Box<[u8; N]>) -> Self {
         let mut bits = Vec::new();
-        for byte in bytes {
-            for bit in Bits::<8>::from_u8(byte).0 {
+        for byte in bytes.as_slice() {
+            for bit in Bits::<8>::from_u8(*byte).0 {
                 bits.push(bit);
             }
         }

@@ -17,8 +17,8 @@ pub enum BytesError {
 pub trait Bytes<const N: usize> {
     const BYTE_SIZE: usize = N;
 
-    fn to_bytes(&self) -> [u8; N];
-    fn from_bytes(bytes: [u8; N]) -> Result<Self, BytesError> where Self: Sized;
+    fn to_bytes(&self) -> Box<[u8; N]>;
+    fn from_bytes(bytes: Box<[u8; N]>) -> Result<Self, BytesError> where Self: Sized;
     fn to_json(&self) -> String;
     fn from_json(json: String) -> Self;
     fn to_structured_json(&self) -> StructuredJson;
