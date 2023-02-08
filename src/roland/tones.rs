@@ -980,7 +980,10 @@ static TONE_LIST: [Tone; 942] = [
     Tone { _number: 937, _name: "GM2 BRUSH", msb: 120, lsb: 0, pc: 40 },
     Tone { _number: 938, _name: "GM2 ORCHSTRA", msb: 120, lsb: 0, pc: 48 },
     Tone { _number: 939, _name: "GM2 SFX", msb: 120, lsb: 0, pc: 56 },
-    //TODO figure out where these came from (SuperNatural?)
+    //TODO figure out what to do with extra tones
+    // - these are tones which are only available on 700NX, but inadvertedly end up in the 4th layer of the preset data
+    // - they can't be used in the 300NX, but at the moment the file can't be parsed without them
+    // - 700NX tone list is ~50 longer than 300NX but the tone number mapping doesn't match
     Tone { _number: 0, _name: "Honky-tonk", msb: 112, lsb: 0, pc: 5 },
     Tone { _number: 0, _name: "Reed E.Piano", msb: 112, lsb: 0, pc: 6 },
     Tone { _number: 0, _name: "Comp Reed E.P", msb: 112, lsb: 0, pc: 7 }
