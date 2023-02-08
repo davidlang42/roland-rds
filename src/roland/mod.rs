@@ -32,6 +32,13 @@ fn in_range(value: u8, min: u8, max: u8) -> u8 {
     value
 }
 
+fn in_range_u16(value: u16, min: u16, max: u16) -> u16 {
+    if value < min || value > max {
+        panic!("Tried to write out of range value: {} ({} - {})", value, min, max);
+    }
+    value
+}
+
 fn parse_many<const B: usize, T: Bytes<B> + Debug, const N: usize>(data: &mut BitStream) -> Result<Box<[T; N]>, BytesError> {
     let mut parsed = Vec::new();
     for _ in 0..N {

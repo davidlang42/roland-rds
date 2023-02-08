@@ -111,7 +111,7 @@ impl<const N: usize> Bits<N> {
         num
     }
 
-    fn _to_u16(&self) -> u16 {
+    fn to_u16(&self) -> u16 {
         if N > 16 {
             panic!("Bits size ({}) is too big for a u16 value", N);
         }
@@ -138,6 +138,25 @@ impl<const N: usize> Bits<N> {
         for bit_index in 0..bits.len() {
             if byte >= bit_value {
                 byte -= bit_value;
+                bits[bit_index] = Bit::ONE;
+            }
+            bit_value /= 2;
+        }
+        Bits(bits)
+    }
+
+    fn from_u16(mut two_bytes: u16) -> Bits<N> {
+        if N > 16 {
+            panic!("Bits size ({}) is too big for a u16 value", N);
+        }
+        if N != 16 && two_bytes >= 2u16.pow(N as u32) {
+            panic!("Bits size ({}) is too small for u16 value {}", N, two_bytes);
+        }
+        let mut bits = [Bit::ZERO; N];
+        let mut bit_value = 2u16.pow((bits.len() - 1) as u32);
+        for bit_index in 0..bits.len() {
+            if two_bytes >= bit_value {
+                two_bytes -= bit_value;
                 bits[bit_index] = Bit::ONE;
             }
             bit_value /= 2;
@@ -275,12 +294,20 @@ impl BitStream {
         self.set_bits(&bits);
     }
 
-    pub fn _get_u16<const N: usize>(&mut self) -> u16 {
+    pub fn get_u16<const N: usize>(&mut self) -> u16 {
         if N > 16 {
             panic!("Cannot get u16 from {} bits", N);
         }
         let bits = self.get_bits::<N>();
-        bits._to_u16()
+        bits.to_u16()
+    }
+
+    pub fn set_u16<const N:usize>(&mut self, value: u16) {
+        if N > 16 {
+            panic!("Cannot set u16 into {} bits", N);
+        }
+        let bits = Bits::<N>::from_u16(value);
+        self.set_bits(&bits);
     }
 
     pub fn get_char(&mut self) -> char {
