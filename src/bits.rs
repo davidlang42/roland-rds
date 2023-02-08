@@ -111,7 +111,7 @@ impl<const N: usize> Bits<N> {
         num
     }
 
-    fn to_u16(&self) -> u16 {
+    fn _to_u16(&self) -> u16 {
         if N > 16 {
             panic!("Bits size ({}) is too big for a u16 value", N);
         }
@@ -275,12 +275,12 @@ impl BitStream {
         self.set_bits(&bits);
     }
 
-    pub fn get_u16<const N: usize>(&mut self) -> u16 {
+    pub fn _get_u16<const N: usize>(&mut self) -> u16 {
         if N > 16 {
             panic!("Cannot get u16 from {} bits", N);
         }
         let bits = self.get_bits::<N>();
-        bits.to_u16()
+        bits._to_u16()
     }
 
     pub fn get_char(&mut self) -> char {

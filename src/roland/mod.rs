@@ -6,6 +6,7 @@ use crate::bytes::{Bytes, BytesError};
 pub mod rd300nx;
 pub mod live_set;
 pub mod layers;
+pub mod tones;
 
 fn validate(ch: char) -> Result<char, BytesError> {
     // Roland keyboards use chars 32 ' ' through 126 '~' inclusive

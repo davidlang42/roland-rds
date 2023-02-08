@@ -3,6 +3,7 @@ use std::fmt::Debug;
 use crate::bits::{Bits, BitStream};
 use crate::bytes::{Bytes, BytesError, StructuredJson};
 
+use super::tones::ToneNumber;
 use super::{max, in_range};
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -131,9 +132,7 @@ impl Bytes<14> for InternalLayer {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ToneLayer {
-    bank_select_msb: u8, // max 127
-    bank_select_lsb: u8, // max 127
-    program_change: u8, // max 127 (1-128)
+    tone_number: ToneNumber,
     course_tune: u8, // 16-112 (-48 - +48)
     fine_tune: u8, // 14-114 (-50 - + 50)
     mono_poly: u8, // 0=Mono, 1=Poly, 2=Mono/Legato
@@ -151,9 +150,10 @@ pub struct ToneLayer {
 impl Bytes<12> for ToneLayer {
     fn to_bytes(&self) -> [u8; Self::BYTE_SIZE] {
         let mut bits = BitStream::new();
-        bits.set_u8::<7>(self.bank_select_msb);
-        bits.set_u8::<7>(self.bank_select_lsb);
-        bits.set_u8::<7>(self.program_change);
+        let tone = self.tone_number.details();
+        bits.set_u8::<7>(tone.msb);
+        bits.set_u8::<7>(tone.lsb);
+        bits.set_u8::<7>(tone.pc);
         bits.set_u8::<7>(in_range(self.course_tune, 16, 112));
         bits.set_u8::<7>(in_range(self.fine_tune, 14, 114));
         bits.set_u8::<2>(max(self.mono_poly, 2));
@@ -172,10 +172,11 @@ impl Bytes<12> for ToneLayer {
 
     fn from_bytes(bytes: [u8; Self::BYTE_SIZE]) -> Result<Self, BytesError> where Self: Sized {
         let mut data = BitStream::read(bytes);
+        let msb = data.get_u8::<7>();
+        let lsb = data.get_u8::<7>();
+        let pc = data.get_u8::<7>();
         Ok(Self {
-            bank_select_msb: data.get_u8::<7>(),
-            bank_select_lsb: data.get_u8::<7>(),
-            program_change: data.get_u8::<7>(),
+            tone_number: ToneNumber::find(msb, lsb, pc).expect(&format!("Tone not found: MSB({}) LSB({}) PC({})", msb, lsb, pc)),
             course_tune: data.get_u8::<7>(),
             fine_tune: data.get_u8::<7>(),
             mono_poly: data.get_u8::<2>(),

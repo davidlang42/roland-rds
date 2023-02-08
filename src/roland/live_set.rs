@@ -40,7 +40,7 @@ impl LiveSet {
         for byte in bytes_without_checksum {
             sum = sum.wrapping_add(*byte);
         }
-        u8::MAX - sum + 1
+        (u8::MAX - sum).wrapping_add(1)
     }
 }
 
