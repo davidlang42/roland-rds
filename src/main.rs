@@ -19,6 +19,7 @@ mod json;
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 fn main() {
+    env::set_var("RUST_BACKTRACE", "1");
     let mut args = env::args();
     let cmd = args.next().unwrap();
     if let Some(verb) = args.next() {

@@ -205,8 +205,19 @@ impl BitStream {
         }
     }
 
+    pub fn new() -> Self {
+        Self {
+            bits: Vec::new(),
+            index: 0
+        }
+    }
+
     pub fn eof(&self) -> bool {
         self.index >= self.bits.len()
+    }
+
+    pub fn reset(&mut self) {
+        self.index = 0;
     }
 
     pub fn get_bits<const N: usize>(&mut self) -> Bits<N> {
@@ -221,6 +232,17 @@ impl BitStream {
         Bits(bits.try_into().unwrap())
     }
 
+    pub fn set_bits<const N: usize>(&mut self, value: &Bits<N>) {
+        for bit in value.0 {
+            self.set_bit(bit);
+        }
+    }
+
+    fn set_bit(&mut self, value: Bit) {
+        self.bits.insert(self.index, value);
+        self.index += 1;
+    }
+
     pub fn get_bytes<const N: usize>(&mut self) -> [u8; N] {
         let mut bytes = Vec::new();
         for _ in 0..N {
@@ -233,12 +255,24 @@ impl BitStream {
         self.get_bits::<1>().0[0].on()
     }
 
+    pub fn set_bool(&mut self, value: bool) {
+        self.set_bit(if value { Bit::ONE } else { Bit::ZERO });
+    }
+
     pub fn get_u8<const N: usize>(&mut self) -> u8 {
         if N > 8 {
             panic!("Cannot get u8 from {} bits", N);
         }
         let bits = self.get_bits::<N>();
         bits.to_u8()
+    }
+
+    pub fn set_u8<const N:usize>(&mut self, value: u8) {
+        if N > 8 {
+            panic!("Cannot set u8 into {} bits", N);
+        }
+        let bits = Bits::<N>::from_u8(value);
+        self.set_bits(&bits);
     }
 
     pub fn get_u16<const N: usize>(&mut self) -> u16 {

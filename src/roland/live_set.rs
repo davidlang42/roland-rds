@@ -3,13 +3,28 @@ use std::fmt::Debug;
 use crate::bits::{Bits, BitStream};
 use crate::bytes::{Bytes, BytesError, StructuredJson};
 use crate::json::serialize_chars_as_string;
-use super::validate;
+use super::layers::InternalLayer;
+use super::{validate, parse_many};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct LiveSet {
+    // Common
     #[serde(with = "serialize_chars_as_string")]
     name: [char; 16], // 14 bytes
-    other: Bits<17160>, // 2145 bytes
+    other1: Bits<6528>, // 816 bytes
+    // Song/Rhythm
+    // Chorus
+    // Reverb
+    // MFX x8
+    // Resonance
+    // Internal Layer x4
+    internal_layers: Box<[InternalLayer; 4]>, // 56 bytes
+    // External Layer x4
+    other2: Bits<10184> // 1273 bytes
+    // Tone x4
+    // Piano x4
+    // E.Piano x4
+    // ToneWheel x4
     // checksum: 1 byte
 }
 
@@ -34,11 +49,15 @@ impl Bytes<2160> for LiveSet {
         for i in 0..name.len() {
             name[i] = validate(data.get_char())?;
         }
-        let other = data.get_bits();
+        let other1 = data.get_bits();
+        let internal_layers = parse_many(&mut data)?;
+        let other2 = data.get_bits();
         let found_check_sum = data.get_u8::<8>();
         let live_set = Self {
             name,
-            other
+            other1,
+            internal_layers,
+            other2
         };
         let bytes = live_set.to_bytes();
         let expected_check_sum = bytes[bytes.len() - 1];
@@ -53,18 +72,24 @@ impl Bytes<2160> for LiveSet {
 
     fn to_bytes(&self) -> [u8; Self::BYTE_SIZE] {
         let mut bytes = Bits::<7>::compress(self.name).to_bytes();
-        bytes.append(&mut self.other.to_bytes());
+        bytes.append(&mut self.other1.to_bytes());
+        for internal_layer in self.internal_layers.iter() {
+            for byte in internal_layer.to_bytes() {
+                bytes.push(byte);
+            }
+        }
+        bytes.append(&mut self.other2.to_bytes());
         let check_sum = Self::check_sum(&bytes);
         bytes.push(check_sum);
         bytes.try_into().unwrap()
     }
 
     fn to_structured_json(&self) -> StructuredJson {
-        StructuredJson::SingleJson(self.to_json())
+        StructuredJson::SingleJson(self.to_json()) //TODO split this up once I've made all the live set components
     }
 
     fn from_structured_json(structured_json: StructuredJson) -> Self {
-        Self::from_json(structured_json.to_single_json())
+        Self::from_json(structured_json.to_single_json()) //TODO split this up once I've made all the live set components
     }
 
     fn to_json(&self) -> String {
