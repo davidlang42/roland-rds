@@ -7,7 +7,6 @@ use super::{max, in_range};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct InternalLayer {
-    //TODO make value types more intuitive
     volume: u8, // max 127
     pan: u8, // max 127 (L64 - 63R)
     chorus: u8, // max 127
@@ -109,6 +108,85 @@ impl Bytes<14> for InternalLayer {
             receive_pan: data.get_bool(),
             receive_hold_1: data.get_bool(),
             receive_expression: data.get_bool(),
+            unused: data.get_bits()
+        })
+    }
+
+    fn to_structured_json(&self) -> StructuredJson {
+        StructuredJson::SingleJson(self.to_json())
+    }
+
+    fn from_structured_json(structured_json: StructuredJson) -> Self {
+        Self::from_json(structured_json.to_single_json())
+    }
+
+    fn to_json(&self) -> String {
+        serde_json::to_string(&self).expect("Error serializing JSON")
+    }
+
+    fn from_json(json: String) -> Self {
+        serde_json::from_str(&json).expect("Error deserializing JSON")
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ToneLayer {
+    bank_select_msb: u8, // max 127
+    bank_select_lsb: u8, // max 127
+    program_change: u8, // max 127 (1-128)
+    course_tune: u8, // 16-112 (-48 - +48)
+    fine_tune: u8, // 14-114 (-50 - + 50)
+    mono_poly: u8, // 0=Mono, 1=Poly, 2=Mono/Legato
+    pitch_bend_range: u8, // max 24
+    portamento_switch: bool,
+    portamento_time: u8, // max 127
+    cutoff: u8, // max 127 (-63 - +63)
+    resonance: u8, // max 127 (-63 - +63)
+    attack_time: u8, // max 127 (-63 - +63)
+    decay_time: u8, // max 127 (-63 - +63)
+    release_time: u8, // max 127 (-63 - +63)
+    unused: Bits<10>
+}
+
+impl Bytes<12> for ToneLayer {
+    fn to_bytes(&self) -> [u8; Self::BYTE_SIZE] {
+        let mut bits = BitStream::new();
+        bits.set_u8::<7>(self.bank_select_msb);
+        bits.set_u8::<7>(self.bank_select_lsb);
+        bits.set_u8::<7>(self.program_change);
+        bits.set_u8::<7>(in_range(self.course_tune, 16, 112));
+        bits.set_u8::<7>(in_range(self.fine_tune, 14, 114));
+        bits.set_u8::<2>(max(self.mono_poly, 2));
+        bits.set_u8::<5>(max(self.pitch_bend_range, 24));
+        bits.set_bool(self.portamento_switch);
+        bits.set_u8::<8>(max(self.portamento_time, 127));
+        bits.set_u8::<7>(self.cutoff);
+        bits.set_u8::<7>(self.resonance);
+        bits.set_u8::<7>(self.attack_time);
+        bits.set_u8::<7>(self.decay_time);
+        bits.set_u8::<7>(self.release_time);
+        bits.set_bits(&self.unused);
+        bits.reset();
+        bits.get_bytes()
+    }
+
+    fn from_bytes(bytes: [u8; Self::BYTE_SIZE]) -> Result<Self, BytesError> where Self: Sized {
+        let mut data = BitStream::read(bytes);
+        Ok(Self {
+            bank_select_msb: data.get_u8::<7>(),
+            bank_select_lsb: data.get_u8::<7>(),
+            program_change: data.get_u8::<7>(),
+            course_tune: data.get_u8::<7>(),
+            fine_tune: data.get_u8::<7>(),
+            mono_poly: data.get_u8::<2>(),
+            pitch_bend_range: data.get_u8::<5>(),
+            portamento_switch: data.get_bool(),
+            portamento_time: data.get_u8::<8>(),
+            cutoff: data.get_u8::<7>(),
+            resonance: data.get_u8::<7>(),
+            attack_time: data.get_u8::<7>(),
+            decay_time: data.get_u8::<7>(),
+            release_time: data.get_u8::<7>(),
             unused: data.get_bits()
         })
     }

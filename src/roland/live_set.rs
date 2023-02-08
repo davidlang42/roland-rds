@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use crate::bits::{Bits, BitStream};
 use crate::bytes::{Bytes, BytesError, StructuredJson};
 use crate::json::serialize_chars_as_string;
-use super::layers::InternalLayer;
+use super::layers::{InternalLayer, ToneLayer};
 use super::{validate, parse_many};
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -20,9 +20,11 @@ pub struct LiveSet {
     // Internal Layer x4
     internal_layers: Box<[InternalLayer; 4]>, // 56 bytes
     // External Layer x4
-    other2: Bits<10184> // 1273 bytes
+    external_layers: Bits<960>, // 120 bytes
     // Tone x4
+    tone_layers: Box<[ToneLayer; 4]>, // 48 bytes
     // Piano x4
+    other2: Bits<8840>, // 1105 bytes
     // E.Piano x4
     // ToneWheel x4
     // checksum: 1 byte
@@ -51,12 +53,16 @@ impl Bytes<2160> for LiveSet {
         }
         let other1 = data.get_bits();
         let internal_layers = parse_many(&mut data)?;
+        let external_layers = data.get_bits();
+        let tone_layers = parse_many(&mut data)?;
         let other2 = data.get_bits();
         let found_check_sum = data.get_u8::<8>();
         let live_set = Self {
             name,
             other1,
             internal_layers,
+            external_layers,
+            tone_layers,
             other2
         };
         let bytes = live_set.to_bytes();
@@ -75,6 +81,12 @@ impl Bytes<2160> for LiveSet {
         bytes.append(&mut self.other1.to_bytes());
         for internal_layer in self.internal_layers.iter() {
             for byte in internal_layer.to_bytes() {
+                bytes.push(byte);
+            }
+        }
+        bytes.append(&mut self.external_layers.to_bytes());
+        for tone_layer in self.tone_layers.iter() {
+            for byte in tone_layer.to_bytes() {
                 bytes.push(byte);
             }
         }
