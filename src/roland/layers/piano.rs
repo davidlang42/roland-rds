@@ -4,7 +4,7 @@ use crate::bits::{Bits, BitStream};
 use crate::bytes::{Bytes, BytesError, StructuredJson};
 use crate::json::serialize_array_as_vec;
 
-use super::super::{max, in_range, in_range_u16};
+use super::super::{max, in_range_u16};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PianoLayer {
@@ -12,16 +12,16 @@ pub struct PianoLayer {
     stereo_width: u8, // max 63
     nuance: u8, // max 2 (TYPE1, TYPE2, TYPE3)
     duplex_scale_level: u8, // max 127
-    hammer_noise_level: u8, // 62-66 (-2 - +2)
+    hammer_noise_level: u8, //TODO spec was wrong: "62-66 (-2 - +2)"
     damper_noise_level: u8, // max 127
     string_resonance_level: u8, // max 127
     key_off_resonance_level: u8, // max 127
     sound_lift: u8, // max 127
-    tone_character: u8, // 59-69 (-5 - +5)
+    tone_character: u8, //TODO spec was wrong: "59-69 (-5 - +5)"
     stretch_tune_type: u8, // max 2 (OFF, PRESET, USER)
     #[serde(with = "serialize_array_as_vec")]
     micro_tune: Box<[u16; 128]>, // each 12-1012 (-50.0 - +50.0)
-    unused: Bits<7>
+    unused: Bits<5>
 }
 
 impl Bytes<264> for PianoLayer {
@@ -31,12 +31,12 @@ impl Bytes<264> for PianoLayer {
         bits.set_u8::<6>(max(self.stereo_width, 63));
         bits.set_u8::<2>(max(self.nuance, 2));
         bits.set_u8::<7>(max(self.duplex_scale_level, 127));
-        bits.set_u8::<3>(in_range(self.hammer_noise_level, 62, 66));
+        bits.set_u8::<3>(self.hammer_noise_level); //TODO constrain value
         bits.set_u8::<7>(max(self.damper_noise_level, 127));
         bits.set_u8::<7>(max(self.string_resonance_level, 127));
         bits.set_u8::<7>(max(self.key_off_resonance_level, 127));
         bits.set_u8::<7>(max(self.sound_lift, 127));
-        bits.set_u8::<4>(in_range(self.tone_character, 59, 69));
+        bits.set_u8::<4>(self.tone_character);//TODO constrain value
         bits.set_u8::<2>(max(self.stretch_tune_type, 2));
         for value in *self.micro_tune {
             bits.set_u16::<16>(in_range_u16(value, 12, 1012));
