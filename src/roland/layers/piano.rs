@@ -27,7 +27,7 @@ pub struct PianoLayer {
 impl Bytes<264> for PianoLayer {
     fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {
         let mut bits = BitStream::new();
-        bits.set_u8::<7>(max(self.tone_number, 8));
+        bits.set_u8::<7>(max(self.tone_number, 8)); //TODO somewhere there needs to be an assertion that this tone number matches the live set tone number (if one of the piano tones is being used)
         bits.set_u8::<6>(max(self.stereo_width, 63));
         bits.set_u8::<2>(max(self.nuance, 2));
         bits.set_u8::<7>(max(self.duplex_scale_level, 127));

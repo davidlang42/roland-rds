@@ -17,17 +17,11 @@ pub struct LiveSet {
     // Reverb
     // MFX x8
     // Resonance
-    // Internal Layer x4
     internal_layers: Box<[InternalLayer; 4]>, // 56 bytes
-    // External Layer x4
     external_layers: Box<[ExternalLayer; 4]>, // 120 bytes
-    // Tone x4
     tone_layers: Box<[ToneLayer; 4]>, // 48 bytes
-    // Piano x4
     piano_layers: Box<[PianoLayer; 4]>, // 1056 bytes
-    // E.Piano x4 ~38bits
     e_piano_layers: Box<[EPianoLayer; 4]>, // 24 bytes
-    // ToneWheel x4 ~39bits
     tone_wheel_layers: Box<[ToneWheelLayer; 4]>, // 24 bytes
     unused: Bits<8>, // 1 byte
     // checksum: 1 byte
