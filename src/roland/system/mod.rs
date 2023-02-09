@@ -1,14 +1,18 @@
 use crate::bits::{Bits, BitStream};
 use crate::bytes::{Bytes, BytesError, StructuredJson};
 use crate::json::serialize_chars_as_string;
+use self::favorites::Favorites;
+
 use super::validate;
+
+mod favorites;
 
 #[derive(Serialize, Deserialize)]
 pub struct System {
     common: Bits<64>, // 61 bits, 8 bytes?
-    compressor: Bits<112>, // 103 bits, 14 bytes?
-    favorites: Bits<784>, // 602 bits, 98 bytes?
-    v_link: Bits<32>, // 30 bits, 4 bytes?
+    compressor: Bits<272>, // 103 bits, 14 bytes?
+    favorites: Favorites, // 76 bytes
+    v_link: Bits<48>, // 30 bits, 4 bytes?
     switch_assign: Bits<160>, // 150 bits, 20 bytes?
     #[serde(with = "serialize_chars_as_string")]
     hardware_version: [char; 16]
@@ -19,7 +23,7 @@ impl Bytes<160> for System {
         let mut data = BitStream::read(bytes);
         let common = data.get_bits();
         let compressor = data.get_bits();
-        let favorites = data.get_bits();
+        let favorites = Favorites::from_bytes(Box::new(data.get_bytes()))?;
         let v_link = data.get_bits();
         let switch_assign = data.get_bits();
         let mut hardware_version = [char::default(); 16];
@@ -41,7 +45,7 @@ impl Bytes<160> for System {
         for byte in self.compressor.to_bytes() {
             bytes.push(byte);
         }
-        for byte in self.favorites.to_bytes() {
+        for byte in *self.favorites.to_bytes() {
             bytes.push(byte);
         }
         for byte in self.v_link.to_bytes() {

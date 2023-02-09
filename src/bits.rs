@@ -95,7 +95,7 @@ impl<const N: usize> FromStr for Bits<N> {
 
 impl<const N: usize> Bits<N> {
     const BITS_PER_BYTE: usize = 8;
-
+    
     fn to_u8(&self) -> u8 {
         if N > 8 {
             panic!("Bits size ({}) is too big for a u8 value", N);
