@@ -4,6 +4,8 @@ use crate::bits::{Bits, BitStream};
 use crate::bytes::{Bytes, BytesError, StructuredJson};
 use self::chorus::Chorus;
 use self::common::Common;
+use self::mfx::Mfx;
+use self::resonance::Resonance;
 use self::reverb::Reverb;
 use self::song_rhythm::SongRhythm;
 
@@ -14,6 +16,8 @@ mod common;
 mod chorus;
 mod reverb;
 mod song_rhythm;
+mod mfx;
+mod resonance;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct LiveSet {
@@ -21,11 +25,8 @@ pub struct LiveSet {
     song_rhythm: SongRhythm, // 6 bytes
     chorus: Chorus, // 42 bytes
     reverb: Reverb, // 42 bytes
-
-    // MFX x8
-    // Resonance
-    other: Bits<5472>, // 684 bytes
-    
+    mfx: Box<[Mfx; 8]>, // 608 bytes
+    resonance: Resonance, // 76 bytes
     internal_layers: Box<[InternalLayer; 4]>, // 56 bytes
     external_layers: Box<[ExternalLayer; 4]>, // 120 bytes
     tone_layers: Box<[ToneLayer; 4]>, // 48 bytes
@@ -57,7 +58,8 @@ impl Bytes<2160> for LiveSet {
         let song_rhythm = SongRhythm::from_bytes(Box::new(data.get_bytes()))?;
         let chorus = Chorus::from_bytes(Box::new(data.get_bytes()))?;
         let reverb = Reverb::from_bytes(Box::new(data.get_bytes()))?;
-        let other = data.get_bits();
+        let mfx = parse_many(&mut data)?;
+        let resonance = Resonance::from_bytes(Box::new(data.get_bytes()))?;
         let internal_layers = parse_many(&mut data)?;
         let external_layers = parse_many(&mut data)?;
         let tone_layers = parse_many(&mut data)?;
@@ -72,7 +74,8 @@ impl Bytes<2160> for LiveSet {
             song_rhythm,
             chorus,
             reverb,
-            other,
+            mfx,
+            resonance,
             internal_layers,
             external_layers,
             tone_layers,
@@ -103,7 +106,14 @@ impl Bytes<2160> for LiveSet {
         for byte in *self.reverb.to_bytes() {
             bytes.push(byte);
         }
-        bytes.append(&mut self.other.to_bytes());
+        for mfx in self.mfx.iter() {
+            for byte in *mfx.to_bytes() {
+                bytes.push(byte);
+            }
+        }
+        for byte in *self.resonance.to_bytes() {
+            bytes.push(byte);
+        }
         for internal_layer in self.internal_layers.iter() {
             for byte in *internal_layer.to_bytes() {
                 bytes.push(byte);

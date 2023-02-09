@@ -5,7 +5,7 @@ use crate::bytes::{Bytes, BytesError, StructuredJson};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SongRhythm(Bits<48>);
-//TODO fields are well defined by the 700NX midi implementation, but CBF doing the boilerplate rn (should be 39 bits + 9 unused)
+//TODO fields are well defined by the 700NX midi implementation, but CBF doing the boilerplate rn (should be 44 or 45 bits + 4 or 3 unused)
 
 impl Bytes<6> for SongRhythm {
     fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {

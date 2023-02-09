@@ -4,10 +4,10 @@ use crate::bits::{Bits, BitStream};
 use crate::bytes::{Bytes, BytesError, StructuredJson};
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Chorus(Bits<336>);
-//TODO fields are well defined by the 700NX midi implementation, but CBF doing the boilerplate rn (should be 335 bits + 1 unused)
+pub struct Resonance(Bits<608>);
+//TODO fields are partially defined by the 700NX midi implementation, but there is a lot of extra space unaccounted for (should be 513 bytes)
 
-impl Bytes<42> for Chorus {
+impl Bytes<76> for Resonance {
     fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {
         let mut bits = BitStream::new();
         bits.set_bits(&self.0);
