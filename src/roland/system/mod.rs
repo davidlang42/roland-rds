@@ -1,16 +1,19 @@
 use crate::bits::{Bits, BitStream};
 use crate::bytes::{Bytes, BytesError, StructuredJson};
 use crate::json::serialize_chars_as_string;
+use self::common::Common;
 use self::favorites::Favorites;
 
 use super::validate;
 
 mod favorites;
+mod common;
 
 #[derive(Serialize, Deserialize)]
 pub struct System {
-    common: Bits<64>, // 61 bits, 8 bytes?
-    compressor: Bits<272>, // 103 bits, 14 bytes?
+    unused: Bits<16>, // 2 bytes
+    common: Common, // 8 bytes
+    compressor: Bits<256>, // 103 bits, 32 bytes?
     favorites: Favorites, // 76 bytes
     v_link: Bits<48>, // 30 bits, 4 bytes?
     switch_assign: Bits<160>, // 150 bits, 20 bytes?
@@ -21,7 +24,8 @@ pub struct System {
 impl Bytes<160> for System {
     fn from_bytes(bytes: Box<[u8; Self::BYTE_SIZE]>) -> Result<Self, BytesError> {
         let mut data = BitStream::read(bytes);
-        let common = data.get_bits();
+        let unused = data.get_bits();
+        let common = Common::from_bytes(Box::new(data.get_bytes()))?;
         let compressor = data.get_bits();
         let favorites = Favorites::from_bytes(Box::new(data.get_bytes()))?;
         let v_link = data.get_bits();
@@ -31,6 +35,7 @@ impl Bytes<160> for System {
             hardware_version[i] = validate(data.get_u8::<8>() as char)?;
         }
         Ok(Self {
+            unused,
             common,
             compressor,
             favorites,
@@ -41,7 +46,10 @@ impl Bytes<160> for System {
     }
 
     fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {
-        let mut bytes = self.common.to_bytes();
+        let mut bytes = self.unused.to_bytes();
+        for byte in *self.common.to_bytes() {
+            bytes.push(byte);
+        }
         for byte in self.compressor.to_bytes() {
             bytes.push(byte);
         }
