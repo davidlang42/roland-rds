@@ -2,22 +2,30 @@ use std::fmt::Debug;
 
 use crate::bits::{Bits, BitStream};
 use crate::bytes::{Bytes, BytesError, StructuredJson};
+use self::chorus::Chorus;
 use self::common::Common;
+use self::reverb::Reverb;
+use self::song_rhythm::SongRhythm;
 
 use super::layers::{InternalLayer, ToneLayer, ExternalLayer, PianoLayer, EPianoLayer, ToneWheelLayer};
 use super::parse_many;
 
 mod common;
+mod chorus;
+mod reverb;
+mod song_rhythm;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct LiveSet {
     common: Common, // 56 bytes
-    other: Bits<6192>, // 774 bytes
-    // Song/Rhythm
-    // Chorus
-    // Reverb
+    song_rhythm: SongRhythm, // 6 bytes
+    chorus: Chorus, // 42 bytes
+    reverb: Reverb, // 42 bytes
+
     // MFX x8
     // Resonance
+    other: Bits<5472>, // 684 bytes
+    
     internal_layers: Box<[InternalLayer; 4]>, // 56 bytes
     external_layers: Box<[ExternalLayer; 4]>, // 120 bytes
     tone_layers: Box<[ToneLayer; 4]>, // 48 bytes
@@ -46,6 +54,9 @@ impl Bytes<2160> for LiveSet {
     fn from_bytes(bytes: Box<[u8; Self::BYTE_SIZE]>) -> Result<Self, BytesError> {
         let mut data = BitStream::read(bytes);
         let common = Common::from_bytes(Box::new(data.get_bytes()))?;
+        let song_rhythm = SongRhythm::from_bytes(Box::new(data.get_bytes()))?;
+        let chorus = Chorus::from_bytes(Box::new(data.get_bytes()))?;
+        let reverb = Reverb::from_bytes(Box::new(data.get_bytes()))?;
         let other = data.get_bits();
         let internal_layers = parse_many(&mut data)?;
         let external_layers = parse_many(&mut data)?;
@@ -55,9 +66,13 @@ impl Bytes<2160> for LiveSet {
         let tone_wheel_layers = parse_many(&mut data)?;
         let unused = data.get_bits();
         let found_check_sum = data.get_u8::<8>();
+        data.done();
         let live_set = Self {
             common,
-            other: other,
+            song_rhythm,
+            chorus,
+            reverb,
+            other,
             internal_layers,
             external_layers,
             tone_layers,
@@ -79,6 +94,15 @@ impl Bytes<2160> for LiveSet {
 
     fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {
         let mut bytes = self.common.to_bytes().to_vec();
+        for byte in *self.song_rhythm.to_bytes() {
+            bytes.push(byte);
+        }
+        for byte in *self.chorus.to_bytes() {
+            bytes.push(byte);
+        }
+        for byte in *self.reverb.to_bytes() {
+            bytes.push(byte);
+        }
         bytes.append(&mut self.other.to_bytes());
         for internal_layer in self.internal_layers.iter() {
             for byte in *internal_layer.to_bytes() {
@@ -113,7 +137,7 @@ impl Bytes<2160> for LiveSet {
         bytes.append(&mut self.unused.to_bytes());
         let check_sum = Self::check_sum(&bytes);
         bytes.push(check_sum);
-        bytes.try_into().unwrap()
+        bytes.try_into().expect("Wrong number of bytes")
     }
 
     fn to_structured_json(&self) -> StructuredJson {
