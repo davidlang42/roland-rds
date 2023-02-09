@@ -2,16 +2,17 @@ use std::fmt::Debug;
 
 use crate::bits::{Bits, BitStream};
 use crate::bytes::{Bytes, BytesError, StructuredJson};
-use crate::json::serialize_chars_as_string;
+use self::common::Common;
+
 use super::layers::{InternalLayer, ToneLayer, ExternalLayer, PianoLayer, EPianoLayer, ToneWheelLayer};
-use super::{validate, parse_many};
+use super::parse_many;
+
+mod common;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct LiveSet {
-    // Common
-    #[serde(with = "serialize_chars_as_string")]
-    name: [char; 16], // 14 bytes
-    other: Bits<6528>, // 816 bytes
+    common: Common, // 56 bytes
+    other: Bits<6192>, // 774 bytes
     // Song/Rhythm
     // Chorus
     // Reverb
@@ -29,7 +30,7 @@ pub struct LiveSet {
 
 impl LiveSet {
     pub fn name_string(&self) -> String {
-        self.name.iter().collect()
+        self.common.name_string()
     }
 
     fn check_sum(bytes_without_checksum: &Vec<u8>) -> u8 {
@@ -44,11 +45,8 @@ impl LiveSet {
 impl Bytes<2160> for LiveSet {
     fn from_bytes(bytes: Box<[u8; Self::BYTE_SIZE]>) -> Result<Self, BytesError> {
         let mut data = BitStream::read(bytes);
-        let mut name = [char::default(); 16];
-        for i in 0..name.len() {
-            name[i] = validate(data.get_char())?;
-        }
-        let other1 = data.get_bits();
+        let common = Common::from_bytes(Box::new(data.get_bytes()))?;
+        let other = data.get_bits();
         let internal_layers = parse_many(&mut data)?;
         let external_layers = parse_many(&mut data)?;
         let tone_layers = parse_many(&mut data)?;
@@ -58,8 +56,8 @@ impl Bytes<2160> for LiveSet {
         let unused = data.get_bits();
         let found_check_sum = data.get_u8::<8>();
         let live_set = Self {
-            name,
-            other: other1,
+            common,
+            other: other,
             internal_layers,
             external_layers,
             tone_layers,
@@ -80,7 +78,7 @@ impl Bytes<2160> for LiveSet {
     }
 
     fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {
-        let mut bytes = Bits::<7>::compress(self.name).to_bytes();
+        let mut bytes = self.common.to_bytes().to_vec();
         bytes.append(&mut self.other.to_bytes());
         for internal_layer in self.internal_layers.iter() {
             for byte in *internal_layer.to_bytes() {

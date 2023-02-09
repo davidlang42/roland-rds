@@ -21,7 +21,7 @@ pub struct ExternalLayer {
     modulation: bool,
     bender: bool,
     control_mfx_switch: bool,
-    control_slider: [bool; 4], // UPPER1, UPPER2, LOWER1, LOWER2
+    control_slider: [bool; 4], // index=layer (UPPER1, UPPER2, LOWER1, LOWER2)
     transmit_other: Bits<177>, //TODO these are well defined by the 700NX midi implementation, but CBF doing the boilerplate rn
     s1: bool,
     s2: bool,

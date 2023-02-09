@@ -20,7 +20,7 @@ pub struct PianoLayer {
     tone_character: u8, //TODO spec was wrong: "59-69 (-5 - +5)"
     stretch_tune_type: u8, // max 2 (OFF, PRESET, USER)
     #[serde(with = "serialize_array_as_vec")]
-    micro_tune: Box<[u16; 128]>, // each 12-1012 (-50.0 - +50.0)
+    micro_tune: Box<[u16; 128]>, // index=midi note?, each 12-1012 (-50.0 - +50.0)
     unused: Bits<5>
 }
 

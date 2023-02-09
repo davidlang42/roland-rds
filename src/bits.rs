@@ -179,18 +179,6 @@ impl<const N: usize> Bits<N> {
     }
 }
 
-impl Bits<7> {
-    pub fn compress(text: [char; 16]) -> Bits<112> {
-        let mut bits = Vec::new();
-        for ch in text {
-            for bit in Self::from_u8(ch as u8).0 {
-                bits.push(bit);
-            }
-        }
-        Bits(bits.try_into().unwrap())
-    }
-}
-
 pub struct BitStream {
     bits: Vec<Bit>,
     index: usize
@@ -224,10 +212,16 @@ impl BitStream {
         }
     }
 
-    pub fn new() -> Self {
+    pub fn new() -> Self {//TODO make anywhere that uses bitstream check nothing left over at the end
         Self {
             bits: Vec::new(),
             index: 0
+        }
+    }
+
+    pub fn done(&self) {
+        if !self.eof() {
+            panic!("Failed to read to end of stream");
         }
     }
 
@@ -313,5 +307,10 @@ impl BitStream {
     pub fn get_char(&mut self) -> char {
         let ascii = self.get_u8::<7>();
         ascii as char
+    }
+
+    pub fn set_char(&mut self, value: char) {
+        let bits = Bits::<7>::from_u8(value as u8);
+        self.set_bits(&bits);
     }
 }
