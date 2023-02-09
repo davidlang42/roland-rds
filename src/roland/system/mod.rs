@@ -2,6 +2,7 @@ use crate::bits::{Bits, BitStream};
 use crate::bytes::{Bytes, BytesError, StructuredJson};
 use crate::json::serialize_chars_as_string;
 use self::common::Common;
+use self::compressor::Compressor;
 use self::favorites::Favorites;
 use self::switch_assign::SwitchAssign;
 use self::v_link::VLink;
@@ -12,18 +13,21 @@ mod favorites;
 mod common;
 mod v_link;
 mod switch_assign;
+mod compressor;
 
 #[derive(Serialize, Deserialize)]
 pub struct System {
     unused1: Bits<16>, // 2 bytes
     common: Common, // 8 bytes
-    compressor: Bits<192>, // 103 bits, 24 bytes?
-    v_link: VLink, // 4 bytes
-    unused2: Bits<32>, // 4 bytes
-    favorites: Favorites, // 76 bytes
+    unused2: Bits<48>, // 6 bytes
+    compressor: Compressor, // 14 bytes
     unused3: Bits<32>, // 4 bytes
+    v_link: VLink, // 4 bytes
+    unused4: Bits<32>, // 4 bytes
+    favorites: Favorites, // 76 bytes
+    unused5: Bits<32>, // 4 bytes
     switch_assign: SwitchAssign, // 20 bytes
-    unused4: Bits<16>, // 2 bytes
+    unused6: Bits<16>, // 2 bytes
     #[serde(with = "serialize_chars_as_string")]
     hardware_version: [char; 16] // 16 bytes
 }
@@ -33,13 +37,15 @@ impl Bytes<160> for System {
         let mut data = BitStream::read(bytes);
         let unused1 = data.get_bits();
         let common = Common::from_bytes(Box::new(data.get_bytes()))?;
-        let compressor = data.get_bits();
-        let v_link = VLink::from_bytes(Box::new(data.get_bytes()))?;
         let unused2 = data.get_bits();
-        let favorites = Favorites::from_bytes(Box::new(data.get_bytes()))?;
+        let compressor = Compressor::from_bytes(Box::new(data.get_bytes()))?;
         let unused3 = data.get_bits();
-        let switch_assign = SwitchAssign::from_bytes(Box::new(data.get_bytes()))?;
+        let v_link = VLink::from_bytes(Box::new(data.get_bytes()))?;
         let unused4 = data.get_bits();
+        let favorites = Favorites::from_bytes(Box::new(data.get_bytes()))?;
+        let unused5 = data.get_bits();
+        let switch_assign = SwitchAssign::from_bytes(Box::new(data.get_bytes()))?;
+        let unused6 = data.get_bits();
         let mut hardware_version = [char::default(); 16];
         for i in 0..hardware_version.len() {
             hardware_version[i] = validate(data.get_u8::<8>() as char)?;
@@ -47,13 +53,15 @@ impl Bytes<160> for System {
         Ok(Self {
             unused1,
             common,
-            compressor,
-            v_link,
             unused2,
-            favorites,
+            compressor,
             unused3,
-            switch_assign,
+            v_link,
             unused4,
+            favorites,
+            unused5,
+            switch_assign,
+            unused6,
             hardware_version
         })
     }
@@ -63,25 +71,31 @@ impl Bytes<160> for System {
         for byte in *self.common.to_bytes() {
             bytes.push(byte);
         }
-        for byte in self.compressor.to_bytes() {
-            bytes.push(byte);
-        }
-        for byte in *self.v_link.to_bytes() {
-            bytes.push(byte);
-        }
         for byte in self.unused2.to_bytes() {
             bytes.push(byte);
         }
-        for byte in *self.favorites.to_bytes() {
+        for byte in *self.compressor.to_bytes() {
             bytes.push(byte);
         }
         for byte in self.unused3.to_bytes() {
             bytes.push(byte);
         }
-        for byte in *self.switch_assign.to_bytes() {
+        for byte in *self.v_link.to_bytes() {
             bytes.push(byte);
         }
         for byte in self.unused4.to_bytes() {
+            bytes.push(byte);
+        }
+        for byte in *self.favorites.to_bytes() {
+            bytes.push(byte);
+        }
+        for byte in self.unused5.to_bytes() {
+            bytes.push(byte);
+        }
+        for byte in *self.switch_assign.to_bytes() {
+            bytes.push(byte);
+        }
+        for byte in self.unused6.to_bytes() {
             bytes.push(byte);
         }
         for ch in self.hardware_version {
