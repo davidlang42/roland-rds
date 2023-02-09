@@ -4,10 +4,10 @@ use crate::bits::{Bits, BitStream};
 use crate::bytes::{Bytes, BytesError, StructuredJson};
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Common(Bits<64>);
-//TODO fields are well defined by the 700NX midi implementation, but CBF doing the boilerplate rn (should be 61 bits + 3 unused)
+pub struct Common(Bits<80>);
+//TODO fields are well defined by the 700NX midi implementation, but CBF doing the boilerplate rn (should be 61 bits + 3 unused + 2 more bytes of unknown data?)
 
-impl Bytes<8> for Common {
+impl Bytes<10> for Common {
     fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {
         let mut bits = BitStream::new();
         bits.set_bits(&self.0);

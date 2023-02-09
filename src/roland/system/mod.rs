@@ -17,17 +17,19 @@ mod compressor;
 
 #[derive(Serialize, Deserialize)]
 pub struct System {
-    unused1: Bits<16>, // 2 bytes
-    common: Common, // 8 bytes
-    unused2: Bits<48>, // 6 bytes
+    //TODO check & write system checksums
+    //TODO dont serialize padding unless non-standard
+    unused1: Bits<16>, // 2 bytes padding ("00000000 00000001")
+    common: Common, // 10 bytes
+    unused2: Bits<32>, // 2 bytes Common checksum, 2 bytes padding
     compressor: Compressor, // 14 bytes
-    unused3: Bits<32>, // 4 bytes
+    unused3: Bits<32>, // 2 bytes Compressor checksum, 2 bytes padding
     v_link: VLink, // 4 bytes
-    unused4: Bits<32>, // 4 bytes
+    unused4: Bits<32>, // 2 bytes VLink checksum, 2 bytes padding 
     favorites: Favorites, // 76 bytes
-    unused5: Bits<32>, // 4 bytes
+    unused5: Bits<32>, // 2 bytes Favorites checksum, 2 bytes padding
     switch_assign: SwitchAssign, // 20 bytes
-    unused6: Bits<16>, // 2 bytes
+    unused6: Bits<16>, // 2 bytes SwitchAssign checksum
     #[serde(with = "serialize_chars_as_string")]
     hardware_version: [char; 16] // 16 bytes
 }

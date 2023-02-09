@@ -19,6 +19,8 @@ mod song_rhythm;
 mod mfx;
 mod resonance;
 
+//TODO modify live set to separate real and unused layers/parameters in 300nx vs 700nx
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct LiveSet {
     common: Common, // 56 bytes
@@ -152,6 +154,7 @@ impl Bytes<2160> for LiveSet {
 
     fn to_structured_json(&self) -> StructuredJson {
         StructuredJson::SingleJson(self.to_json()) //TODO split this up once I've made all the live set components
+        //TODO make sure every file/folder has different names unless they are meant to be the identical type (and interchangeable) across entire project
     }
 
     fn from_structured_json(structured_json: StructuredJson) -> Self {

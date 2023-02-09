@@ -11,3 +11,5 @@ pub use tone::ToneLayer;
 pub use piano::PianoLayer;
 pub use e_piano::EPianoLayer;
 pub use tone_wheel::ToneWheelLayer;
+
+//TODO combine layer infos into one Layer object, which makes more sense for a user eg. LogicalLayer { InternalLayer, ExternalLayer, Tone, Piano }
