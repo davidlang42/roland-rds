@@ -3,6 +3,7 @@ use crate::bytes::{Bytes, BytesError, StructuredJson};
 use crate::json::serialize_chars_as_string;
 use self::common::Common;
 use self::favorites::Favorites;
+use self::switch_assign::SwitchAssign;
 use self::v_link::VLink;
 
 use super::validate;
@@ -10,6 +11,7 @@ use super::validate;
 mod favorites;
 mod common;
 mod v_link;
+mod switch_assign;
 
 #[derive(Serialize, Deserialize)]
 pub struct System {
@@ -19,9 +21,11 @@ pub struct System {
     v_link: VLink, // 4 bytes
     unused2: Bits<32>, // 4 bytes
     favorites: Favorites, // 76 bytes
-    switch_assign: Bits<208>, // 150 bits, 20 bytes?
+    unused3: Bits<32>, // 4 bytes
+    switch_assign: SwitchAssign, // 20 bytes
+    unused4: Bits<16>, // 2 bytes
     #[serde(with = "serialize_chars_as_string")]
-    hardware_version: [char; 16]
+    hardware_version: [char; 16] // 16 bytes
 }
 
 impl Bytes<160> for System {
@@ -33,7 +37,9 @@ impl Bytes<160> for System {
         let v_link = VLink::from_bytes(Box::new(data.get_bytes()))?;
         let unused2 = data.get_bits();
         let favorites = Favorites::from_bytes(Box::new(data.get_bytes()))?;
-        let switch_assign = data.get_bits();
+        let unused3 = data.get_bits();
+        let switch_assign = SwitchAssign::from_bytes(Box::new(data.get_bytes()))?;
+        let unused4 = data.get_bits();
         let mut hardware_version = [char::default(); 16];
         for i in 0..hardware_version.len() {
             hardware_version[i] = validate(data.get_u8::<8>() as char)?;
@@ -45,7 +51,9 @@ impl Bytes<160> for System {
             v_link,
             unused2,
             favorites,
+            unused3,
             switch_assign,
+            unused4,
             hardware_version
         })
     }
@@ -67,7 +75,13 @@ impl Bytes<160> for System {
         for byte in *self.favorites.to_bytes() {
             bytes.push(byte);
         }
-        for byte in self.switch_assign.to_bytes() {
+        for byte in self.unused3.to_bytes() {
+            bytes.push(byte);
+        }
+        for byte in *self.switch_assign.to_bytes() {
+            bytes.push(byte);
+        }
+        for byte in self.unused4.to_bytes() {
             bytes.push(byte);
         }
         for ch in self.hardware_version {
