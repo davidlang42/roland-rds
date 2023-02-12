@@ -55,11 +55,15 @@ impl StructuredJson {
         Ok(count)
     }
 
-    pub fn from_collection<T: Bytes<N>, const N: usize, F>(items: &[T], namer: F) -> Self where F: Fn(&T) -> String {
+    pub fn from_collection<T: Bytes<N>, const N: usize, F>(items: &[T], namer: Option<F>) -> Self where F: Fn(&T) -> String {
         let mut vec = Vec::new();
         let pad_length = digits(items.len());
         for (i, item) in items.iter().enumerate() {
-            vec.push((format!("{}-{}", pad(i, pad_length, '0'), alphanumeric(namer(item))), item.to_structured_json()))
+            let name = match namer {
+                Some(f) => format!("{}-{}", pad(i, pad_length, '0'), alphanumeric(f(item))),
+                None => pad(i, pad_length, '0')
+            };
+            vec.push((name, item.to_structured_json()))
         }
         Self::NestedCollection(vec)
     }

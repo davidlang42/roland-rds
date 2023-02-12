@@ -9,7 +9,7 @@ use self::resonance::Resonance;
 use self::reverb::Reverb;
 use self::song_rhythm::SongRhythm;
 
-use super::layers::{InternalLayer, ToneLayer, ExternalLayer, PianoLayer, EPianoLayer, ToneWheelLayer};
+use super::layers::LogicalLayer;
 use super::parse_many;
 
 mod common;
@@ -29,12 +29,7 @@ pub struct LiveSet {
     reverb: Reverb, // 42 bytes
     mfx: Box<[Mfx; 8]>, // 608 bytes
     resonance: Resonance, // 76 bytes
-    internal_layers: Box<[InternalLayer; 4]>, // 56 bytes
-    external_layers: Box<[ExternalLayer; 4]>, // 120 bytes
-    tone_layers: Box<[ToneLayer; 4]>, // 48 bytes
-    piano_layers: Box<[PianoLayer; 4]>, // 1056 bytes
-    e_piano_layers: Box<[EPianoLayer; 4]>, // 24 bytes
-    tone_wheel_layers: Box<[ToneWheelLayer; 4]>, // 24 bytes
+    layers: Box<[LogicalLayer; 4]>, // 332*4=1328 bytes
     #[serde(skip_serializing_if="Bits::is_unit", default="Bits::unit")]
     padding: Bits<8>, // 1 byte
     // checksum: 1 byte
@@ -69,6 +64,7 @@ impl Bytes<2160> for LiveSet {
             let piano_layers = parse_many(data)?;
             let e_piano_layers = parse_many(data)?;
             let tone_wheel_layers = parse_many(data)?;
+            let layers = LogicalLayer::from_layers(internal_layers, external_layers, tone_layers, piano_layers, e_piano_layers, tone_wheel_layers);
             let padding = data.get_bits();
             let found_check_sum = data.get_u8::<8>();
             let live_set = Self {
@@ -78,12 +74,7 @@ impl Bytes<2160> for LiveSet {
                 reverb,
                 mfx,
                 resonance,
-                internal_layers,
-                external_layers,
-                tone_layers,
-                piano_layers,
-                e_piano_layers,
-                tone_wheel_layers,
+                layers,
                 padding
             };
             let bytes = live_set.to_bytes();
@@ -117,33 +108,33 @@ impl Bytes<2160> for LiveSet {
         for byte in *self.resonance.to_bytes() {
             bytes.push(byte);
         }
-        for internal_layer in self.internal_layers.iter() {
-            for byte in *internal_layer.to_bytes() {
+        for layer in self.layers.iter() {
+            for byte in *layer.internal.to_bytes() {
                 bytes.push(byte);
             }
         }
-        for external_layer in self.external_layers.iter() {
-            for byte in *external_layer.to_bytes() {
+        for layer in self.layers.iter() {
+            for byte in *layer.external.to_bytes() {
                 bytes.push(byte);
             }
         }
-        for tone_layer in self.tone_layers.iter() {
-            for byte in *tone_layer.to_bytes() {
+        for layer in self.layers.iter() {
+            for byte in *layer.tone.to_bytes() {
                 bytes.push(byte);
             }
         }
-        for piano_layer in self.piano_layers.iter() {
-            for byte in *piano_layer.to_bytes() {
+        for layer in self.layers.iter() {
+            for byte in *layer.piano.to_bytes() {
                 bytes.push(byte);
             }
         }
-        for e_piano_layer in self.e_piano_layers.iter() {
-            for byte in *e_piano_layer.to_bytes() {
+        for layer in self.layers.iter() {
+            for byte in *layer.e_piano.to_bytes() {
                 bytes.push(byte);
             }
         }
-        for tone_wheel_layer in self.tone_wheel_layers.iter() {
-            for byte in *tone_wheel_layer.to_bytes() {
+        for layer in self.layers.iter() {
+            for byte in *layer.tone_wheel.to_bytes() {
                 bytes.push(byte);
             }
         }
@@ -154,12 +145,39 @@ impl Bytes<2160> for LiveSet {
     }
 
     fn to_structured_json(&self) -> StructuredJson {
-        StructuredJson::SingleJson(self.to_json()) //TODO (NEXT) split this up once I've made all the live set components
-        //TODO (NEXT) make sure every file/folder has different names unless they are meant to be the identical type (and interchangeable) across entire project
+        if !self.padding.is_unit() {
+            panic!("Cannot split JSON with non-standard padding");
+        }
+        StructuredJson::NestedCollection(vec![
+            ("ls_common".to_string(), self.common.to_structured_json()),
+            ("song_rhythm".to_string(), self.song_rhythm.to_structured_json()),
+            ("chorus".to_string(), self.chorus.to_structured_json()),
+            ("reverb".to_string(), self.reverb.to_structured_json()),
+            ("mfx".to_string(), StructuredJson::from_collection(self.mfx.as_slice(), None)),
+            ("resonance".to_string(), self.resonance.to_structured_json()),
+            ("layers".to_string(), StructuredJson::from_collection(self.layers.as_slice(), Some(|l: &LogicalLayer| l.tone.tone_name())))
+        ])
     }
 
-    fn from_structured_json(structured_json: StructuredJson) -> Self {
-        Self::from_json(structured_json.to_single_json()) //TODO (NEXT) split this up once I've made all the live set components
+    fn from_structured_json(mut structured_json: StructuredJson) -> Self {
+        let common = structured_json.extract("ls_common").to();
+        let song_rhythm = structured_json.extract("song_rhythm").to();
+        let chorus = structured_json.extract("chorus").to();
+        let reverb = structured_json.extract("reverb").to();
+        let mfx = structured_json.extract("mfx").to_array();
+        let resonance = structured_json.extract("resonance").to();
+        let layers = structured_json.extract("layers").to_array();
+        structured_json.done();
+        Self {
+            common,
+            song_rhythm,
+            chorus,
+            reverb,
+            mfx,
+            resonance,
+            layers,
+            padding: Bits::unit()
+        }
     }
 
     fn to_json(&self) -> String {

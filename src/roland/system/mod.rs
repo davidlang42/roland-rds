@@ -17,7 +17,9 @@ mod compressor;
 
 #[derive(Serialize, Deserialize)]
 pub struct System {
-    //TODO check & write system checksums, dont serialize padding #[serde(skip_serializing_if="Bits::is_unit", default="Bits::unit")]
+    //TODO check & write system checksums
+    //TODO dont serialize padding #[serde(skip_serializing_if="Bits::is_unit", default="Bits::unit")]
+    //TODO split up structured json, use "sys_common" for name of common
     unused1: Bits<16>, // 2 bytes padding ("00000000 00000001")
     common: Common, // 10 bytes
     unused2: Bits<32>, // 2 bytes Common checksum, 2 bytes padding

@@ -24,6 +24,12 @@ pub struct ToneLayer {
     unused: Bits<10>
 }
 
+impl ToneLayer {
+    pub fn tone_name(&self) -> String {
+        self.tone_number.details().name.to_owned()
+    }
+}
+
 impl Bytes<12> for ToneLayer {
     fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {
         BitStream::write_fixed(|bits| {

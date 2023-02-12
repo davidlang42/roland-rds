@@ -63,17 +63,17 @@ impl Bytes<183762> for RD300NX {
 
     fn to_structured_json(&self) -> StructuredJson {
         StructuredJson::NestedCollection(vec![
-            ("user_sets".to_string(), StructuredJson::from_collection(self.user_sets.as_slice(), |ls| ls.name_string())),
-            ("piano".to_string(), StructuredJson::from_collection(self.piano.as_slice(), |ls| ls.name_string())),
-            ("e_piano".to_string(), StructuredJson::from_collection(self.e_piano.as_slice(), |ls| ls.name_string())),
+            ("user_sets".to_string(), StructuredJson::from_collection(self.user_sets.as_slice(), Some(LiveSet::name_string))),
+            ("piano".to_string(), StructuredJson::from_collection(self.piano.as_slice(), Some(LiveSet::name_string))),
+            ("e_piano".to_string(), StructuredJson::from_collection(self.e_piano.as_slice(), Some(LiveSet::name_string))),
             ("system".to_string(), self.system.to_structured_json())
         ])
     }
 
     fn from_structured_json(mut structured_json: StructuredJson) -> Self {
         let user_sets = structured_json.extract("user_sets").to_array();
-        let piano = structured_json.extract("bank_a").to_array();
-        let e_piano = structured_json.extract("bank_b").to_array();
+        let piano = structured_json.extract("piano").to_array();
+        let e_piano = structured_json.extract("e_piano").to_array();
         let system = structured_json.extract("system").to();
         structured_json.done();
         Self {
