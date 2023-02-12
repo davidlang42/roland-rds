@@ -2,21 +2,48 @@ use std::fmt::Debug;
 
 use crate::bits::{Bits, BitStream};
 use crate::bytes::{Bytes, BytesError, StructuredJson};
+use crate::roland::in_range_u16;
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Reverb(Bits<336>);
-//TODO (might be relevant) fields are well defined by the 700NX midi implementation, but CBF doing the boilerplate rn (should be 331 bits + 5 unused)
+pub struct Reverb {
+    reverb_type: u8, // max 6 (OFF, REVERB, ROOM, HALL, PLATE, GM2 REVERB, CATHEDRAL)
+    depth: u8, // max 127
+    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
+    unused1: Bits<2>,
+    parameters: [u16; 20], // each 12768-52768 (-20000 - +20000)
+    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
+    unused2: Bits<3>
+}
 
 impl Bytes<42> for Reverb {
     fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {
         BitStream::write_fixed(|bs| {
-            bs.set_bits(&self.0);
+            bs.set_u8::<4>(self.reverb_type);
+            bs.set_u8::<7>(self.depth);
+            bs.set_bits(&self.unused1);
+            for i in 0..self.parameters.len() {
+                bs.set_u16::<16>(in_range_u16(self.parameters[i], 12768, 52768));
+            }
+            bs.set_bits(&self.unused2);
         })
     }
 
     fn from_bytes(bytes: Box<[u8; Self::BYTE_SIZE]>) -> Result<Self, BytesError> where Self: Sized {
         BitStream::read_fixed(bytes, |bs| {
-            Ok(Self(bs.get_bits()))
+            let reverb_type = bs.get_u8::<4>();
+            let level = bs.get_u8::<7>();
+            let unused1 = bs.get_bits();
+            let mut parameters = [0; 20];
+            for i in 0..parameters.len() {
+                parameters[i] = bs.get_u16::<16>();
+            }
+            Ok(Self {
+                reverb_type,
+                depth: level,
+                unused1,
+                parameters,
+                unused2: bs.get_bits()
+            })
         })
     }
 
