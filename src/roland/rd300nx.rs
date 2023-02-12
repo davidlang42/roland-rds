@@ -17,33 +17,31 @@ pub struct RD300NX {
 
 impl Bytes<183762> for RD300NX {
     fn from_bytes(bytes: Box<[u8; Self::BYTE_SIZE]>) -> Result<Self, BytesError> {
-        let mut data = BitStream::read(bytes);
-        let user_sets = parse_many(&mut data)?;
-        let piano = parse_many(&mut data)?;
-        let e_piano = parse_many(&mut data)?;
-        let system = System::from_bytes(Box::new(data.get_bytes()))?;
-        let found_check_sum = [
-            data.get_u8::<8>(),
-            data.get_u8::<8>(),
-        ];
-        if !data.eof() {
-            panic!("Failed to read all {} bytes", Self::BYTE_SIZE);
-        }
-        let rds = Self {
-            user_sets,
-            piano,
-            e_piano,
-            system
-        };
-        let bytes = rds.to_bytes();
-        let expected_check_sum: [u8; 2] = bytes[(bytes.len()-2)..bytes.len()].try_into().unwrap();
-        if found_check_sum != expected_check_sum {
-            return Err(BytesError::IncorrectCheckSum {
-                expected: expected_check_sum.into_iter().collect(),
-                found: found_check_sum.into_iter().collect()
-            });
-        }
-        Ok(rds)
+        BitStream::read_fixed(bytes, |data| {
+            let user_sets = parse_many(data)?;
+            let piano = parse_many(data)?;
+            let e_piano = parse_many(data)?;
+            let system = System::from_bytes(Box::new(data.get_bytes()))?;
+            let found_check_sum = [
+                data.get_u8::<8>(),
+                data.get_u8::<8>(),
+            ];
+            let rds = Self {
+                user_sets,
+                piano,
+                e_piano,
+                system
+            };
+            let bytes = rds.to_bytes();
+            let expected_check_sum: [u8; 2] = bytes[(bytes.len()-2)..bytes.len()].try_into().unwrap();
+            if found_check_sum != expected_check_sum {
+                return Err(BytesError::IncorrectCheckSum {
+                    expected: expected_check_sum.into_iter().collect(),
+                    found: found_check_sum.into_iter().collect()
+                });
+            }
+            Ok(rds)
+        })
     }
 
     fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {

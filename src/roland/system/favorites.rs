@@ -19,42 +19,40 @@ impl Favorites {
 
 impl Bytes<76> for Favorites {
     fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {
-        let mut bits = BitStream::new();
-        for value in self.one_touch_piano_current_number {
-            bits.set_u8::<7>(value);
-        }
-        for value in self.one_touch_e_piano_current_number {
-            bits.set_u8::<7>(value);
-        }
-        for bank in &self.banks {
-            bits.set_bits(&bank.to_bits());
-        }
-        bits.set_bits(&self.unused);
-        bits.reset();
-        Box::new(bits.get_bytes())
+        BitStream::write_fixed(|bits| {
+            for value in self.one_touch_piano_current_number {
+                bits.set_u8::<7>(value);
+            }
+            for value in self.one_touch_e_piano_current_number {
+                bits.set_u8::<7>(value);
+            }
+            for bank in &self.banks {
+                bits.set_bits(&bank.to_bits());
+            }
+            bits.set_bits(&self.unused);
+        })
     }
 
     fn from_bytes(bytes: Box<[u8; Self::BYTE_SIZE]>) -> Result<Self, BytesError> where Self: Sized {
-        let mut data = BitStream::read(bytes);
-        let mut one_touch_piano_current_number = [0; 3];
-        for i in 0..one_touch_piano_current_number.len() {
-            one_touch_piano_current_number[i] = data.get_u8::<7>();
-        }
-        let mut one_touch_e_piano_current_number = [0; 3];
-        for i in 0..one_touch_e_piano_current_number.len() {
-            one_touch_e_piano_current_number[i] = data.get_u8::<7>();
-        }
-        let mut banks = Vec::new();
-        for _ in 0..Self::BANKS {
-            banks.push(Bank::from_bits(data.get_bits())?);
-        }
-        let unused = data.get_bits();
-        data.done();
-        Ok(Self {
-            one_touch_piano_current_number,
-            one_touch_e_piano_current_number,
-            banks: banks.try_into().unwrap(),
-            unused
+        BitStream::read_fixed(bytes, |data| {
+            let mut one_touch_piano_current_number = [0; 3];
+            for i in 0..one_touch_piano_current_number.len() {
+                one_touch_piano_current_number[i] = data.get_u8::<7>();
+            }
+            let mut one_touch_e_piano_current_number = [0; 3];
+            for i in 0..one_touch_e_piano_current_number.len() {
+                one_touch_e_piano_current_number[i] = data.get_u8::<7>();
+            }
+            let mut banks = Vec::new();
+            for _ in 0..Self::BANKS {
+                banks.push(Bank::from_bits(data.get_bits())?);
+            }
+            Ok(Self {
+                one_touch_piano_current_number,
+                one_touch_e_piano_current_number,
+                banks: banks.try_into().unwrap(),
+                unused: data.get_bits()
+            })
         })
     }
 
@@ -83,26 +81,21 @@ impl Bank {
     const BITS_SIZE: usize = Favorite::BITS_SIZE * Self::FAVORITES_PER_BANK;
 
     fn to_bits(&self) -> Bits<{Self::BITS_SIZE}> {
-        let mut bits = BitStream::new();
-        for favorite in &self.0 {
-            bits.set_bits(&favorite.to_bits());
-        }
-        bits.reset();
-        let output = bits.get_bits();
-        bits.done();
-        output
+        BitStream::write_fixed_bits(|bits| {
+            for favorite in &self.0 {
+                bits.set_bits(&favorite.to_bits());
+            }
+        })
     }
 
     fn from_bits(bits: Bits<{Self::BITS_SIZE}>) -> Result<Self, BytesError> where Self: Sized {
-        let mut data = BitStream::new();
-        data.set_bits(&bits);
-        data.reset();
-        let mut favorites = Vec::new();
-        for _ in 0..Self::FAVORITES_PER_BANK {
-            favorites.push(Favorite::from_bits(data.get_bits())?);
-        }
-        data.done();
-        Ok(Self(favorites.try_into().unwrap()))
+        BitStream::read_fixed_bits(bits, |data| {
+            let mut favorites = Vec::new();
+            for _ in 0..Self::FAVORITES_PER_BANK {
+                favorites.push(Favorite::from_bits(data.get_bits())?);
+            }
+            Ok(Self(favorites.try_into().unwrap()))
+        })
     }
 }
 
@@ -116,25 +109,18 @@ impl Favorite {
     const BITS_SIZE: usize = 14;
 
     fn to_bits(&self) -> Bits<{Self::BITS_SIZE}> {
-        let mut bits = BitStream::new();
-        bits.set_u8::<2>(max(self.category, 3));
-        bits.set_u16::<12>(in_range_u16(self.live_set_number, 0, 299));
-        bits.reset();
-        let output = bits.get_bits();
-        bits.done();
-        output
+        BitStream::write_fixed_bits(|bits| {
+            bits.set_u8::<2>(max(self.category, 3));
+            bits.set_u16::<12>(in_range_u16(self.live_set_number, 0, 299));
+        })
     }
 
     fn from_bits(bits: Bits<{Self::BITS_SIZE}>) -> Result<Self, BytesError> where Self: Sized {
-        let mut data = BitStream::new();
-        data.set_bits(&bits);
-        data.reset();
-        let category = data.get_u8::<2>();
-        let live_set_number = data.get_u16::<12>();
-        data.done();
-        Ok(Self {
-            category,
-            live_set_number
+        BitStream::read_fixed_bits(bits, |data| {
+            Ok(Self {
+                category: data.get_u8::<2>(),
+                live_set_number: data.get_u16::<12>()
+            })
         })
     }
 }

@@ -40,113 +40,110 @@ pub struct Common {
 
 impl Bytes<56> for Common {
     fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {
-        let mut bits = BitStream::new();
-        for value in self.name {
-            bits.set_char(value);//TODO validate?
-        }
-        for value in self.voice_reserve {
-            bits.set_u8::<7>(max(value, 64));
-        }
-        bits.set_u16::<9>(in_range_u16(self.live_set_tempo, 10, 500));
-        bits.set_u8::<8>(max(self.fc1_assign, 144));
-        bits.set_u8::<8>(max(self.fc2_assign, 144));
-        bits.set_bool(self.sound_focus_switch);
-        bits.set_u8::<5>(max(self.sound_focus_type, 31));
-        bits.set_u8::<7>(self.sound_focus_value);
-        bits.set_u8::<5>(max(self.s1_assign, 17));
-        bits.set_u8::<5>(max(self.s2_assign, 17));
-        bits.set_bool(self.s1_state);
-        bits.set_bool(self.s2_state);
-        bits.set_bits(&self.eq_settings);
-        bits.set_u8::<7>(self.key_touch_velocity);
-        bits.set_u8::<3>(in_range(self.key_touch_curve_type, 1, 5));
-        bits.set_u8::<5>(self.key_touch_curve_offset); //TODO constrain with correct spec
-        bits.set_u8::<7>(in_range(self.key_touch_velocity_delay_sense, 1, 127));
-        bits.set_u8::<7>(in_range(self.key_touch_velocity_key_follow, 1, 127));
-        bits.set_bool(self.key_off_position);
-        bits.set_bool(self.slider_select);
-        for value in self.slider_assign {
-            bits.set_u8::<8>(max(value, 133));
-        }
-        bits.set_bool(self.split_switch_internal);
-        bits.set_bool(self.split_switch_external);
-        for value in self.harmonic_bar_assign {
-            bits.set_u8::<4>(in_range(value, 1, 9));
-        }
-        bits.set_u8::<2>(self.mfx_control_destination);
-        bits.set_bits(&self.unused);
-        bits.reset();
-        Box::new(bits.get_bytes())
+        BitStream::write_fixed(|bits| {
+            for value in self.name {
+                bits.set_char(value);//TODO validate?
+            }
+            for value in self.voice_reserve {
+                bits.set_u8::<7>(max(value, 64));
+            }
+            bits.set_u16::<9>(in_range_u16(self.live_set_tempo, 10, 500));
+            bits.set_u8::<8>(max(self.fc1_assign, 144));
+            bits.set_u8::<8>(max(self.fc2_assign, 144));
+            bits.set_bool(self.sound_focus_switch);
+            bits.set_u8::<5>(max(self.sound_focus_type, 31));
+            bits.set_u8::<7>(self.sound_focus_value);
+            bits.set_u8::<5>(max(self.s1_assign, 17));
+            bits.set_u8::<5>(max(self.s2_assign, 17));
+            bits.set_bool(self.s1_state);
+            bits.set_bool(self.s2_state);
+            bits.set_bits(&self.eq_settings);
+            bits.set_u8::<7>(self.key_touch_velocity);
+            bits.set_u8::<3>(in_range(self.key_touch_curve_type, 1, 5));
+            bits.set_u8::<5>(self.key_touch_curve_offset); //TODO constrain with correct spec
+            bits.set_u8::<7>(in_range(self.key_touch_velocity_delay_sense, 1, 127));
+            bits.set_u8::<7>(in_range(self.key_touch_velocity_key_follow, 1, 127));
+            bits.set_bool(self.key_off_position);
+            bits.set_bool(self.slider_select);
+            for value in self.slider_assign {
+                bits.set_u8::<8>(max(value, 133));
+            }
+            bits.set_bool(self.split_switch_internal);
+            bits.set_bool(self.split_switch_external);
+            for value in self.harmonic_bar_assign {
+                bits.set_u8::<4>(in_range(value, 1, 9));
+            }
+            bits.set_u8::<2>(self.mfx_control_destination);
+            bits.set_bits(&self.unused);
+        })
     }
 
     fn from_bytes(bytes: Box<[u8; Self::BYTE_SIZE]>) -> Result<Self, BytesError> where Self: Sized {
-        let mut data = BitStream::read(bytes);
-        let mut name = [char::default(); 16];
-        for i in 0..name.len() {
-            name[i] = validate(data.get_char())?;
-        }
-        let mut voice_reserve = [0; 16];
-        for i in 0..voice_reserve.len() {
-            voice_reserve[i] = data.get_u8::<7>();
-        }
-        let live_set_tempo = data.get_u16::<9>();
-        let fc1_assign = data.get_u8::<8>();
-        let fc2_assign = data.get_u8::<8>();
-        let sound_focus_switch = data.get_bool();
-        let sound_focus_type = data.get_u8::<5>();
-        let sound_focus_value = data.get_u8::<7>();
-        let s1_assign = data.get_u8::<5>();
-        let s2_assign = data.get_u8::<5>();
-        let s1_state = data.get_bool();
-        let s2_state = data.get_bool();
-        let eq_settings = data.get_bits();
-        let key_touch_velocity = data.get_u8::<7>();
-        let key_touch_curve_type = data.get_u8::<3>();
-        let key_touch_curve_offset = data.get_u8::<5>();
-        let key_touch_velocity_delay_sense = data.get_u8::<7>();
-        let key_touch_velocity_key_follow = data.get_u8::<7>();
-        let key_off_position = data.get_bool();
-        let slider_select = data.get_bool();
-        let mut slider_assign = [0; 4];
-        for i in 0..slider_assign.len() {
-            slider_assign[i] = data.get_u8::<8>();
-        }
-        let split_switch_internal = data.get_bool();
-        let split_switch_external = data.get_bool();
-        let mut harmonic_bar_assign = [0; 4 * 2];
-        for i in 0..harmonic_bar_assign.len() {
-            harmonic_bar_assign[i] = data.get_u8::<4>();
-        }
-        let mfx_control_destination = data.get_u8::<2>();
-        let unused = data.get_bits();
-        data.done();
-        Ok(Self {
-            name,
-            voice_reserve,
-            live_set_tempo,
-            fc1_assign,
-            fc2_assign,
-            sound_focus_switch,
-            sound_focus_type,
-            sound_focus_value,
-            s1_assign,
-            s2_assign,
-            s1_state,
-            s2_state,
-            eq_settings,
-            key_touch_velocity,
-            key_touch_curve_type,
-            key_touch_curve_offset,
-            key_touch_velocity_delay_sense,
-            key_touch_velocity_key_follow,
-            key_off_position,
-            slider_select,
-            slider_assign,
-            split_switch_internal,
-            split_switch_external,
-            harmonic_bar_assign,
-            mfx_control_destination,
-            unused
+        BitStream::read_fixed(bytes, |data| {
+            let mut name = [char::default(); 16];
+            for i in 0..name.len() {
+                name[i] = validate(data.get_char())?;
+            }
+            let mut voice_reserve = [0; 16];
+            for i in 0..voice_reserve.len() {
+                voice_reserve[i] = data.get_u8::<7>();
+            }
+            let live_set_tempo = data.get_u16::<9>();
+            let fc1_assign = data.get_u8::<8>();
+            let fc2_assign = data.get_u8::<8>();
+            let sound_focus_switch = data.get_bool();
+            let sound_focus_type = data.get_u8::<5>();
+            let sound_focus_value = data.get_u8::<7>();
+            let s1_assign = data.get_u8::<5>();
+            let s2_assign = data.get_u8::<5>();
+            let s1_state = data.get_bool();
+            let s2_state = data.get_bool();
+            let eq_settings = data.get_bits();
+            let key_touch_velocity = data.get_u8::<7>();
+            let key_touch_curve_type = data.get_u8::<3>();
+            let key_touch_curve_offset = data.get_u8::<5>();
+            let key_touch_velocity_delay_sense = data.get_u8::<7>();
+            let key_touch_velocity_key_follow = data.get_u8::<7>();
+            let key_off_position = data.get_bool();
+            let slider_select = data.get_bool();
+            let mut slider_assign = [0; 4];
+            for i in 0..slider_assign.len() {
+                slider_assign[i] = data.get_u8::<8>();
+            }
+            let split_switch_internal = data.get_bool();
+            let split_switch_external = data.get_bool();
+            let mut harmonic_bar_assign = [0; 4 * 2];
+            for i in 0..harmonic_bar_assign.len() {
+                harmonic_bar_assign[i] = data.get_u8::<4>();
+            }
+            Ok(Self {
+                name,
+                voice_reserve,
+                live_set_tempo,
+                fc1_assign,
+                fc2_assign,
+                sound_focus_switch,
+                sound_focus_type,
+                sound_focus_value,
+                s1_assign,
+                s2_assign,
+                s1_state,
+                s2_state,
+                eq_settings,
+                key_touch_velocity,
+                key_touch_curve_type,
+                key_touch_curve_offset,
+                key_touch_velocity_delay_sense,
+                key_touch_velocity_key_follow,
+                key_off_position,
+                slider_select,
+                slider_assign,
+                split_switch_internal,
+                split_switch_external,
+                harmonic_bar_assign,
+                mfx_control_destination: data.get_u8::<2>(),
+                unused: data.get_bits()
+            })
         })
     }
 

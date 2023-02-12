@@ -9,15 +9,15 @@ pub struct Resonance(Bits<608>);
 
 impl Bytes<76> for Resonance {
     fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {
-        let mut bits = BitStream::new();
-        bits.set_bits(&self.0);
-        bits.reset();
-        Box::new(bits.get_bytes())
+        BitStream::write_fixed(|bs| {
+            bs.set_bits(&self.0);
+        })
     }
 
     fn from_bytes(bytes: Box<[u8; Self::BYTE_SIZE]>) -> Result<Self, BytesError> where Self: Sized {
-        let mut data = BitStream::read(bytes);
-        Ok(Self(data.get_bits()))
+        BitStream::read_fixed(bytes, |bs| {
+            Ok(Self(bs.get_bits()))
+        })
     }
 
     fn to_structured_json(&self) -> StructuredJson {

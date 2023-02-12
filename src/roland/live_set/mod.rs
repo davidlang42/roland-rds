@@ -55,46 +55,46 @@ impl LiveSet {
 
 impl Bytes<2160> for LiveSet {
     fn from_bytes(bytes: Box<[u8; Self::BYTE_SIZE]>) -> Result<Self, BytesError> {
-        let mut data = BitStream::read(bytes);
-        let common = Common::from_bytes(Box::new(data.get_bytes()))?;
-        let song_rhythm = SongRhythm::from_bytes(Box::new(data.get_bytes()))?;
-        let chorus = Chorus::from_bytes(Box::new(data.get_bytes()))?;
-        let reverb = Reverb::from_bytes(Box::new(data.get_bytes()))?;
-        let mfx = parse_many(&mut data)?;
-        let resonance = Resonance::from_bytes(Box::new(data.get_bytes()))?;
-        let internal_layers = parse_many(&mut data)?;
-        let external_layers = parse_many(&mut data)?;
-        let tone_layers = parse_many(&mut data)?;
-        let piano_layers = parse_many(&mut data)?;
-        let e_piano_layers = parse_many(&mut data)?;
-        let tone_wheel_layers = parse_many(&mut data)?;
-        let unused = data.get_bits();
-        let found_check_sum = data.get_u8::<8>();
-        data.done();
-        let live_set = Self {
-            common,
-            song_rhythm,
-            chorus,
-            reverb,
-            mfx,
-            resonance,
-            internal_layers,
-            external_layers,
-            tone_layers,
-            piano_layers,
-            e_piano_layers,
-            tone_wheel_layers,
-            unused
-        };
-        let bytes = live_set.to_bytes();
-        let expected_check_sum = bytes[bytes.len() - 1];
-        if found_check_sum != expected_check_sum {
-            return Err(BytesError::IncorrectCheckSum {
-                expected: vec![expected_check_sum],
-                found: vec![found_check_sum]
-            });
-        }
-        Ok(live_set)
+        BitStream::read_fixed(bytes, |data| {
+            let common = Common::from_bytes(Box::new(data.get_bytes()))?;
+            let song_rhythm = SongRhythm::from_bytes(Box::new(data.get_bytes()))?;
+            let chorus = Chorus::from_bytes(Box::new(data.get_bytes()))?;
+            let reverb = Reverb::from_bytes(Box::new(data.get_bytes()))?;
+            let mfx = parse_many(data)?;
+            let resonance = Resonance::from_bytes(Box::new(data.get_bytes()))?;
+            let internal_layers = parse_many(data)?;
+            let external_layers = parse_many(data)?;
+            let tone_layers = parse_many(data)?;
+            let piano_layers = parse_many(data)?;
+            let e_piano_layers = parse_many(data)?;
+            let tone_wheel_layers = parse_many(data)?;
+            let unused = data.get_bits();
+            let found_check_sum = data.get_u8::<8>();
+            let live_set = Self {
+                common,
+                song_rhythm,
+                chorus,
+                reverb,
+                mfx,
+                resonance,
+                internal_layers,
+                external_layers,
+                tone_layers,
+                piano_layers,
+                e_piano_layers,
+                tone_wheel_layers,
+                unused
+            };
+            let bytes = live_set.to_bytes();
+            let expected_check_sum = bytes[bytes.len() - 1];
+            if found_check_sum != expected_check_sum {
+                return Err(BytesError::IncorrectCheckSum {
+                    expected: vec![expected_check_sum],
+                    found: vec![found_check_sum]
+                });
+            }
+            Ok(live_set)
+        })
     }
 
     fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {

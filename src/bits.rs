@@ -199,7 +199,7 @@ impl Iterator for BitStream {
 }
 
 impl BitStream {
-    pub fn read<const N: usize>(bytes: Box<[u8; N]>) -> Self {
+    fn read<const N: usize>(bytes: Box<[u8; N]>) -> Self {
         let mut bits = Vec::new();
         for byte in bytes.as_slice() {
             for bit in Bits::<8>::from_u8(*byte).0 {
@@ -212,21 +212,64 @@ impl BitStream {
         }
     }
 
-    pub fn new() -> Self {//TODO make anywhere that uses bitstream check nothing left over at the end
+    fn read_bits<const B: usize>(bits: Bits<B>) -> Self {
+        Self {
+            bits: bits.0.into_iter().collect(),
+            index: 0
+        }
+    }
+
+    fn new() -> Self {
         Self {
             bits: Vec::new(),
             index: 0
         }
     }
 
-    pub fn done(&self) {
-        if !self.eof() {
-            panic!("Failed to read to end of stream");
+    pub fn write_fixed<const N: usize, F>(f: F) -> Box<[u8; N]> where F: FnOnce(&mut Self) {
+        let mut stream = Self::new();
+        f(&mut stream);
+        if stream.len() != N * 8 {
+            panic!("Failed to write all {} bytes (found {} bits, expected {})", N, stream.len(), N * 8);
         }
+        stream.reset();
+        Box::new(stream.get_bytes())
     }
 
-    pub fn eof(&self) -> bool {
-        self.index >= self.bits.len()
+    pub fn write_fixed_bits<const B: usize, F>(f: F) -> Bits<B> where F: FnOnce(&mut Self) {
+        let mut stream = Self::new();
+        f(&mut stream);
+        if stream.len() != B {
+            panic!("Failed to write all {} bits (found {} bits, expected {})", B, stream.len(), B);
+        }
+        stream.reset();
+        stream.get_bits()
+    }
+
+    pub fn read_fixed<const N: usize, F, T>(bytes: Box<[u8; N]>, f: F) -> T where F: FnOnce(&mut Self) -> T {
+        let mut stream = BitStream::read(bytes);
+        let result = f(&mut stream);
+        if stream.position() < stream.len() {
+            panic!("Failed to read all {} bytes (read {} bits, expected {})", N, stream.position(), N * 8);
+        }
+        result
+    }
+
+    pub fn read_fixed_bits<const B: usize, F, T>(bits: Bits<B>, f: F) -> T where F: FnOnce(&mut Self) -> T {
+        let mut stream = BitStream::read_bits(bits);
+        let result = f(&mut stream);
+        if stream.position() < stream.len() {
+            panic!("Failed to read all {} bits (read {} bits, expected {})", B, stream.position(), B);
+        }
+        result
+    }
+
+    pub fn position(&self) -> usize {
+        self.index
+    }
+
+    pub fn len(&self) -> usize {
+        self.bits.len()
     }
 
     pub fn reset(&mut self) {

@@ -26,57 +26,57 @@ pub struct PianoLayer {
 
 impl Bytes<264> for PianoLayer {
     fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {
-        let mut bits = BitStream::new();
-        bits.set_u8::<7>(max(self.tone_number, 8)); //TODO somewhere there needs to be an assertion that this tone number matches the live set tone number (if one of the piano tones is being used)
-        bits.set_u8::<6>(max(self.stereo_width, 63));
-        bits.set_u8::<2>(max(self.nuance, 2));
-        bits.set_u8::<7>(max(self.duplex_scale_level, 127));
-        bits.set_u8::<3>(self.hammer_noise_level); //TODO constrain value
-        bits.set_u8::<7>(max(self.damper_noise_level, 127));
-        bits.set_u8::<7>(max(self.string_resonance_level, 127));
-        bits.set_u8::<7>(max(self.key_off_resonance_level, 127));
-        bits.set_u8::<7>(max(self.sound_lift, 127));
-        bits.set_u8::<4>(self.tone_character);//TODO constrain value
-        bits.set_u8::<2>(max(self.stretch_tune_type, 2));
-        for value in *self.micro_tune {
-            bits.set_u16::<16>(in_range_u16(value, 12, 1012));
-        }
-        bits.set_bits(&self.unused);
-        bits.reset();
-        Box::new(bits.get_bytes())
+        BitStream::write_fixed(|bits| {
+            bits.set_u8::<7>(max(self.tone_number, 8)); //TODO somewhere there needs to be an assertion that this tone number matches the live set tone number (if one of the piano tones is being used)
+            bits.set_u8::<6>(max(self.stereo_width, 63));
+            bits.set_u8::<2>(max(self.nuance, 2));
+            bits.set_u8::<7>(max(self.duplex_scale_level, 127));
+            bits.set_u8::<3>(self.hammer_noise_level); //TODO constrain value
+            bits.set_u8::<7>(max(self.damper_noise_level, 127));
+            bits.set_u8::<7>(max(self.string_resonance_level, 127));
+            bits.set_u8::<7>(max(self.key_off_resonance_level, 127));
+            bits.set_u8::<7>(max(self.sound_lift, 127));
+            bits.set_u8::<4>(self.tone_character);//TODO constrain value
+            bits.set_u8::<2>(max(self.stretch_tune_type, 2));
+            for value in *self.micro_tune {
+                bits.set_u16::<16>(in_range_u16(value, 12, 1012));
+            }
+            bits.set_bits(&self.unused);
+        })
     }
 
     fn from_bytes(bytes: Box<[u8; Self::BYTE_SIZE]>) -> Result<Self, BytesError> where Self: Sized {
-        let mut data = BitStream::read(bytes);
-        let tone_number = data.get_u8::<7>();
-        let stereo_width = data.get_u8::<6>();
-        let nuance = data.get_u8::<2>();
-        let duplex_scale_level = data.get_u8::<7>();
-        let hammer_noise_level = data.get_u8::<3>();
-        let damper_noise_level = data.get_u8::<7>();
-        let string_resonance_level = data.get_u8::<7>();
-        let key_off_resonance_level = data.get_u8::<7>();
-        let sound_lift = data.get_u8::<7>();
-        let tone_character = data.get_u8::<4>();
-        let stretch_tune_type = data.get_u8::<2>();
-        let mut micro_tune = [0; 128];
-        for i in 0..micro_tune.len() {
-            micro_tune[i] = data.get_u16::<16>();
-        }
-        Ok(Self {
-            tone_number,
-            stereo_width,
-            nuance,
-            duplex_scale_level,
-            hammer_noise_level,
-            damper_noise_level,
-            string_resonance_level,
-            key_off_resonance_level,
-            sound_lift,
-            tone_character,
-            stretch_tune_type,
-            micro_tune: Box::new(micro_tune),
-            unused: data.get_bits()
+        BitStream::read_fixed(bytes, |data| {
+            let tone_number = data.get_u8::<7>();
+            let stereo_width = data.get_u8::<6>();
+            let nuance = data.get_u8::<2>();
+            let duplex_scale_level = data.get_u8::<7>();
+            let hammer_noise_level = data.get_u8::<3>();
+            let damper_noise_level = data.get_u8::<7>();
+            let string_resonance_level = data.get_u8::<7>();
+            let key_off_resonance_level = data.get_u8::<7>();
+            let sound_lift = data.get_u8::<7>();
+            let tone_character = data.get_u8::<4>();
+            let stretch_tune_type = data.get_u8::<2>();
+            let mut micro_tune = [0; 128];
+            for i in 0..micro_tune.len() {
+                micro_tune[i] = data.get_u16::<16>();
+            }
+            Ok(Self {
+                tone_number,
+                stereo_width,
+                nuance,
+                duplex_scale_level,
+                hammer_noise_level,
+                damper_noise_level,
+                string_resonance_level,
+                key_off_resonance_level,
+                sound_lift,
+                tone_character,
+                stretch_tune_type,
+                micro_tune: Box::new(micro_tune),
+                unused: data.get_bits()
+            })
         })
     }
 

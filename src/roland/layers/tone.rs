@@ -25,46 +25,46 @@ pub struct ToneLayer {
 
 impl Bytes<12> for ToneLayer {
     fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {
-        let mut bits = BitStream::new();
-        let tone = self.tone_number.details();
-        bits.set_u8::<7>(tone.msb);
-        bits.set_u8::<7>(tone.lsb);
-        bits.set_u8::<7>(tone.pc);
-        bits.set_u8::<7>(in_range(self.course_tune, 16, 112));
-        bits.set_u8::<7>(in_range(self.fine_tune, 14, 114));
-        bits.set_u8::<2>(max(self.mono_poly, 2));
-        bits.set_u8::<5>(max(self.pitch_bend_range, 24));
-        bits.set_bool(self.portamento_switch);
-        bits.set_u8::<8>(max(self.portamento_time, 127));
-        bits.set_u8::<7>(self.cutoff);
-        bits.set_u8::<7>(self.resonance);
-        bits.set_u8::<7>(self.attack_time);
-        bits.set_u8::<7>(self.decay_time);
-        bits.set_u8::<7>(self.release_time);
-        bits.set_bits(&self.unused);
-        bits.reset();
-        Box::new(bits.get_bytes())
+        BitStream::write_fixed(|bits| {
+            let tone = self.tone_number.details();
+            bits.set_u8::<7>(tone.msb);
+            bits.set_u8::<7>(tone.lsb);
+            bits.set_u8::<7>(tone.pc);
+            bits.set_u8::<7>(in_range(self.course_tune, 16, 112));
+            bits.set_u8::<7>(in_range(self.fine_tune, 14, 114));
+            bits.set_u8::<2>(max(self.mono_poly, 2));
+            bits.set_u8::<5>(max(self.pitch_bend_range, 24));
+            bits.set_bool(self.portamento_switch);
+            bits.set_u8::<8>(max(self.portamento_time, 127));
+            bits.set_u8::<7>(self.cutoff);
+            bits.set_u8::<7>(self.resonance);
+            bits.set_u8::<7>(self.attack_time);
+            bits.set_u8::<7>(self.decay_time);
+            bits.set_u8::<7>(self.release_time);
+            bits.set_bits(&self.unused);
+        })
     }
 
     fn from_bytes(bytes: Box<[u8; Self::BYTE_SIZE]>) -> Result<Self, BytesError> where Self: Sized {
-        let mut data = BitStream::read(bytes);
-        let msb = data.get_u8::<7>();
-        let lsb = data.get_u8::<7>();
-        let pc = data.get_u8::<7>();
-        Ok(Self {
-            tone_number: ToneNumber::find(msb, lsb, pc).expect(&format!("Tone not found: MSB({}) LSB({}) PC({})", msb, lsb, pc)),
-            course_tune: data.get_u8::<7>(),
-            fine_tune: data.get_u8::<7>(),
-            mono_poly: data.get_u8::<2>(),
-            pitch_bend_range: data.get_u8::<5>(),
-            portamento_switch: data.get_bool(),
-            portamento_time: data.get_u8::<8>(),
-            cutoff: data.get_u8::<7>(),
-            resonance: data.get_u8::<7>(),
-            attack_time: data.get_u8::<7>(),
-            decay_time: data.get_u8::<7>(),
-            release_time: data.get_u8::<7>(),
-            unused: data.get_bits()
+        BitStream::read_fixed(bytes, |data| {
+            let msb = data.get_u8::<7>();
+            let lsb = data.get_u8::<7>();
+            let pc = data.get_u8::<7>();
+            Ok(Self {
+                tone_number: ToneNumber::find(msb, lsb, pc).expect(&format!("Tone not found: MSB({}) LSB({}) PC({})", msb, lsb, pc)),
+                course_tune: data.get_u8::<7>(),
+                fine_tune: data.get_u8::<7>(),
+                mono_poly: data.get_u8::<2>(),
+                pitch_bend_range: data.get_u8::<5>(),
+                portamento_switch: data.get_bool(),
+                portamento_time: data.get_u8::<8>(),
+                cutoff: data.get_u8::<7>(),
+                resonance: data.get_u8::<7>(),
+                attack_time: data.get_u8::<7>(),
+                decay_time: data.get_u8::<7>(),
+                release_time: data.get_u8::<7>(),
+                unused: data.get_bits()
+            })
         })
     }
 
