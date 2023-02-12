@@ -10,6 +10,7 @@ pub struct Favorites {
     one_touch_piano_current_number: [u8; 3], // each max 127
     one_touch_e_piano_current_number: [u8; 3], // each max 127
     banks: [Bank; Self::BANKS],
+    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused: Bits<6>
 }
 

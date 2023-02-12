@@ -20,6 +20,7 @@ pub struct ToneLayer {
     attack_time: u8, // max 127 (-63 - +63)
     decay_time: u8, // max 127 (-63 - +63)
     release_time: u8, // max 127 (-63 - +63)
+    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused: Bits<10>
 }
 

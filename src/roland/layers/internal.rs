@@ -36,6 +36,7 @@ pub struct InternalLayer {
     receive_pan: bool,
     receive_hold_1: bool,
     receive_expression: bool,
+    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused: Bits<15>
 }
 

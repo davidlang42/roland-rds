@@ -35,6 +35,7 @@ pub struct Common {
     split_switch_external: bool,
     harmonic_bar_assign: [u8; 4*2], // index=reverse layer & on/off (LOWER2:ON, LOWER2:OFF, LOWER1:ON, LOWER1:OFF, UPPER2:ON, UPPER2:OFF, UPPER1:ON, UPPER1:OFF) each 1-9 (16',5-1/3',8',4',2-2/3',1-3/5',2',1-1/3',1')
     mfx_control_destination: u8, // max 3 (UPPER1, UPPER2, LOWER1, LOWER2)
+    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused: Bits<7>
 }
 

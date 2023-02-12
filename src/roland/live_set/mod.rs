@@ -35,7 +35,8 @@ pub struct LiveSet {
     piano_layers: Box<[PianoLayer; 4]>, // 1056 bytes
     e_piano_layers: Box<[EPianoLayer; 4]>, // 24 bytes
     tone_wheel_layers: Box<[ToneWheelLayer; 4]>, // 24 bytes
-    unused: Bits<8>, // 1 byte
+    #[serde(skip_serializing_if="Bits::is_unit", default="Bits::unit")]
+    padding: Bits<8>, // 1 byte
     // checksum: 1 byte
 }
 
@@ -68,7 +69,7 @@ impl Bytes<2160> for LiveSet {
             let piano_layers = parse_many(data)?;
             let e_piano_layers = parse_many(data)?;
             let tone_wheel_layers = parse_many(data)?;
-            let unused = data.get_bits();
+            let padding = data.get_bits();
             let found_check_sum = data.get_u8::<8>();
             let live_set = Self {
                 common,
@@ -83,7 +84,7 @@ impl Bytes<2160> for LiveSet {
                 piano_layers,
                 e_piano_layers,
                 tone_wheel_layers,
-                unused
+                padding
             };
             let bytes = live_set.to_bytes();
             let expected_check_sum = bytes[bytes.len() - 1];
@@ -146,7 +147,7 @@ impl Bytes<2160> for LiveSet {
                 bytes.push(byte);
             }
         }
-        bytes.append(&mut self.unused.to_bytes());
+        bytes.append(&mut self.padding.to_bytes());
         let check_sum = Self::check_sum(&bytes);
         bytes.push(check_sum);
         bytes.try_into().expect("Wrong number of bytes")

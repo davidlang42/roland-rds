@@ -9,7 +9,6 @@ pub mod layers;
 pub mod tones;
 pub mod system;
 
-//TODO dont serialize unused bits if all zero (across entire project)
 //TODO handle types better than all u8 (across entire project)
 //TODO factor out common sets of settings between layers and live set common/etc, or system and live set
 //TODO make microtune a map of non-default values (are there any other arrays which are really maps?)

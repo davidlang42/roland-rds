@@ -16,6 +16,7 @@ pub struct SongRhythm {
     rhythm_pattern: u8, // max 200
     rhythm_midi_out_channel: u8, // max 16 (OFF, 1-16)
     rhythm_output_port: u8, // max 5 (ALL, INT, OUT1, OUT2, OUT3, USB)
+    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused: Bits<2>
 }
 

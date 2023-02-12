@@ -95,6 +95,34 @@ impl<const N: usize> FromStr for Bits<N> {
 
 impl<const N: usize> Bits<N> {
     const BITS_PER_BYTE: usize = 8;
+
+    pub fn is_zero(&self) -> bool {
+        for bit in self.0 {
+            if bit.on() {
+                return false;
+            }
+        }
+        true
+    }
+
+    pub fn zero() -> Self {
+        Self([Bit::ZERO; N])
+    }
+
+    pub fn is_unit(&self) -> bool {
+        for i in 0..(self.0.len() - 1) {
+            if self.0[i].on() {
+                return false;
+            }
+        }
+        self.0[self.0.len() - 1].on()
+    }
+
+    pub fn unit() -> Self {
+        let mut bits = [Bit::ZERO; N];
+        bits[N - 1] = Bit::ONE;
+        Self(bits)
+    }
     
     fn to_u8(&self) -> u8 {
         if N > 8 {

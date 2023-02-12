@@ -21,6 +21,7 @@ pub struct PianoLayer {
     stretch_tune_type: u8, // max 2 (OFF, PRESET, USER)
     #[serde(with = "serialize_array_as_vec")]
     micro_tune: Box<[u16; 128]>, // index=midi note?, each 12-1012 (-50.0 - +50.0)
+    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused: Bits<5>
 }
 

@@ -25,6 +25,7 @@ pub struct ExternalLayer {
     transmit_other: Bits<177>, //TODO (not relevant, but probably best to just do it) these are well defined by the 700NX midi implementation, but CBF doing the boilerplate rn
     s1: bool,
     s2: bool,
+    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused: Bits<1>
 }
 
