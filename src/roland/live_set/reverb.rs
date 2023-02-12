@@ -31,7 +31,7 @@ impl Bytes<42> for Reverb {
     fn from_bytes(bytes: Box<[u8; Self::BYTE_SIZE]>) -> Result<Self, BytesError> where Self: Sized {
         BitStream::read_fixed(bytes, |bs| {
             let reverb_type = bs.get_u8::<4>();
-            let level = bs.get_u8::<7>();
+            let depth = bs.get_u8::<7>();
             let unused1 = bs.get_bits();
             let mut parameters = [0; 20];
             for i in 0..parameters.len() {
@@ -39,7 +39,7 @@ impl Bytes<42> for Reverb {
             }
             Ok(Self {
                 reverb_type,
-                depth: level,
+                depth,
                 unused1,
                 parameters,
                 unused2: bs.get_bits()
