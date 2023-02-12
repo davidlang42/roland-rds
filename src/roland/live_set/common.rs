@@ -22,10 +22,10 @@ pub struct Common {
     s2_assign: u8, // max 17 (OFF, COUPLE+1OCT, COUPLE-1OCT, COUPLE+2OCT, COUPLE-2OCT, COUPLE+5TH, COUPLE-4TH, OCT-UP, OCT-DOWN, START/STOP, TAP-TEMPO, SONG PLY/STP, SONG RESET, SONG BWD, SONG FWD, MFX1 SW, MFX2 SW, ROTARY SPEED)
     s1_state: bool,
     s2_state: bool,
-    eq_settings: Bits<68>, //TODO these are well defined by the 700NX midi implementation, but CBF doing the boilerplate rn
+    eq_settings: Bits<68>,
     key_touch_velocity: u8, // max 127 (REAL, 1-127)
     key_touch_curve_type: u8, // 1-5 (SUPER LIGHT, LIGHT, MEDIUM, HEAVY, SUPER HEAVY)
-    key_touch_curve_offset: u8, //TODO spec is wrong: 54-73 (-10 - +9)
+    key_touch_curve_offset: u8, // MI is wrong: 54-73 (-10 - +9)
     key_touch_velocity_delay_sense: u8, // 1-127 (-63 - +63)
     key_touch_velocity_key_follow: u8, // 1-127 (-63 - +63)
     key_off_position: bool, // (STANDARD, DEEP)
@@ -60,7 +60,7 @@ impl Bytes<56> for Common {
             bits.set_bits(&self.eq_settings);
             bits.set_u8::<7>(self.key_touch_velocity);
             bits.set_u8::<3>(in_range(self.key_touch_curve_type, 1, 5));
-            bits.set_u8::<5>(self.key_touch_curve_offset); //TODO constrain with correct spec
+            bits.set_u8::<5>(self.key_touch_curve_offset);
             bits.set_u8::<7>(in_range(self.key_touch_velocity_delay_sense, 1, 127));
             bits.set_u8::<7>(in_range(self.key_touch_velocity_key_follow, 1, 127));
             bits.set_bool(self.key_off_position);

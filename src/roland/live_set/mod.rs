@@ -153,12 +153,12 @@ impl Bytes<2160> for LiveSet {
     }
 
     fn to_structured_json(&self) -> StructuredJson {
-        StructuredJson::SingleJson(self.to_json()) //TODO split this up once I've made all the live set components
-        //TODO make sure every file/folder has different names unless they are meant to be the identical type (and interchangeable) across entire project
+        StructuredJson::SingleJson(self.to_json()) //TODO (NEXT) split this up once I've made all the live set components
+        //TODO (NEXT) make sure every file/folder has different names unless they are meant to be the identical type (and interchangeable) across entire project
     }
 
     fn from_structured_json(structured_json: StructuredJson) -> Self {
-        Self::from_json(structured_json.to_single_json()) //TODO split this up once I've made all the live set components
+        Self::from_json(structured_json.to_single_json()) //TODO (NEXT) split this up once I've made all the live set components
     }
 
     fn to_json(&self) -> String {

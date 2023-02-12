@@ -15,6 +15,7 @@ pub mod system;
 //TODO make microtune a map of non-default values (are there any other arrays which are really maps?)
 //TODO look for other sections of json which are overly verbose and contain basically default data and figure out what to do with them
 //TODO complete or action future decoding of each sub-section as issues and point back to the 700NX midi-implementation doc
+//TODO support 700nx (requires minimal code change for actual implementation but needs some work to auto-detect incoming files/ handle differences nicely) -- label any issues I can't do with a 300NX as "requires RD700NX"
 
 fn validate(ch: char) -> Result<char, BytesError> { //TODO should we validate on the way in as well as out? probably need better error messages for invalid which include which # live set we are in, which field we are looking at
     // Roland keyboards use chars 32 ' ' through 126 '~' inclusive

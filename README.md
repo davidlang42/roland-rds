@@ -52,7 +52,8 @@ In the `encode`, `decode` and `split` operations, if you omit the input filename
 If you run `roland-rds help` or without args, you will see usage instructions.
 
 ## Development
-I encourage anyone who has time to add to the understanding of the RDS file, as currently most of the data is just stored as bits to pass through. I suggest the following 2 approaches, potentially sued in tandem.
+I encourage anyone who has time to add to the understanding of the RDS file, or implement for additional Roland devices. I suggest the following 2 approaches, potentially used in tandem.
+You can also find some easier (more well defined) tasks in [issues](https://github.com/davidlang42/roland-rds/issues) which will help.
 
 ### Generate & diff
 - use a keyboard to create 2 different RDS files with only a single parameter different

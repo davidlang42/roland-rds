@@ -5,7 +5,7 @@ use crate::bytes::{Bytes, BytesError, StructuredJson};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Reverb(Bits<336>);
-//TODO fields are well defined by the 700NX midi implementation, but CBF doing the boilerplate rn (should be 331 bits + 5 unused)
+//TODO (might be relevant) fields are well defined by the 700NX midi implementation, but CBF doing the boilerplate rn (should be 331 bits + 5 unused)
 
 impl Bytes<42> for Reverb {
     fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {

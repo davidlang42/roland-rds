@@ -5,7 +5,6 @@ use crate::bytes::{Bytes, BytesError, StructuredJson};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SwitchAssign(Bits<160>);
-//TODO fields are well defined by the 700NX midi implementation, but CBF doing the boilerplate rn (should be 150 bits + 10 unused)
 
 impl Bytes<20> for SwitchAssign {
     fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {

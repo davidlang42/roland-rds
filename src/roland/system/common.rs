@@ -5,7 +5,8 @@ use crate::bytes::{Bytes, BytesError, StructuredJson};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Common(Bits<80>);
-//TODO fields are well defined by the 700NX midi implementation, but CBF doing the boilerplate rn (should be 61 bits + 3 unused + 2 more bytes of unknown data?)
+//TODO need to do these fields because some settings are relevant to live sets (should be 61 bits + 3 unused + 2 more bytes of unknown data?)
+//TODO find where the setting about 16PARTS/16PARTS+LAYERS is, because thats important too
 
 impl Bytes<10> for Common {
     fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {

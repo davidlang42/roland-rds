@@ -18,7 +18,6 @@ mod json;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-//TODO support 700nx (requires minimal code change for actual implementation but needs some work to auto-detect incoming files/ handle differences nicely) -- label any issues I can't do with a 300NX as "requires RD700NX"
 fn main() {
     env::set_var("RUST_BACKTRACE", "1");
     let mut args = env::args();
@@ -40,7 +39,7 @@ fn main() {
     }
 }
 
-fn help(cmd: &str) { //TODO update readme if required
+fn help(cmd: &str) {
     println!("roland-rds (v{})", VERSION);
     println!("Usage:");
     println!("  {} decode FILENAME       -- decode RDS file and print JSON to std out", cmd);

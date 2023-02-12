@@ -5,7 +5,6 @@ use crate::bytes::{Bytes, BytesError, StructuredJson};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct VLink(Bits<32>);
-//TODO fields are well defined by the 700NX midi implementation, but CBF doing the boilerplate rn (should be 30 bits + 2 unused)
 
 impl Bytes<4> for VLink {
     fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {

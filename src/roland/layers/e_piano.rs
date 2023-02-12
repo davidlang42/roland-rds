@@ -5,7 +5,6 @@ use crate::bytes::{Bytes, BytesError, StructuredJson};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct EPianoLayer(Bits<48>);
-//TODO fields are well defined by the 700NX midi implementation, but CBF doing the boilerplate rn (should be 38 bits + 10 unused)
 
 impl Bytes<6> for EPianoLayer {
     fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {

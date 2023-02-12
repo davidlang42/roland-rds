@@ -12,12 +12,12 @@ pub struct PianoLayer {
     stereo_width: u8, // max 63
     nuance: u8, // max 2 (TYPE1, TYPE2, TYPE3)
     duplex_scale_level: u8, // max 127
-    hammer_noise_level: u8, //TODO spec was wrong: "62-66 (-2 - +2)"
+    hammer_noise_level: u8, // MI is wrong: "62-66 (-2 - +2)"
     damper_noise_level: u8, // max 127
     string_resonance_level: u8, // max 127
     key_off_resonance_level: u8, // max 127
     sound_lift: u8, // max 127
-    tone_character: u8, //TODO spec was wrong: "59-69 (-5 - +5)"
+    tone_character: u8, // MI is wrong: "59-69 (-5 - +5)"
     stretch_tune_type: u8, // max 2 (OFF, PRESET, USER)
     #[serde(with = "serialize_array_as_vec")]
     micro_tune: Box<[u16; 128]>, // index=midi note?, each 12-1012 (-50.0 - +50.0)
@@ -27,16 +27,16 @@ pub struct PianoLayer {
 impl Bytes<264> for PianoLayer {
     fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {
         BitStream::write_fixed(|bits| {
-            bits.set_u8::<7>(max(self.tone_number, 8)); //TODO somewhere there needs to be an assertion that this tone number matches the live set tone number (if one of the piano tones is being used)
+            bits.set_u8::<7>(max(self.tone_number, 8));
             bits.set_u8::<6>(max(self.stereo_width, 63));
             bits.set_u8::<2>(max(self.nuance, 2));
             bits.set_u8::<7>(max(self.duplex_scale_level, 127));
-            bits.set_u8::<3>(self.hammer_noise_level); //TODO constrain value
+            bits.set_u8::<3>(self.hammer_noise_level);
             bits.set_u8::<7>(max(self.damper_noise_level, 127));
             bits.set_u8::<7>(max(self.string_resonance_level, 127));
             bits.set_u8::<7>(max(self.key_off_resonance_level, 127));
             bits.set_u8::<7>(max(self.sound_lift, 127));
-            bits.set_u8::<4>(self.tone_character);//TODO constrain value
+            bits.set_u8::<4>(self.tone_character);
             bits.set_u8::<2>(max(self.stretch_tune_type, 2));
             for value in *self.micro_tune {
                 bits.set_u16::<16>(in_range_u16(value, 12, 1012));

@@ -5,7 +5,6 @@ use crate::bytes::{Bytes, BytesError, StructuredJson};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Compressor(Bits<112>);
-//TODO fields are well defined by the 700NX midi implementation, but CBF doing the boilerplate rn (should be 103 bits + 9 unused)
 
 impl Bytes<14> for Compressor {
     fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {

@@ -5,7 +5,7 @@ use crate::bytes::{Bytes, BytesError, StructuredJson};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Mfx(Bits<608>);
-//TODO fields are partially defined by the 700NX midi implementation, but there is a lot of extra space unaccounted for (should be 521 bits) maybe some of it is checksum?
+//TODO (definitely relevant) fields are partially defined by the 700NX midi implementation, but there is a lot of extra space unaccounted for (should be 521 bits) maybe some of it is checksum?
 
 impl Bytes<76> for Mfx {
     fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {

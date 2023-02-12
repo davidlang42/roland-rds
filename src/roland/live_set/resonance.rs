@@ -5,7 +5,6 @@ use crate::bytes::{Bytes, BytesError, StructuredJson};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Resonance(Bits<608>);
-//TODO fields are partially defined by the 700NX midi implementation, but there is a lot of extra space unaccounted for (should be 513 bytes) maybe some of it is checksum?
 
 impl Bytes<76> for Resonance {
     fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {
