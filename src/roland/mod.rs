@@ -1,7 +1,6 @@
 use std::fmt::Debug;
 
-use crate::bits::BitStream;
-use crate::bytes::{Bytes, BytesError};
+use crate::bytes::{Bytes, BytesError, BitStream};
 
 pub mod rd300nx;
 pub mod live_set;

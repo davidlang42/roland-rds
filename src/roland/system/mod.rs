@@ -1,5 +1,5 @@
-use crate::bits::{Bits, BitStream};
-use crate::bytes::{Bytes, BytesError, StructuredJson};
+use crate::bytes::{Bytes, BytesError, Bits, BitStream};
+use crate::json::{Json, StructuredJson};
 use crate::json::serialize_chars_as_string;
 use self::common::Common;
 use self::compressor::Compressor;
@@ -107,7 +107,9 @@ impl Bytes<160> for System {
         }
         bytes.try_into().unwrap()
     }
+}
 
+impl Json for System {
     fn to_structured_json(&self) -> StructuredJson {
         StructuredJson::SingleJson(self.to_json())
     }
@@ -117,7 +119,7 @@ impl Bytes<160> for System {
     }
 
     fn to_json(&self) -> String {
-        serde_json::to_string(&self).expect("Error serializing JSON")
+        serde_json::to_string_pretty(&self).expect("Error serializing JSON")
     }
 
     fn from_json(json: String) -> Self {

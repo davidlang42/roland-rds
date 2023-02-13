@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
-use crate::bits::{Bits, BitStream};
-use crate::bytes::{Bytes, BytesError, StructuredJson};
+use crate::bytes::{Bytes, BytesError, Bits, BitStream};
+use crate::json::{Json, StructuredJson};
 use self::chorus::Chorus;
 use self::common::Common;
 use self::mfx::Mfx;
@@ -143,7 +143,9 @@ impl Bytes<2160> for LiveSet {
         bytes.push(check_sum);
         bytes.try_into().expect("Wrong number of bytes")
     }
+}
 
+impl Json for LiveSet {
     fn to_structured_json(&self) -> StructuredJson {
         if !self.padding.is_unit() {
             panic!("Cannot split JSON with non-standard padding");
@@ -153,9 +155,9 @@ impl Bytes<2160> for LiveSet {
             ("song_rhythm".to_string(), self.song_rhythm.to_structured_json()),
             ("chorus".to_string(), self.chorus.to_structured_json()),
             ("reverb".to_string(), self.reverb.to_structured_json()),
-            ("mfx".to_string(), StructuredJson::from_collection(self.mfx.as_slice(), None)),
+            ("mfx".to_string(), StructuredJson::from_collection(self.mfx.as_slice(), |_| None)),
             ("resonance".to_string(), self.resonance.to_structured_json()),
-            ("layers".to_string(), StructuredJson::from_collection(self.layers.as_slice(), Some(|l: &LogicalLayer| l.tone.tone_name())))
+            ("layers".to_string(), StructuredJson::from_collection(self.layers.as_slice(), |l| Some(l.tone.tone_name())))
         ])
     }
 
@@ -181,7 +183,7 @@ impl Bytes<2160> for LiveSet {
     }
 
     fn to_json(&self) -> String {
-        serde_json::to_string(&self).expect("Error serializing JSON")
+        serde_json::to_string_pretty(&self).expect("Error serializing JSON")
     }
 
     fn from_json(json: String) -> Self {

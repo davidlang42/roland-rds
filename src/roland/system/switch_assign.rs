@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
-use crate::bits::{Bits, BitStream};
-use crate::bytes::{Bytes, BytesError, StructuredJson};
+use crate::bytes::{Bytes, BytesError, Bits, BitStream};
+use crate::json::{Json, StructuredJson};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SwitchAssign(Bits<160>);
@@ -18,7 +18,9 @@ impl Bytes<20> for SwitchAssign {
             Ok(Self(bs.get_bits()))
         })
     }
+}
 
+impl Json for SwitchAssign {
     fn to_structured_json(&self) -> StructuredJson {
         StructuredJson::SingleJson(self.to_json())
     }
@@ -28,7 +30,7 @@ impl Bytes<20> for SwitchAssign {
     }
 
     fn to_json(&self) -> String {
-        serde_json::to_string(&self).expect("Error serializing JSON")
+        serde_json::to_string_pretty(&self).expect("Error serializing JSON")
     }
 
     fn from_json(json: String) -> Self {

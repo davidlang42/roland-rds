@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
-use crate::bits::{Bits, BitStream};
-use crate::bytes::{Bytes, BytesError, StructuredJson};
+use crate::bytes::{Bytes, BytesError, Bits, BitStream};
+use crate::json::{Json, StructuredJson};
 use crate::roland::in_range_u16;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -46,7 +46,9 @@ impl Bytes<42> for Reverb {
             })
         })
     }
+}
 
+impl Json for Reverb {
     fn to_structured_json(&self) -> StructuredJson {
         StructuredJson::SingleJson(self.to_json())
     }
@@ -56,7 +58,7 @@ impl Bytes<42> for Reverb {
     }
 
     fn to_json(&self) -> String {
-        serde_json::to_string(&self).expect("Error serializing JSON")
+        serde_json::to_string_pretty(&self).expect("Error serializing JSON")
     }
 
     fn from_json(json: String) -> Self {

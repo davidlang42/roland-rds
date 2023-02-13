@@ -6,11 +6,10 @@ use std::io::Write;
 use std::path::PathBuf;
 
 use crate::bytes::Bytes;
-use crate::bytes::StructuredJson;
+use crate::json::{Json, StructuredJson};
 use crate::roland::rd300nx::RD300NX;
 
 mod roland;
-mod bits;
 mod bytes;
 mod json;
 
@@ -39,7 +38,7 @@ fn main() {
     }
 }
 
-fn help(cmd: &str) {
+fn help(cmd: &str) {//TODO make input/output filenames not option and use - for std in/out with warning for windows on encode
     println!("roland-rds (v{})", VERSION);
     println!("Usage:");
     println!("  {} decode FILENAME       -- decode RDS file and print JSON to std out", cmd);

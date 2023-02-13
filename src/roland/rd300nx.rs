@@ -1,5 +1,5 @@
-use crate::bits::BitStream;
-use crate::bytes::{Bytes, BytesError, StructuredJson};
+use crate::bytes::{Bytes, BytesError, BitStream};
+use crate::json::{StructuredJson, Json};
 use crate::json::serialize_array_as_vec;
 use super::live_set::LiveSet;
 use super::parse_many;
@@ -60,12 +60,14 @@ impl Bytes<183762> for RD300NX {
         }
         bytes.try_into().unwrap()
     }
+}
 
+impl Json for RD300NX {
     fn to_structured_json(&self) -> StructuredJson {
         StructuredJson::NestedCollection(vec![
-            ("user_sets".to_string(), StructuredJson::from_collection(self.user_sets.as_slice(), Some(LiveSet::name_string))),
-            ("piano".to_string(), StructuredJson::from_collection(self.piano.as_slice(), Some(LiveSet::name_string))),
-            ("e_piano".to_string(), StructuredJson::from_collection(self.e_piano.as_slice(), Some(LiveSet::name_string))),
+            ("user_sets".to_string(), StructuredJson::from_collection(self.user_sets.as_slice(), |ls| Some(ls.name_string()))),
+            ("piano".to_string(), StructuredJson::from_collection(self.piano.as_slice(), |ls| Some(ls.name_string()))),
+            ("e_piano".to_string(), StructuredJson::from_collection(self.e_piano.as_slice(), |ls| Some(ls.name_string()))),
             ("system".to_string(), self.system.to_structured_json())
         ])
     }
@@ -85,7 +87,7 @@ impl Bytes<183762> for RD300NX {
     }
 
     fn to_json(&self) -> String {
-        serde_json::to_string(&self).expect("Error serializing JSON")
+        serde_json::to_string_pretty(&self).expect("Error serializing JSON")
     }
 
     fn from_json(json: String) -> Self {

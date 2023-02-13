@@ -12,6 +12,8 @@ pub use piano::PianoLayer;
 pub use e_piano::EPianoLayer;
 pub use tone_wheel::ToneWheelLayer;
 
+use crate::json::{Json, StructuredJson};
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct LogicalLayer {
     pub internal: InternalLayer,
@@ -41,6 +43,24 @@ impl LogicalLayer {
                 tone_wheel: tw.remove(0),
             });
         }
-        layers.try_into().unwrap()
+        Box::new(layers.try_into().unwrap())
+    }
+}
+
+impl Json for LogicalLayer {
+    fn to_structured_json(&self) -> StructuredJson {
+        StructuredJson::SingleJson(self.to_json())
+    }
+
+    fn from_structured_json(structured_json: StructuredJson) -> Self {
+        Self::from_json(structured_json.to_single_json())
+    }
+
+    fn to_json(&self) -> String {
+        serde_json::to_string_pretty(&self).expect("Error serializing JSON")
+    }
+
+    fn from_json(json: String) -> Self {
+        serde_json::from_str(&json).expect("Error deserializing JSON")
     }
 }
