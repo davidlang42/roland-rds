@@ -163,3 +163,53 @@ impl Default for PianoKey {
         Self::from(0)
     }
 }
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
+pub enum NuanceType { // 0-2
+    Type1,
+    Type2,
+    Type3
+}
+
+impl From<u8> for NuanceType {
+    fn from(value: u8) -> Self {
+        Self::iter().nth(value as usize).unwrap()
+    }
+}
+
+impl Into<u8> for NuanceType {
+    fn into(self) -> u8 {
+        Self::iter().position(|s| s == self).unwrap() as u8
+    }
+}
+
+impl Default for NuanceType {
+    fn default() -> Self {
+        Self::from(0)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
+pub enum StretchTuneType { // 0-2
+    Off,
+    Preset,
+    User
+}
+
+impl From<u8> for StretchTuneType {
+    fn from(value: u8) -> Self {
+        Self::iter().nth(value as usize).unwrap()
+    }
+}
+
+impl Into<u8> for StretchTuneType {
+    fn into(self) -> u8 {
+        Self::iter().position(|s| s == self).unwrap() as u8
+    }
+}
+
+impl Default for StretchTuneType {
+    fn default() -> Self {
+        Self::from(0)
+    }
+}
