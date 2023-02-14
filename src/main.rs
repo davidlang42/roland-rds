@@ -30,7 +30,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             )?,
             "decode" => decode(
                 optional(args.next().ok_or("The 2nd argument should be the FILENAME for the input RDS file (or '-' for STDIN)")?),
-                optional(args.next().ok_or("The 3rd argument should be the FILENAME for the output JSON file (or '-' for STDOUT)")?)
+                optional(args.next().ok_or("The 3rd argument should be the FILENAME for the output JSON file (or '-' for STDOUT)")?) //TODO output_json arg not working as file
             )?,
             "split" => split(
                 optional(args.next().ok_or("The 2nd argument should be the FILENAME for the input JSON file (or '-' for STDIN)")?),

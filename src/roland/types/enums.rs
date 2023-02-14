@@ -680,7 +680,6 @@ impl Default for MfxType {
     }
 }
 
-
 #[derive(Serialize, Deserialize, Debug, Copy, Clone)]
 pub enum MidiChannel {  // 0-16 (OFF, 1-16)
     Off,
@@ -709,5 +708,67 @@ impl Into<u8> for MidiChannel {
 impl Default for MidiChannel {
     fn default() -> Self {
         Self::from(0)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+pub enum VoiceReserve {  // 0-64 (0-63, full)
+    Voices(u8),
+    Full
+}
+
+impl From<u8> for VoiceReserve {
+    fn from(value: u8) -> Self {
+        if value == 64 {
+            Self::Full
+        } else {
+            Self::Voices(value)
+        }
+    }
+}
+
+impl Into<u8> for VoiceReserve {
+    fn into(self) -> u8 {
+        match self {
+            Self::Full => 64,
+            Self::Voices(v) => v
+        }
+    }
+}
+
+impl Default for VoiceReserve {
+    fn default() -> Self {
+        Self::from(0)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
+pub enum HarmonicBar { // 1-9 (16',5-1/3',8',4',2-2/3',1-3/5',2',1-1/3',1')
+    F16,
+    F5_1_3,
+    F8,
+    F4,
+    F2_2_3,
+    F1_3_5,
+    F2,
+    F1_1_3,
+    F1
+}
+
+impl From<u8> for HarmonicBar {
+    fn from(value: u8) -> Self {
+        Self::iter().nth(value as usize - 1).unwrap()
+    }
+}
+
+impl Into<u8> for HarmonicBar {
+    fn into(self) -> u8 {
+        Self::iter().position(|s| s == self).unwrap() as u8 + 1
+    }
+}
+
+impl Default for HarmonicBar {
+    fn default() -> Self {
+        Self::from(1)
     }
 }

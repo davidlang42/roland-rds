@@ -7,8 +7,10 @@ use crate::roland::types::numeric::OneIndexedU16;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Favorites {
+    //TODO numeric types for one_touch_piano/e_piano current number
     one_touch_piano_current_number: [u8; 3], // each max 127
     one_touch_e_piano_current_number: [u8; 3], // each max 127
+    //TODO fully enumerated map for bank by bank name (a,b,c,d)
     banks: [Bank; Self::BANKS],
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused: Bits<6>

@@ -6,6 +6,7 @@ use crate::roland::types::enums::{Polarity, SettingMode, MidiChannel};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Common {
+    //TODO type for master_tune
     master_tune: u16, // 24-2024 (-100.0 - +100.0)
     master_level: u8, // max 127
     live_set_control_channel: MidiChannel,
@@ -15,8 +16,10 @@ pub struct Common {
     eq_mode: SettingMode,
     pedal_mode: SettingMode,
     s1_s2_mode: SettingMode,
+    //TODO type for fc1/fc2_assign
     fc1_assign: u8, // max 146 (OFF, CC00 - CC127, BEND-UP, BEND-DOWN, AFTERTOUCH, OCT-UP, OCT-DOWN, START/STOP, TAP-TEMPO, RHY PLY/STP, SONG PLY/STP, SONG RESET, MFX1 SW, MFX2 SW, MFX1 CONTROL, MFX2 CONTROL, ROTARY SPEED, SOUND FOCUS VALUE, LIVE SET UP, LIVE SET DOWN)
     fc2_assign: u8, // max 146 (OFF, CC00 - CC127, BEND-UP, BEND-DOWN, AFTERTOUCH, OCT-UP, OCT-DOWN, START/STOP, TAP-TEMPO, RHY PLY/STP, SONG PLY/STP, SONG RESET, MFX1 SW, MFX2 SW, MFX1 CONTROL, MFX2 CONTROL, ROTARY SPEED, SOUND FOCUS VALUE, LIVE SET UP, LIVE SET DOWN)
+    //TODO type for s1/s2_assign
     s1_assign: u8, // max 20 (OFF, COUPLE+1OCT, COUPLE-1OCT, COUPLE+2OCT, COUPLE-2OCT, COUPLE+5TH, COUPLE-4TH, OCT-UP, OCT-DOWN, START/STOP, TAP-TEMPO, SONG PLY/STP, SONG RESET, SONG BWD, SONG FWD, MFX1 SW, MFX2 SW, ROTARY SPEED, LIVE SET UP, LIVE SET DOWN, PANEL LOCK)
     s2_assign: u8, // max 20 (OFF, COUPLE+1OCT, COUPLE-1OCT, COUPLE+2OCT, COUPLE-2OCT, COUPLE+5TH, COUPLE-4TH, OCT-UP, OCT-DOWN, START/STOP, TAP-TEMPO, SONG PLY/STP, SONG RESET, SONG BWD, SONG FWD, MFX1 SW, MFX2 SW, ROTARY SPEED, LIVE SET UP, LIVE SET DOWN, PANEL LOCK)
     tone_remain: bool,

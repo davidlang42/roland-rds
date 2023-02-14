@@ -23,6 +23,7 @@ pub struct InternalLayer {
     fc2: bool,
     modulation: bool,
     bender: bool,
+    //TODO fully enumerated map for control_slider
     control_slider: [bool; 4], // index=layer (UPPER1, UPPER2, LOWER1, LOWER2)
     s1: bool,
     s2: bool,

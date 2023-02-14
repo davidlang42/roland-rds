@@ -11,6 +11,7 @@ pub struct Reverb {
     depth: u8, // max 127
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused1: Bits<2>,
+    //TODO stop storing parameters once the rest are default
     parameters: [Parameter; 20],
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused2: Bits<3>

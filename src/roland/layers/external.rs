@@ -20,6 +20,7 @@ pub struct ExternalLayer {
     modulation: bool,
     bender: bool,
     control_mfx_switch: bool,
+    //TODO fully enumerated map for control_slider
     control_slider: [bool; 4], // index=layer (UPPER1, UPPER2, LOWER1, LOWER2)
     transmit_midi_messages: Bits<177>,
     s1: bool,

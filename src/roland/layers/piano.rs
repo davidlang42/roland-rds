@@ -6,6 +6,7 @@ use crate::roland::types::enums::{StretchTuneType, NuanceType};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PianoLayer {
+    //TODO numeric type for tone_number
     tone_number_raw: u8, // max 8
     stereo_width: u8, // max 63
     nuance: NuanceType,
@@ -18,6 +19,7 @@ pub struct PianoLayer {
     tone_character_raw: u8, // MI is wrong: "59-69 (-5 - +5)"
     stretch_tune_type: StretchTuneType,
     #[serde(with = "serialize_array_as_vec")]
+    //TODO map for non-default micro_tune
     micro_tune: Box<[u16; 128]>, // index=midi note?, each 12-1012 (-50.0 - +50.0)
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused: Bits<5>

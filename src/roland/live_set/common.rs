@@ -2,20 +2,24 @@ use std::fmt::Debug;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{Json, StructuredJson, serialize_chars_as_string, StructuredJsonError};
-use crate::roland::types::enums::{Layer, SliderSelect, KeyOffPosition, KeyTouchVelocity, KeyTouchCurveType};
+use crate::roland::types::enums::{Layer, SliderSelect, KeyOffPosition, KeyTouchVelocity, KeyTouchCurveType, VoiceReserve, HarmonicBar};
 use crate::roland::types::numeric::OffsetU8;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Common {
     #[serde(with = "serialize_chars_as_string")]
     name: [char; 16], // 32-127 (ascii)
-    voice_reserve: [u8; 16], // index=channel, each max 64 (0-63, full)
+    //TODO map for non-default voice_reserve
+    voice_reserve: [VoiceReserve; 16], // index=channel
     live_set_tempo: u16, // 10-500
+    //TODO type for fc1/fc2_assign
     fc1_assign: u8, // max 144 (OFF, CC00 - CC127, BEND-UP, BEND-DOWN, AFTERTOUCH, OCT-UP, OCT-DOWN, START/STOP, TAP-TEMPO, RHY PLY/STP, SONG PLY/STP, SONG RESET, MFX1 SW, MFX2 SW, MFX1 CONTROL, MFX2 CONTROL, ROTARY SPEED, SOUND FOCUS VALUE)
     fc2_assign: u8, // max 144 (OFF, CC00 - CC127, BEND-UP, BEND-DOWN, AFTERTOUCH, OCT-UP, OCT-DOWN, START/STOP, TAP-TEMPO, RHY PLY/STP, SONG PLY/STP, SONG RESET, MFX1 SW, MFX2 SW, MFX1 CONTROL, MFX2 CONTROL, ROTARY SPEED, SOUND FOCUS VALUE)
     sound_focus_switch: bool,
+    //TODO type for sound_focus_type
     sound_focus_type: u8, // max 31 (OFF, PIANO TYPE1, PIANO TYPE2, E.PIANO TYPE, SOUND LIFT, ENHANCER, MID BOOST)
     sound_focus_value: u8, // max 127
+    //TODO type for s1/s2_assign
     s1_assign: u8, // max 17 (OFF, COUPLE+1OCT, COUPLE-1OCT, COUPLE+2OCT, COUPLE-2OCT, COUPLE+5TH, COUPLE-4TH, OCT-UP, OCT-DOWN, START/STOP, TAP-TEMPO, SONG PLY/STP, SONG RESET, SONG BWD, SONG FWD, MFX1 SW, MFX2 SW, ROTARY SPEED)
     s2_assign: u8, // max 17 (OFF, COUPLE+1OCT, COUPLE-1OCT, COUPLE+2OCT, COUPLE-2OCT, COUPLE+5TH, COUPLE-4TH, OCT-UP, OCT-DOWN, START/STOP, TAP-TEMPO, SONG PLY/STP, SONG RESET, SONG BWD, SONG FWD, MFX1 SW, MFX2 SW, ROTARY SPEED)
     s1_state: bool,
@@ -28,10 +32,12 @@ pub struct Common {
     key_touch_velocity_key_follow: OffsetU8<64>, // 1-127 (-63 - +63)
     key_off_position: KeyOffPosition,
     slider_select: SliderSelect,
+    //TODO type for slider_assign
     slider_assign: [u8; 4], // index=layer (UPPER1, UPPER2, LOWER1, LOWER2) each 0-133 (OFF, CC00 - CC127, BEND-UP, BEND-DOWN, AFTERTOUCH, MFX1 CONTROL, MFX2 CONTROL)
     split_switch_internal: bool,
     split_switch_external: bool,
-    harmonic_bar_assign: [u8; 4*2], // index=reverse layer & on/off (LOWER2:ON, LOWER2:OFF, LOWER1:ON, LOWER1:OFF, UPPER2:ON, UPPER2:OFF, UPPER1:ON, UPPER1:OFF) each 1-9 (16',5-1/3',8',4',2-2/3',1-3/5',2',1-1/3',1')
+    //TODO fully enumerated map (or just structure?) for harmonic_bar_assign
+    harmonic_bar_assign: [HarmonicBar; 4*2], // index=reverse layer & on/off (LOWER2:ON, LOWER2:OFF, LOWER1:ON, LOWER1:OFF, UPPER2:ON, UPPER2:OFF, UPPER1:ON, UPPER1:OFF)
     mfx_control_destination: Layer,
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused: Bits<7>
@@ -44,7 +50,7 @@ impl Bytes<56> for Common {
                 bits.set_char::<7>(value)?;
             }
             for value in self.voice_reserve {
-                bits.set_u8::<7>(value, 0, 64)?;
+                bits.set_u8::<7>(value.into(), 0, 64)?;
             }
             bits.set_u16::<9>(self.live_set_tempo, 10, 500)?;
             bits.set_u8::<8>(self.fc1_assign, 0, 144)?;
@@ -70,7 +76,7 @@ impl Bytes<56> for Common {
             bits.set_bool(self.split_switch_internal);
             bits.set_bool(self.split_switch_external);
             for value in self.harmonic_bar_assign {
-                bits.set_u8::<4>(value, 1, 9)?;
+                bits.set_u8::<4>(value.into(), 1, 9)?;
             }
             bits.set_u8::<2>(self.mfx_control_destination.into(), 0, 3)?;
             bits.set_bits(&self.unused);
@@ -84,9 +90,9 @@ impl Bytes<56> for Common {
             for i in 0..name.len() {
                 name[i] = data.get_char::<7>()?;
             }
-            let mut voice_reserve = [0; 16];
+            let mut voice_reserve = [VoiceReserve::default(); 16];
             for i in 0..voice_reserve.len() {
-                voice_reserve[i] = data.get_u8::<7>(0, 64)?;
+                voice_reserve[i] = data.get_u8::<7>(0, 64)?.into();
             }
             let live_set_tempo = data.get_u16::<9>(10, 500)?;
             let fc1_assign = data.get_u8::<8>(0, 144)?;
@@ -112,9 +118,9 @@ impl Bytes<56> for Common {
             }
             let split_switch_internal = data.get_bool();
             let split_switch_external = data.get_bool();
-            let mut harmonic_bar_assign = [0; 4 * 2];
+            let mut harmonic_bar_assign = [HarmonicBar::default(); 4 * 2];
             for i in 0..harmonic_bar_assign.len() {
-                harmonic_bar_assign[i] = data.get_u8::<4>(1, 9)?;
+                harmonic_bar_assign[i] = data.get_u8::<4>(1, 9)?.into();
             }
             Ok(Self {
                 name,

@@ -21,6 +21,7 @@ pub struct Mfx {
     padding4: Bits<14>,
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused2: Bits<26>,
+    //TODO stop storing parameters once the rest are default
     parameters: [Parameter; 32],
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused3: Bits<3>

@@ -12,6 +12,7 @@ pub struct Chorus {
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused1: Bits<2>,
     output_select: OutputSelect,
+    //TODO stop storing parameters once the rest are default
     parameters: [Parameter; 20],
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused: Bits<1>
