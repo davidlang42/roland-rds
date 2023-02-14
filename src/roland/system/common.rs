@@ -2,13 +2,13 @@ use std::fmt::Debug;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{StructuredJson, Json, StructuredJsonError};
-use crate::roland::types::enums::{Polarity, SettingMode};
+use crate::roland::types::enums::{Polarity, SettingMode, MidiChannel};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Common {
     master_tune: u16, // 24-2024 (-100.0 - +100.0)
     master_level: u8, // max 127
-    live_set_control_channel: u8, // max 16 (OFF, 1-16)
+    live_set_control_channel: MidiChannel,
     damper_polarity: Polarity,
     fc1_polarity: Polarity,
     fc2_polarity: Polarity,
@@ -29,7 +29,7 @@ impl Bytes<10> for Common {
         BitStream::write_fixed(|bs| {
             bs.set_u16::<16>(self.master_tune, 24, 2024)?;
             bs.set_u8::<7>(self.master_level, 0, 127)?;
-            bs.set_u8::<5>(self.live_set_control_channel, 0, 16)?;
+            bs.set_u8::<5>(self.live_set_control_channel.into(), 0, 16)?;
             bs.set_bool(self.damper_polarity.into());
             bs.set_bool(self.fc1_polarity.into());
             bs.set_bool(self.fc2_polarity.into());
@@ -50,7 +50,7 @@ impl Bytes<10> for Common {
             Ok(Self {
                 master_tune: bs.get_u16::<16>(24, 2024)?,
                 master_level: bs.get_u8::<7>(0, 127)?,
-                live_set_control_channel: bs.get_u8::<5>(0, 16)?,
+                live_set_control_channel: bs.get_u8::<5>(0, 16)?.into(),
                 damper_polarity: bs.get_bool().into(),
                 fc1_polarity: bs.get_bool().into(),
                 fc2_polarity: bs.get_bool().into(),

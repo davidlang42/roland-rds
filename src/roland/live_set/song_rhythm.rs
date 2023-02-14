@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{Json, StructuredJson, StructuredJsonError};
-use crate::roland::types::enums::OutputPort;
+use crate::roland::types::enums::{OutputPort, MidiChannel};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SongRhythm {
@@ -16,7 +16,7 @@ pub struct SongRhythm {
     rhythm_set: u8, // max 13
     rhythm_level: u8, // max 127
     rhythm_pattern: u8, // max 200
-    rhythm_midi_out_channel: u8, // max 16 (OFF, 1-16)
+    rhythm_midi_out_channel: MidiChannel,
     rhythm_output_port: OutputPort,
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused3: Bits<2>
@@ -33,7 +33,7 @@ impl Bytes<6> for SongRhythm {
             bits.set_u8::<4>(self.rhythm_set, 0, 13)?;
             bits.set_u8::<7>(self.rhythm_level, 0, 127)?;
             bits.set_u8::<8>(self.rhythm_pattern, 0, 200)?;
-            bits.set_u8::<5>(self.rhythm_midi_out_channel, 0, 16)?;
+            bits.set_u8::<5>(self.rhythm_midi_out_channel.into(), 0, 16)?;
             bits.set_u8::<3>(self.rhythm_output_port.into(), 0, 5)?;
             bits.set_bits(&self.unused3);
             Ok(())
@@ -51,7 +51,7 @@ impl Bytes<6> for SongRhythm {
                 rhythm_set: data.get_u8::<4>(0, 13)?,
                 rhythm_level: data.get_u8::<7>(0, 127)?,
                 rhythm_pattern: data.get_u8::<8>(0, 200)?,
-                rhythm_midi_out_channel: data.get_u8::<5>(0, 16)?,
+                rhythm_midi_out_channel: data.get_u8::<5>(0, 16)?.into(),
                 rhythm_output_port: data.get_u8::<3>(0, 5)?.into(),
                 unused3: data.get_bits()
             })

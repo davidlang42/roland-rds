@@ -679,3 +679,35 @@ impl Default for MfxType {
         Self::from(0)
     }
 }
+
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+pub enum MidiChannel {  // 0-16 (OFF, 1-16)
+    Off,
+    Channel(u8)
+}
+
+impl From<u8> for MidiChannel {
+    fn from(value: u8) -> Self {
+        if value == 0 {
+            Self::Off
+        } else {
+            Self::Channel(value)
+        }
+    }
+}
+
+impl Into<u8> for MidiChannel {
+    fn into(self) -> u8 {
+        match self {
+            Self::Off => 0,
+            Self::Channel(ch) => ch
+        }
+    }
+}
+
+impl Default for MidiChannel {
+    fn default() -> Self {
+        Self::from(0)
+    }
+}
