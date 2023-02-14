@@ -1,6 +1,8 @@
 use std::fmt::Debug;
 
-use crate::{bytes::{Bytes, BytesError, Bits, BitStream}, roland::types::OffsetU8};
+use crate::bytes::{Bytes, BytesError, Bits, BitStream};
+use crate::roland::types::enums::MonoPoly;
+use crate::roland::types::numeric::OffsetU8;
 
 use super::super::tones::ToneNumber;
 
@@ -9,7 +11,7 @@ pub struct ToneLayer {
     tone_number: ToneNumber,
     course_tune_semitones: OffsetU8<64>, // 16-112 (-48 - +48)
     fine_tune_percent: OffsetU8<64>, // 14-114 (-50 - + 50)
-    mono_poly: u8, // 0=Mono, 1=Poly, 2=Mono/Legato
+    mono_poly: MonoPoly, // 0=Mono, 1=Poly, 2=Mono/Legato
     pitch_bend_range_semitones: u8, // max 24
     portamento_switch: bool,
     portamento_time: u8, // max 127
@@ -37,7 +39,7 @@ impl Bytes<12> for ToneLayer {
             bits.set_u8::<7>(tone.pc, 0, 127)?;
             bits.set_u8::<7>(self.course_tune_semitones.into(), 16, 112)?;
             bits.set_u8::<7>(self.fine_tune_percent.into(), 14, 114)?;
-            bits.set_u8::<2>(self.mono_poly, 0, 2)?;
+            bits.set_u8::<2>(self.mono_poly.into(), 0, 2)?;
             bits.set_u8::<5>(self.pitch_bend_range_semitones, 0, 24)?;
             bits.set_bool(self.portamento_switch);
             bits.set_u8::<8>(self.portamento_time, 0, 127)?;
@@ -60,7 +62,7 @@ impl Bytes<12> for ToneLayer {
                 tone_number: ToneNumber::find(msb, lsb, pc).ok_or(BytesError::InvalidTone { msb, lsb, pc })?,
                 course_tune_semitones: data.get_u8::<7>(16, 112)?.into(),
                 fine_tune_percent: data.get_u8::<7>(14, 114)?.into(),
-                mono_poly: data.get_u8::<2>(0, 2)?,
+                mono_poly: data.get_u8::<2>(0, 2)?.into(),
                 pitch_bend_range_semitones: data.get_u8::<5>(0, 24)?,
                 portamento_switch: data.get_bool(),
                 portamento_time: data.get_u8::<8>(0, 127)?,
