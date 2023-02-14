@@ -38,7 +38,7 @@ impl<const O: u8> OffsetU8<O> {
     const ZERO: u8 = O;
 }
 
-impl<const O: u8> From<u8> for OffsetU8<O> {
+impl<const O: u8> From<u8> for OffsetU8<O> {//TODO rename this to SignedU8 with an always offset of 64
     fn from(value: u8) -> Self {
         if value >= Self::ZERO {
             Self((value - Self::ZERO) as i8)
