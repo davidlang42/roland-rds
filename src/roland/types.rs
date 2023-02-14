@@ -61,3 +61,36 @@ impl Default for OutputPort {
         Self::from(0)
     }
 }
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+pub struct OffsetU8<const OFFSET: u8>(i8); // MIN(0)-MAX(255) (MIN-OFFSET - MAX-OFFSET)
+
+impl<const O: u8> OffsetU8<O> {
+    const ZERO: u8 = O;
+}
+
+impl<const O: u8> From<u8> for OffsetU8<O> {
+    fn from(value: u8) -> Self {
+        if value >= Self::ZERO {
+            Self((value - Self::ZERO) as i8)
+        } else {
+            Self(-1 * (Self::ZERO - value) as i8)
+        }
+    }
+}
+
+impl<const O: u8> Into<u8> for OffsetU8<O> {
+    fn into(self) -> u8 {
+        if self.0 >= 0 {
+            self.0 as u8 + Self::ZERO
+        } else {
+            Self::ZERO - self.0.abs() as u8
+        }
+    }
+}
+
+impl<const O: u8> Default for OffsetU8<O> {
+    fn default() -> Self {
+        Self::from(Self::ZERO)
+    }
+}

@@ -1,23 +1,23 @@
 use std::fmt::Debug;
 
-use crate::bytes::{Bytes, BytesError, Bits, BitStream};
+use crate::{bytes::{Bytes, BytesError, Bits, BitStream}, roland::types::OffsetU8};
 
 use super::super::tones::ToneNumber;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ToneLayer {
     tone_number: ToneNumber,
-    course_tune: u8, // 16-112 (-48 - +48)
-    fine_tune: u8, // 14-114 (-50 - + 50)
+    course_tune_semitones: OffsetU8<64>, // 16-112 (-48 - +48)
+    fine_tune_percent: OffsetU8<64>, // 14-114 (-50 - + 50)
     mono_poly: u8, // 0=Mono, 1=Poly, 2=Mono/Legato
-    pitch_bend_range: u8, // max 24
+    pitch_bend_range_semitones: u8, // max 24
     portamento_switch: bool,
     portamento_time: u8, // max 127
-    cutoff: u8, // max 127 (-63 - +63)
-    resonance: u8, // max 127 (-63 - +63)
-    attack_time: u8, // max 127 (-63 - +63)
-    decay_time: u8, // max 127 (-63 - +63)
-    release_time: u8, // max 127 (-63 - +63)
+    cutoff: OffsetU8<64>, // max 127 (-63 - +63)
+    resonance: OffsetU8<64>, // max 127 (-63 - +63)
+    attack_time: OffsetU8<64>, // max 127 (-63 - +63)
+    decay_time: OffsetU8<64>, // max 127 (-63 - +63)
+    release_time: OffsetU8<64>, // max 127 (-63 - +63)
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused: Bits<10>
 }
@@ -35,17 +35,17 @@ impl Bytes<12> for ToneLayer {
             bits.set_u8::<7>(tone.msb, 0, 127)?;
             bits.set_u8::<7>(tone.lsb, 0, 127)?;
             bits.set_u8::<7>(tone.pc, 0, 127)?;
-            bits.set_u8::<7>(self.course_tune, 16, 112)?;
-            bits.set_u8::<7>(self.fine_tune, 14, 114)?;
+            bits.set_u8::<7>(self.course_tune_semitones.into(), 16, 112)?;
+            bits.set_u8::<7>(self.fine_tune_percent.into(), 14, 114)?;
             bits.set_u8::<2>(self.mono_poly, 0, 2)?;
-            bits.set_u8::<5>(self.pitch_bend_range, 0, 24)?;
+            bits.set_u8::<5>(self.pitch_bend_range_semitones, 0, 24)?;
             bits.set_bool(self.portamento_switch);
             bits.set_u8::<8>(self.portamento_time, 0, 127)?;
-            bits.set_u8::<7>(self.cutoff, 0, 127)?;
-            bits.set_u8::<7>(self.resonance, 0, 127)?;
-            bits.set_u8::<7>(self.attack_time, 0, 127)?;
-            bits.set_u8::<7>(self.decay_time, 0, 127)?;
-            bits.set_u8::<7>(self.release_time, 0, 127)?;
+            bits.set_u8::<7>(self.cutoff.into(), 0, 127)?;
+            bits.set_u8::<7>(self.resonance.into(), 0, 127)?;
+            bits.set_u8::<7>(self.attack_time.into(), 0, 127)?;
+            bits.set_u8::<7>(self.decay_time.into(), 0, 127)?;
+            bits.set_u8::<7>(self.release_time.into(), 0, 127)?;
             bits.set_bits(&self.unused);
             Ok(())
         })
@@ -58,17 +58,17 @@ impl Bytes<12> for ToneLayer {
             let pc = data.get_u8::<7>(0, 127)?;
             Ok(Self {
                 tone_number: ToneNumber::find(msb, lsb, pc).ok_or(BytesError::InvalidTone { msb, lsb, pc })?,
-                course_tune: data.get_u8::<7>(16, 112)?,
-                fine_tune: data.get_u8::<7>(14, 114)?,
+                course_tune_semitones: data.get_u8::<7>(16, 112)?.into(),
+                fine_tune_percent: data.get_u8::<7>(14, 114)?.into(),
                 mono_poly: data.get_u8::<2>(0, 2)?,
-                pitch_bend_range: data.get_u8::<5>(0, 24)?,
+                pitch_bend_range_semitones: data.get_u8::<5>(0, 24)?,
                 portamento_switch: data.get_bool(),
                 portamento_time: data.get_u8::<8>(0, 127)?,
-                cutoff: data.get_u8::<7>(0, 127)?,
-                resonance: data.get_u8::<7>(0, 127)?,
-                attack_time: data.get_u8::<7>(0, 127)?,
-                decay_time: data.get_u8::<7>(0, 127)?,
-                release_time: data.get_u8::<7>(0, 127)?,
+                cutoff: data.get_u8::<7>(0, 127)?.into(),
+                resonance: data.get_u8::<7>(0, 127)?.into(),
+                attack_time: data.get_u8::<7>(0, 127)?.into(),
+                decay_time: data.get_u8::<7>(0, 127)?.into(),
+                release_time: data.get_u8::<7>(0, 127)?.into(),
                 unused: data.get_bits()
             })
         })
