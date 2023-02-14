@@ -1,15 +1,15 @@
 use std::fmt::Debug;
 
-use crate::bits::{Bits, BitStream};
-use crate::bytes::{Bytes, BytesError, StructuredJson};
+use crate::bytes::{Bytes, BytesError, Bits, BitStream};
+use crate::json::{Json, StructuredJson, StructuredJsonError};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SwitchAssign(Bits<160>);
 
 impl Bytes<20> for SwitchAssign {
-    fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {
+    fn to_bytes(&self) -> Result<Box<[u8; Self::BYTE_SIZE]>, BytesError> {
         BitStream::write_fixed(|bs| {
-            bs.set_bits(&self.0);
+            Ok(bs.set_bits(&self.0))
         })
     }
 
@@ -18,20 +18,22 @@ impl Bytes<20> for SwitchAssign {
             Ok(Self(bs.get_bits()))
         })
     }
+}
 
+impl Json for SwitchAssign {
     fn to_structured_json(&self) -> StructuredJson {
         StructuredJson::SingleJson(self.to_json())
     }
 
-    fn from_structured_json(structured_json: StructuredJson) -> Self {
-        Self::from_json(structured_json.to_single_json())
+    fn from_structured_json(structured_json: StructuredJson) -> Result<Self, StructuredJsonError> {
+        Self::from_json(structured_json.to_single_json()?).map_err(|e| e.into())
     }
 
     fn to_json(&self) -> String {
-        serde_json::to_string(&self).expect("Error serializing JSON")
+        serde_json::to_string_pretty(&self).unwrap()
     }
 
-    fn from_json(json: String) -> Self {
-        serde_json::from_str(&json).expect("Error deserializing JSON")
+    fn from_json(json: String) -> Result<Self, serde_json::Error> {
+        serde_json::from_str(&json)
     }
 }

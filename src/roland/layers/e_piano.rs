@@ -1,15 +1,14 @@
 use std::fmt::Debug;
 
-use crate::bits::{Bits, BitStream};
-use crate::bytes::{Bytes, BytesError, StructuredJson};
+use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct EPianoLayer(Bits<48>);
 
 impl Bytes<6> for EPianoLayer {
-    fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {
+    fn to_bytes(&self) -> Result<Box<[u8; Self::BYTE_SIZE]>, BytesError> {
         BitStream::write_fixed(|bs| {
-            bs.set_bits(&self.0);
+            Ok(bs.set_bits(&self.0))
         })
     }
 
@@ -17,21 +16,5 @@ impl Bytes<6> for EPianoLayer {
         BitStream::read_fixed(bytes, |bs| {
             Ok(Self(bs.get_bits()))
         })
-    }
-
-    fn to_structured_json(&self) -> StructuredJson {
-        StructuredJson::SingleJson(self.to_json())
-    }
-
-    fn from_structured_json(structured_json: StructuredJson) -> Self {
-        Self::from_json(structured_json.to_single_json())
-    }
-
-    fn to_json(&self) -> String {
-        serde_json::to_string(&self).expect("Error serializing JSON")
-    }
-
-    fn from_json(json: String) -> Self {
-        serde_json::from_str(&json).expect("Error deserializing JSON")
     }
 }

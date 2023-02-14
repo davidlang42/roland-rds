@@ -1,9 +1,6 @@
 use std::fmt::Debug;
 
-use crate::bits::{Bits, BitStream};
-use crate::bytes::{Bytes, BytesError, StructuredJson};
-
-use super::super::{max, in_range};
+use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct InternalLayer {
@@ -41,19 +38,19 @@ pub struct InternalLayer {
 }
 
 impl Bytes<14> for InternalLayer {
-    fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {
+    fn to_bytes(&self) -> Result<Box<[u8; 14]>, BytesError> {
         BitStream::write_fixed(|bits| {
-            bits.set_u8::<7>(self.volume);
-            bits.set_u8::<7>(self.pan);
-            bits.set_u8::<7>(self.chorus);
-            bits.set_u8::<7>(self.reverb);
-            bits.set_u8::<7>(max(self.range_lower, 87));
-            bits.set_u8::<7>(in_range(self.range_upper, self.range_lower, 87));
-            bits.set_u8::<7>(in_range(self.velocity_range_lower, 1, 127));
-            bits.set_u8::<7>(in_range(self.velocity_range_upper, 1, 127));
-            bits.set_u8::<7>(in_range(self.velocity_sensitivity, 1, 127));
-            bits.set_u8::<7>(in_range(self.velocity_max, 1, 127));
-            bits.set_u8::<7>(in_range(self.transpose, 16, 112));
+            bits.set_u8::<7>(self.volume, 0, 127)?;
+            bits.set_u8::<7>(self.pan, 0, 127)?;
+            bits.set_u8::<7>(self.chorus, 0, 127)?;
+            bits.set_u8::<7>(self.reverb, 0, 127)?;
+            bits.set_u8::<7>(self.range_lower, 0, 87)?;
+            bits.set_u8::<7>(self.range_upper, self.range_lower, 87)?;
+            bits.set_u8::<7>(self.velocity_range_lower, 1, 127)?;
+            bits.set_u8::<7>(self.velocity_range_upper, 1, 127)?;
+            bits.set_u8::<7>(self.velocity_sensitivity, 1, 127)?;
+            bits.set_u8::<7>(self.velocity_max, 1, 127)?;
+            bits.set_u8::<7>(self.transpose, 16, 112)?;
             bits.set_bool(self.enable);
             bits.set_bool(self.damper);
             bits.set_bool(self.fc1);
@@ -74,23 +71,29 @@ impl Bytes<14> for InternalLayer {
             bits.set_bool(self.receive_hold_1);
             bits.set_bool(self.receive_expression);
             bits.set_bits(&self.unused);
+            Ok(())
         })
     }
 
     fn from_bytes(bytes: Box<[u8; Self::BYTE_SIZE]>) -> Result<Self, BytesError> where Self: Sized {
         BitStream::read_fixed(bytes, |data| {
+            let volume = data.get_u8::<7>(0, 127)?;
+            let pan = data.get_u8::<7>(0, 127)?;
+            let chorus = data.get_u8::<7>(0, 127)?;
+            let reverb = data.get_u8::<7>(0, 127)?;
+            let range_lower = data.get_u8::<7>(0, 87)?;
             Ok(Self {
-                volume: data.get_u8::<7>(),
-                pan: data.get_u8::<7>(),
-                chorus: data.get_u8::<7>(),
-                reverb: data.get_u8::<7>(),
-                range_lower: data.get_u8::<7>(),
-                range_upper: data.get_u8::<7>(),
-                velocity_range_lower: data.get_u8::<7>(),
-                velocity_range_upper: data.get_u8::<7>(),
-                velocity_sensitivity: data.get_u8::<7>(),
-                velocity_max: data.get_u8::<7>(),
-                transpose: data.get_u8::<7>(),
+                volume,
+                pan,
+                chorus,
+                reverb,
+                range_lower,
+                range_upper: data.get_u8::<7>(range_lower, 87)?,
+                velocity_range_lower: data.get_u8::<7>(1, 127)?,
+                velocity_range_upper: data.get_u8::<7>(1, 127)?,
+                velocity_sensitivity: data.get_u8::<7>(1, 127)?,
+                velocity_max: data.get_u8::<7>(1, 127)?,
+                transpose: data.get_u8::<7>(16, 112)?,
                 enable: data.get_bool(),
                 damper: data.get_bool(),
                 fc1: data.get_bool(),
@@ -112,20 +115,5 @@ impl Bytes<14> for InternalLayer {
             })
         })
     }
-
-    fn to_structured_json(&self) -> StructuredJson {
-        StructuredJson::SingleJson(self.to_json())
-    }
-
-    fn from_structured_json(structured_json: StructuredJson) -> Self {
-        Self::from_json(structured_json.to_single_json())
-    }
-
-    fn to_json(&self) -> String {
-        serde_json::to_string(&self).expect("Error serializing JSON")
-    }
-
-    fn from_json(json: String) -> Self {
-        serde_json::from_str(&json).expect("Error deserializing JSON")
-    }
 }
+

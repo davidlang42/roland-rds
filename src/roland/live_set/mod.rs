@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
-use crate::bits::{Bits, BitStream};
-use crate::bytes::{Bytes, BytesError, StructuredJson};
+use crate::bytes::{Bytes, BytesError, Bits, BitStream};
+use crate::json::{Json, StructuredJson, StructuredJsonError};
 use self::chorus::Chorus;
 use self::common::Common;
 use self::mfx::Mfx;
@@ -9,8 +9,7 @@ use self::resonance::Resonance;
 use self::reverb::Reverb;
 use self::song_rhythm::SongRhythm;
 
-use super::layers::LogicalLayer;
-use super::parse_many;
+use super::layers::{LogicalLayer, ToneWheelLayer, EPianoLayer, InternalLayer, ExternalLayer, ToneLayer, PianoLayer};
 
 mod common;
 mod chorus;
@@ -19,7 +18,7 @@ mod song_rhythm;
 mod mfx;
 mod resonance;
 
-//TODO modify live set to separate real and unused layers/parameters in 300nx vs 700nx
+//TODO (LAST) modify live set to separate real and unused layers/parameters in 300nx vs 700nx
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct LiveSet {
@@ -39,35 +38,34 @@ impl LiveSet {
     pub fn name_string(&self) -> String {
         self.common.name_string()
     }
-
-    fn check_sum(bytes_without_checksum: &Vec<u8>) -> u8 {
-        let mut sum: u8 = 0;
-        for byte in bytes_without_checksum {
-            sum = sum.wrapping_add(*byte);
-        }
-        (u8::MAX - sum).wrapping_add(1)
-    }
 }
 
 impl Bytes<2160> for LiveSet {
     fn from_bytes(bytes: Box<[u8; Self::BYTE_SIZE]>) -> Result<Self, BytesError> {
         BitStream::read_fixed(bytes, |data| {
-            let common = Common::from_bytes(Box::new(data.get_bytes()))?;
-            let song_rhythm = SongRhythm::from_bytes(Box::new(data.get_bytes()))?;
-            let chorus = Chorus::from_bytes(Box::new(data.get_bytes()))?;
-            let reverb = Reverb::from_bytes(Box::new(data.get_bytes()))?;
-            let mfx = parse_many(data)?;
-            let resonance = Resonance::from_bytes(Box::new(data.get_bytes()))?;
-            let internal_layers = parse_many(data)?;
-            let external_layers = parse_many(data)?;
-            let tone_layers = parse_many(data)?;
-            let piano_layers = parse_many(data)?;
-            let e_piano_layers = parse_many(data)?;
-            let tone_wheel_layers = parse_many(data)?;
+            let common = Common::from_bytes(data.get_bytes())?;
+            let song_rhythm = SongRhythm::from_bytes(data.get_bytes())?;
+            let chorus = Chorus::from_bytes(data.get_bytes())?;
+            let reverb = Reverb::from_bytes(data.get_bytes())?;
+            let mfx = Mfx::array_from_bytes(data)?;
+            let resonance = Resonance::from_bytes(data.get_bytes())?;
+            let internal_layers = InternalLayer::array_from_bytes(data)?;
+            let external_layers = ExternalLayer::array_from_bytes(data)?;
+            let tone_layers = ToneLayer::array_from_bytes(data)?;
+            let piano_layers = PianoLayer::array_from_bytes(data)?;
+            let e_piano_layers = EPianoLayer::array_from_bytes(data)?;
+            let tone_wheel_layers = ToneWheelLayer::array_from_bytes(data)?;
             let layers = LogicalLayer::from_layers(internal_layers, external_layers, tone_layers, piano_layers, e_piano_layers, tone_wheel_layers);
             let padding = data.get_bits();
-            let found_check_sum = data.get_u8::<8>();
-            let live_set = Self {
+            let expected_sum_to_zero = sum_to_zero(data.sum_previous_bytes());
+            let found_sum_to_zero = data.get_full_u8();
+            if found_sum_to_zero != expected_sum_to_zero {
+                return Err(BytesError::IncorrectCheckSum {
+                    expected: vec![expected_sum_to_zero],
+                    found: vec![found_sum_to_zero]
+                });
+            }
+            Ok(Self {
                 common,
                 song_rhythm,
                 chorus,
@@ -76,74 +74,47 @@ impl Bytes<2160> for LiveSet {
                 resonance,
                 layers,
                 padding
-            };
-            let bytes = live_set.to_bytes();
-            let expected_check_sum = bytes[bytes.len() - 1];
-            if found_check_sum != expected_check_sum {
-                return Err(BytesError::IncorrectCheckSum {
-                    expected: vec![expected_check_sum],
-                    found: vec![found_check_sum]
-                });
-            }
-            Ok(live_set)
+            })
         })
     }
 
-    fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {
-        let mut bytes = self.common.to_bytes().to_vec();
-        for byte in *self.song_rhythm.to_bytes() {
-            bytes.push(byte);
-        }
-        for byte in *self.chorus.to_bytes() {
-            bytes.push(byte);
-        }
-        for byte in *self.reverb.to_bytes() {
-            bytes.push(byte);
-        }
-        for mfx in self.mfx.iter() {
-            for byte in *mfx.to_bytes() {
-                bytes.push(byte);
+    fn to_bytes(&self) -> Result<Box<[u8; 2160]>, BytesError> {
+        BitStream::write_fixed(|bs| {
+            bs.set_bytes(self.common.to_bytes()?);
+            bs.set_bytes(self.song_rhythm.to_bytes()?);
+            bs.set_bytes(self.chorus.to_bytes()?);
+            bs.set_bytes(self.reverb.to_bytes()?);
+            for mfx in self.mfx.iter() {
+                bs.set_bytes(mfx.to_bytes()?);
             }
-        }
-        for byte in *self.resonance.to_bytes() {
-            bytes.push(byte);
-        }
-        for layer in self.layers.iter() {
-            for byte in *layer.internal.to_bytes() {
-                bytes.push(byte);
+            bs.set_bytes(self.resonance.to_bytes()?);
+            for layer in self.layers.iter() {
+                bs.set_bytes(layer.internal.to_bytes()?);
             }
-        }
-        for layer in self.layers.iter() {
-            for byte in *layer.external.to_bytes() {
-                bytes.push(byte);
+            for layer in self.layers.iter() {
+                bs.set_bytes(layer.external.to_bytes()?);
             }
-        }
-        for layer in self.layers.iter() {
-            for byte in *layer.tone.to_bytes() {
-                bytes.push(byte);
+            for layer in self.layers.iter() {
+                bs.set_bytes(layer.tone.to_bytes()?);
             }
-        }
-        for layer in self.layers.iter() {
-            for byte in *layer.piano.to_bytes() {
-                bytes.push(byte);
+            for layer in self.layers.iter() {
+                bs.set_bytes(layer.piano.to_bytes()?);
             }
-        }
-        for layer in self.layers.iter() {
-            for byte in *layer.e_piano.to_bytes() {
-                bytes.push(byte);
+            for layer in self.layers.iter() {
+                bs.set_bytes(layer.e_piano.to_bytes()?);
             }
-        }
-        for layer in self.layers.iter() {
-            for byte in *layer.tone_wheel.to_bytes() {
-                bytes.push(byte);
+            for layer in self.layers.iter() {
+                bs.set_bytes(layer.tone_wheel.to_bytes()?);
             }
-        }
-        bytes.append(&mut self.padding.to_bytes());
-        let check_sum = Self::check_sum(&bytes);
-        bytes.push(check_sum);
-        bytes.try_into().expect("Wrong number of bytes")
+            bs.set_bits(&self.padding);
+            let sum_to_zero = sum_to_zero(bs.sum_previous_bytes());
+            bs.set_full_u8(sum_to_zero);
+            Ok(())
+        })
     }
+}
 
+impl Json for LiveSet {
     fn to_structured_json(&self) -> StructuredJson {
         if !self.padding.is_unit() {
             panic!("Cannot split JSON with non-standard padding");
@@ -153,22 +124,22 @@ impl Bytes<2160> for LiveSet {
             ("song_rhythm".to_string(), self.song_rhythm.to_structured_json()),
             ("chorus".to_string(), self.chorus.to_structured_json()),
             ("reverb".to_string(), self.reverb.to_structured_json()),
-            ("mfx".to_string(), StructuredJson::from_collection(self.mfx.as_slice(), None)),
+            ("mfx".to_string(), StructuredJson::from_collection(self.mfx.as_slice(), |_| None)),
             ("resonance".to_string(), self.resonance.to_structured_json()),
-            ("layers".to_string(), StructuredJson::from_collection(self.layers.as_slice(), Some(|l: &LogicalLayer| l.tone.tone_name())))
+            ("layers".to_string(), StructuredJson::from_collection(self.layers.as_slice(), |l| Some(l.tone.tone_name())))
         ])
     }
 
-    fn from_structured_json(mut structured_json: StructuredJson) -> Self {
-        let common = structured_json.extract("ls_common").to();
-        let song_rhythm = structured_json.extract("song_rhythm").to();
-        let chorus = structured_json.extract("chorus").to();
-        let reverb = structured_json.extract("reverb").to();
-        let mfx = structured_json.extract("mfx").to_array();
-        let resonance = structured_json.extract("resonance").to();
-        let layers = structured_json.extract("layers").to_array();
-        structured_json.done();
-        Self {
+    fn from_structured_json(mut structured_json: StructuredJson) -> Result<Self, StructuredJsonError> {
+        let common = structured_json.extract("ls_common")?.to()?;
+        let song_rhythm = structured_json.extract("song_rhythm")?.to()?;
+        let chorus = structured_json.extract("chorus")?.to()?;
+        let reverb = structured_json.extract("reverb")?.to()?;
+        let mfx = structured_json.extract("mfx")?.to_array()?;
+        let resonance = structured_json.extract("resonance")?.to()?;
+        let layers = structured_json.extract("layers")?.to_array()?;
+        structured_json.done()?;
+        Ok(Self {
             common,
             song_rhythm,
             chorus,
@@ -177,14 +148,18 @@ impl Bytes<2160> for LiveSet {
             resonance,
             layers,
             padding: Bits::unit()
-        }
+        })
     }
 
     fn to_json(&self) -> String {
-        serde_json::to_string(&self).expect("Error serializing JSON")
+        serde_json::to_string_pretty(&self).unwrap()
     }
 
-    fn from_json(json: String) -> Self {
-        serde_json::from_str(&json).expect("Error deserializing JSON")
+    fn from_json(json: String) -> Result<Self, serde_json::Error> {
+        serde_json::from_str(&json)
     }
+}
+
+fn sum_to_zero(sum: u16) -> u8 {
+    (u8::MAX - sum.to_be_bytes()[1]).wrapping_add(1)
 }
