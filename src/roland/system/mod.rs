@@ -15,7 +15,6 @@ mod compressor;
 
 #[derive(Serialize, Deserialize)]
 pub struct System {
-    //TODO (SYSTEM) split up structured json, use "sys_common" for name of common
     #[serde(skip_serializing_if="Bits::is_unit", default="Bits::unit")]
     padding1: Bits<16>, // 2 bytes padding
     common: Common, // 10 bytes
