@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{Json, StructuredJson, StructuredJsonError};
-use crate::roland::types::OutputPort;
+use crate::roland::types::enums::OutputPort;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SongRhythm {

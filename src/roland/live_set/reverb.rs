@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{Json, StructuredJson, StructuredJsonError};
-use crate::roland::types::Parameter;
+use crate::roland::types::numeric::Parameter;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Reverb {

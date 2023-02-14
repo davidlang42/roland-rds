@@ -252,3 +252,29 @@ impl Default for Pan {
         Self::from(0)
     }
 }
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
+pub enum PatchCategory { // 0-3
+    OneTouchPiano,
+    OneTouchEPiano,
+    Preset,
+    User
+}
+
+impl From<u8> for PatchCategory {
+    fn from(value: u8) -> Self {
+        Self::iter().nth(value as usize).unwrap()
+    }
+}
+
+impl Into<u8> for PatchCategory {
+    fn into(self) -> u8 {
+        Self::iter().position(|s| s == self).unwrap() as u8
+    }
+}
+
+impl Default for PatchCategory {
+    fn default() -> Self {
+        Self::from(0)
+    }
+}

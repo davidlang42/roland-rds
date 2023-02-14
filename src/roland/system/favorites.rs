@@ -2,6 +2,8 @@ use std::fmt::Debug;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{StructuredJson, Json, StructuredJsonError};
+use crate::roland::types::enums::PatchCategory;
+use crate::roland::types::numeric::OneIndexedU16;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Favorites {
@@ -103,8 +105,8 @@ impl Bank {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Favorite {
-    category: u8, // max 3, (One Touch Piano, One Touch E.Piano, Preset, User)
-    live_set_number: u16 // max 299 (1-300)
+    category: PatchCategory,
+    live_set_number: OneIndexedU16 // 0-299 (1-300)
 }
 
 impl Favorite {
@@ -112,8 +114,8 @@ impl Favorite {
 
     fn to_bits(&self) -> Result<Bits<{Self::BITS_SIZE}>, BytesError> {
         BitStream::write_fixed_bits(|bits| {
-            bits.set_u8::<2>(self.category, 0, 3)?;
-            bits.set_u16::<12>(self.live_set_number, 0, 299)?;
+            bits.set_u8::<2>(self.category.into(), 0, 3)?;
+            bits.set_u16::<12>(self.live_set_number.into(), 0, 299)?;
             Ok(())
         })
     }
@@ -121,8 +123,8 @@ impl Favorite {
     fn from_bits(bits: Bits<{Self::BITS_SIZE}>) -> Result<Self, BytesError> where Self: Sized {
         BitStream::read_fixed_bits(bits, |data| {
             Ok(Self {
-                category: data.get_u8::<2>(0, 3)?,
-                live_set_number: data.get_u16::<12>(0, 299)?
+                category: data.get_u8::<2>(0, 3)?.into(),
+                live_set_number: data.get_u16::<12>(0, 299)?.into()
             })
         })
     }

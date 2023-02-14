@@ -63,3 +63,25 @@ impl<const O: u8> Default for OffsetU8<O> {
         Self::from(Self::ZERO)
     }
 }
+
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+pub struct OneIndexedU16(u16); // 0-65534 (1-65535)
+
+impl From<u16> for OneIndexedU16 {
+    fn from(value: u16) -> Self {
+        Self(value + 1)
+    }
+}
+
+impl Into<u16> for OneIndexedU16 {
+    fn into(self) -> u16 {
+        self.0 - 1
+    }
+}
+
+impl Default for OneIndexedU16 {
+    fn default() -> Self {
+        Self::from(0)
+    }
+}
