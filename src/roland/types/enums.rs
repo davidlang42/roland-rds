@@ -482,3 +482,54 @@ impl Default for KeyTouchCurveType {
         Self::from(1)
     }
 }
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
+pub enum OutputSelect { // 0-2
+    Main,
+    Rev,
+    Both,
+}
+
+impl From<u8> for OutputSelect {
+    fn from(value: u8) -> Self {
+        Self::iter().nth(value as usize).unwrap()
+    }
+}
+
+impl Into<u8> for OutputSelect {
+    fn into(self) -> u8 {
+        Self::iter().position(|s| s == self).unwrap() as u8
+    }
+}
+
+impl Default for OutputSelect {
+    fn default() -> Self {
+        Self::from(0)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
+pub enum ChorusType { // 0-3
+    Off,
+    Chorus,
+    Delay,
+    Gm2Chorus
+}
+
+impl From<u8> for ChorusType {
+    fn from(value: u8) -> Self {
+        Self::iter().nth(value as usize).unwrap()
+    }
+}
+
+impl Into<u8> for ChorusType {
+    fn into(self) -> u8 {
+        Self::iter().position(|s| s == self).unwrap() as u8
+    }
+}
+
+impl Default for ChorusType {
+    fn default() -> Self {
+        Self::from(0)
+    }
+}

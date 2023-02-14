@@ -2,15 +2,16 @@ use std::fmt::Debug;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{Json, StructuredJson, StructuredJsonError};
+use crate::roland::types::enums::{OutputSelect, ChorusType};
 use crate::roland::types::numeric::Parameter;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Chorus {
-    chorus_type: u8, // max 3 (OFF, CHORUS, DELAY, GM2 CHORUS)
+    chorus_type: ChorusType,
     depth: u8, // max 127
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused1: Bits<2>,
-    output_select: u8, // max 2 (MAIN, REV, MAIN+REV)
+    output_select: OutputSelect,
     parameters: [Parameter; 20],
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused: Bits<1>
@@ -19,10 +20,10 @@ pub struct Chorus {
 impl Bytes<42> for Chorus {
     fn to_bytes(&self) -> Result<Box<[u8; 42]>, BytesError> {
         BitStream::write_fixed(|bs| {
-            bs.set_u8::<4>(self.chorus_type, 0, 3)?;
+            bs.set_u8::<4>(self.chorus_type.into(), 0, 3)?;
             bs.set_u8::<7>(self.depth, 0, 127)?;
             bs.set_bits(&self.unused1);
-            bs.set_u8::<2>(self.output_select, 0, 2)?;
+            bs.set_u8::<2>(self.output_select.into(), 0, 2)?;
             for i in 0..self.parameters.len() {
                 bs.set_u16::<16>(self.parameters[i].into(), 12768, 52768)?;
             }
@@ -33,10 +34,10 @@ impl Bytes<42> for Chorus {
 
     fn from_bytes(bytes: Box<[u8; Self::BYTE_SIZE]>) -> Result<Self, BytesError> where Self: Sized {
         BitStream::read_fixed(bytes, |bs| {
-            let chorus_type = bs.get_u8::<4>(0, 3)?;
+            let chorus_type = bs.get_u8::<4>(0, 3)?.into();
             let depth = bs.get_u8::<7>(0, 127)?;
             let unused1 = bs.get_bits();
-            let output_select = bs.get_u8::<2>(0, 2)?;
+            let output_select = bs.get_u8::<2>(0, 2)?.into();
             let mut parameters = [Parameter::default(); 20];
             for i in 0..parameters.len() {
                 parameters[i] = bs.get_u16::<16>(12768, 52768)?.into();
