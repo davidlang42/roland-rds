@@ -2,6 +2,7 @@ use std::fmt::Debug;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{Json, StructuredJson, StructuredJsonError};
+use crate::roland::types::enums::MfxType;
 use crate::roland::types::numeric::Parameter;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -9,7 +10,7 @@ pub struct Mfx {
     enable: bool,
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused1: Bits<8>,
-    effect_type: u8,
+    mfx_type: MfxType,
     #[serde(skip_serializing_if="Bits::is_unit", default="Bits::unit")]
     padding1: Bits<8>,
     #[serde(skip_serializing_if="Bits::is_unit", default="Bits::unit")]
@@ -30,7 +31,7 @@ impl Bytes<76> for Mfx {
         BitStream::write_fixed(|bs| {
             bs.set_bool(self.enable);
             bs.set_bits(&self.unused1);
-            bs.set_full_u8(self.effect_type);
+            bs.set_u8::<8>(self.mfx_type.into(), 0, 255)?;
             bs.set_bits(&self.padding1);
             bs.set_bits(&self.padding2);
             bs.set_bits(&self.padding3);
@@ -48,7 +49,7 @@ impl Bytes<76> for Mfx {
         BitStream::read_fixed(bytes, |bs| {
             let enable = bs.get_bool();
             let unused1 = bs.get_bits();
-            let effect_type = bs.get_full_u8();
+            let mfx_type = bs.get_u8::<8>(0, 255)?.into();
             let padding1 = bs.get_bits();
             let padding2 = bs.get_bits();
             let padding3 = bs.get_bits();
@@ -61,7 +62,7 @@ impl Bytes<76> for Mfx {
             Ok(Self {
                 enable,
                 unused1,
-                effect_type,
+                mfx_type,
                 padding1,
                 padding2,
                 padding3,

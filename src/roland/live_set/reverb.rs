@@ -3,10 +3,11 @@ use std::fmt::Debug;
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{Json, StructuredJson, StructuredJsonError};
 use crate::roland::types::numeric::Parameter;
+use crate::roland::types::enums::ReverbType;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Reverb {
-    reverb_type: u8, // max 6 (OFF, REVERB, ROOM, HALL, PLATE, GM2 REVERB, CATHEDRAL)
+    reverb_type: ReverbType,
     depth: u8, // max 127
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused1: Bits<2>,
@@ -18,7 +19,7 @@ pub struct Reverb {
 impl Bytes<42> for Reverb {
     fn to_bytes(&self) -> Result<Box<[u8; 42]>, BytesError> {
         BitStream::write_fixed(|bs| {
-            bs.set_u8::<4>(self.reverb_type, 0, 6)?;
+            bs.set_u8::<4>(self.reverb_type.into(), 0, 6)?;
             bs.set_u8::<7>(self.depth, 0, 127)?;
             bs.set_bits(&self.unused1);
             for i in 0..self.parameters.len() {
@@ -31,7 +32,7 @@ impl Bytes<42> for Reverb {
 
     fn from_bytes(bytes: Box<[u8; Self::BYTE_SIZE]>) -> Result<Self, BytesError> where Self: Sized {
         BitStream::read_fixed(bytes, |bs| {
-            let reverb_type = bs.get_u8::<4>(0, 6)?;
+            let reverb_type = bs.get_u8::<4>(0, 6)?.into();
             let depth = bs.get_u8::<7>(0, 127)?;
             let unused1 = bs.get_bits();
             let mut parameters = [Parameter::default(); 20];

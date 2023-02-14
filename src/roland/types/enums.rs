@@ -533,3 +533,149 @@ impl Default for ChorusType {
         Self::from(0)
     }
 }
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
+pub enum ReverbType { // 0-6
+    Off,
+    Reverb,
+    Room,
+    Hall,
+    Plate,
+    Gm2Reverb,
+    Cathedral
+}
+
+impl From<u8> for ReverbType {
+    fn from(value: u8) -> Self {
+        Self::iter().nth(value as usize).unwrap()
+    }
+}
+
+impl Into<u8> for ReverbType {
+    fn into(self) -> u8 {
+        Self::iter().position(|s| s == self).unwrap() as u8
+    }
+}
+
+impl Default for ReverbType {
+    fn default() -> Self {
+        Self::from(0)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
+pub enum MfxType { // 0-255
+    Thru,
+    Equalizer,
+    Spectrum,
+    Isolator,
+    LowBoost,
+    SuperFilter,
+    StepFilter,
+    Enhancer,
+    AutoWah,
+    Humanizer,
+    SpeakerSimulator,
+    Phaser,
+    StepPhaser,
+    MultiStagePhaser,
+    InfinitePhaser,
+    RingModulator,
+    StepRingModulator,
+    Tremolo,
+    AutoPan,
+    StepPan,
+    Slicer,
+    Rotary,
+    VkRotary,
+    Chorus,
+    Flanger,
+    StepFlanger,
+    HexaChorus,
+    TremoloChorus,
+    SpaceD,
+    Chorus3D,
+    Flanger3D,
+    StepFlanger3D,
+    TwoBandChorus,
+    TwoBandFlanger,
+    TwoBandStepFlanger,
+    Overdrive,
+    Distortion,
+    VsOverdrive,
+    VsDistortion,
+    GuitarAmpSimulator,
+    Compressor,
+    Limiter,
+    Gate,
+    Delay,
+    LongDelay,
+    SerialDelay,
+    ModulationDelay,
+    ThreeTapPanDelay,
+    FourTapPanDelay,
+    MultiTapDelay,
+    ReverseDelay,
+    ShuffleDelay,
+    Delay3D,
+    TimeCtrlDelay,
+    LongTimeCtrlDelay,
+    TapeEcho,
+    LofiNoise,
+    LofiCompress,
+    LofiRadio,
+    Telephone,
+    Photograph,
+    PitchShifter,
+    TwoVoicePitchShifter,
+    StepPitchShifter,
+    Reverb,
+    GatedReverb,
+    ChorusOverdrive,
+    OverdriveFlanger,
+    OverdriveDelay,
+    DistortionChorus,
+    DistortionFlanger,
+    DistortionDelay,
+    EnhancerChorus,
+    EnhancerFlanger,
+    EnhancerDelay,
+    ChorusDelay,
+    FlangerDelay,
+    ChorusFlanger,
+    VrChorus, //RD700NX only
+    VrTremolo, //RD700NX only
+    VrAutoWah, //RD700NX only
+    VrPhaser, //RD700NX only
+    OrganMulti, //RD700NX only
+    Linedrive, //RD700NX only
+    SmallPhaser, //RD700NX only
+    SympatheticResonance, //RD300NX only
+    Other(u8)
+}
+
+impl From<u8> for MfxType {
+    fn from(value: u8) -> Self {
+        if value <= 85 {
+            Self::iter().nth(value as usize).unwrap()
+        } else {
+            Self::Other(value)
+        }
+    }
+}
+
+impl Into<u8> for MfxType {
+    fn into(self) -> u8 {
+        if let Self::Other(value) = self {
+            value
+        } else {
+            Self::iter().position(|s| s == self).unwrap() as u8
+        }
+    }
+}
+
+impl Default for MfxType {
+    fn default() -> Self {
+        Self::from(0)
+    }
+}
