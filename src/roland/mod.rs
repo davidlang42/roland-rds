@@ -8,4 +8,3 @@ pub mod system;
 //TODO (TYPES) factor out common sets of settings between layers and live set common/etc, or system and live set
 //TODO (TYPES) make microtune a map of non-default values (are there any other arrays which are really maps?)
 //TODO (TYPES) look for other sections of json which are overly verbose and contain basically default data and figure out what to do with them
-//TODO (ERRORS) better error messages including which # live set we are in, which field we are looking at
