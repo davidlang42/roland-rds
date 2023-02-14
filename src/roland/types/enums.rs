@@ -213,3 +213,42 @@ impl Default for StretchTuneType {
         Self::from(0)
     }
 }
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+pub enum Pan { // 0-127 (L64 - 63R)
+    Left(u8),
+    Centre,
+    Right(u8)
+}
+
+impl Pan {
+    const CENTRE: u8 = 64;
+}
+
+impl From<u8> for Pan {
+    fn from(value: u8) -> Self {
+        if value > Self::CENTRE {
+            Self::Right(value - Self::CENTRE)
+        } else if value < Self::CENTRE {
+            Self::Left(Self::CENTRE - value)
+        } else {
+            Self::Centre
+        }
+    }
+}
+
+impl Into<u8> for Pan {
+    fn into(self) -> u8 {
+        match self {
+            Self::Left(l) => Self::CENTRE - l,
+            Self::Centre => Self::CENTRE,
+            Self::Right(r) => Self::CENTRE + r
+        }
+    }
+}
+
+impl Default for Pan {
+    fn default() -> Self {
+        Self::from(0)
+    }
+}
