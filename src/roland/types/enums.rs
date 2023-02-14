@@ -339,7 +339,7 @@ impl Default for Polarity {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, Hash, Eq)]
 pub enum Layer { // 0-3
     Upper1,
     Upper2,

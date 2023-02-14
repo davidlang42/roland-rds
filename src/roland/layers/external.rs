@@ -1,8 +1,11 @@
+use std::collections::HashMap;
 use std::fmt::Debug;
+
+use strum::IntoEnumIterator;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::roland::types::numeric::OffsetU8;
-use crate::roland::types::enums::PianoKey;
+use crate::roland::types::enums::{PianoKey, Layer};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ExternalLayer {
@@ -20,8 +23,7 @@ pub struct ExternalLayer {
     modulation: bool,
     bender: bool,
     control_mfx_switch: bool,
-    //TODO fully enumerated map for control_slider
-    control_slider: [bool; 4], // index=layer (UPPER1, UPPER2, LOWER1, LOWER2)
+    control_slider: HashMap<Layer, bool>,
     transmit_midi_messages: Bits<177>,
     s1: bool,
     s2: bool,
@@ -46,8 +48,8 @@ impl Bytes<30> for ExternalLayer {
             bits.set_bool(self.modulation);
             bits.set_bool(self.bender);
             bits.set_bool(self.control_mfx_switch);
-            for value in self.control_slider {
-                bits.set_bool(value);
+            for key in Layer::iter() {
+                bits.set_bool(*self.control_slider.get(&key).unwrap());
             }
             bits.set_bits(&self.transmit_midi_messages);
             bits.set_bool(self.s1);
@@ -59,23 +61,40 @@ impl Bytes<30> for ExternalLayer {
 
     fn from_bytes(bytes: Box<[u8; Self::BYTE_SIZE]>) -> Result<Self, BytesError> where Self: Sized {
         BitStream::read_fixed(bytes, |data| {
-            let range_lower = data.get_u8::<7>(0, 87)?.into();
+            let range_lower: PianoKey = data.get_u8::<7>(0, 87)?.into();
+            let range_upper = data.get_u8::<7>(range_lower.into(), 87)?.into();
+            let velocity_range_lower = data.get_u8::<7>(1, 127)?;
+            let velocity_range_upper = data.get_u8::<7>(1, 127)?;
+            let velocity_sensitivity = data.get_u8::<7>(1, 127)?.into();
+            let velocity_max = data.get_u8::<7>(1, 127)?;
+            let transpose = data.get_u8::<7>(16, 112)?.into();
+            let enable = data.get_bool();
+            let damper = data.get_bool();
+            let fc1 = data.get_bool();
+            let fc2 = data.get_bool();
+            let modulation = data.get_bool();
+            let bender = data.get_bool();
+            let control_mfx_switch = data.get_bool();
+            let mut control_slider = HashMap::new();
+            for key in Layer::iter() {
+                control_slider.insert(key, data.get_bool());
+            }
             Ok(Self {
                 range_lower,
-                range_upper: data.get_u8::<7>(range_lower.into(), 87)?.into(),
-                velocity_range_lower: data.get_u8::<7>(1, 127)?,
-                velocity_range_upper: data.get_u8::<7>(1, 127)?,
-                velocity_sensitivity: data.get_u8::<7>(1, 127)?.into(),
-                velocity_max: data.get_u8::<7>(1, 127)?,
-                transpose: data.get_u8::<7>(16, 112)?.into(),
-                enable: data.get_bool(),
-                damper: data.get_bool(),
-                fc1: data.get_bool(),
-                fc2: data.get_bool(),
-                modulation: data.get_bool(),
-                bender: data.get_bool(),
-                control_mfx_switch: data.get_bool(),
-                control_slider: [data.get_bool(), data.get_bool(), data.get_bool(), data.get_bool()],
+                range_upper,
+                velocity_range_lower,
+                velocity_range_upper,
+                velocity_sensitivity,
+                velocity_max,
+                transpose,
+                enable,
+                damper,
+                fc1,
+                fc2,
+                modulation,
+                bender,
+                control_mfx_switch,
+                control_slider,
                 transmit_midi_messages: data.get_bits(),
                 s1: data.get_bool(),
                 s2: data.get_bool(),

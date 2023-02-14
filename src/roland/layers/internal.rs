@@ -1,7 +1,10 @@
+use std::collections::HashMap;
 use std::fmt::Debug;
 
+use strum::IntoEnumIterator;
+
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
-use crate::roland::types::enums::{PianoKey, Pan};
+use crate::roland::types::enums::{PianoKey, Pan, Layer};
 use crate::roland::types::numeric::OffsetU8;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -23,8 +26,7 @@ pub struct InternalLayer {
     fc2: bool,
     modulation: bool,
     bender: bool,
-    //TODO fully enumerated map for control_slider
-    control_slider: [bool; 4], // index=layer (UPPER1, UPPER2, LOWER1, LOWER2)
+    control_slider: HashMap<Layer, bool>,
     s1: bool,
     s2: bool,
     // flags below are not editable on the keyboard
@@ -60,8 +62,8 @@ impl Bytes<14> for InternalLayer {
             bits.set_bool(self.fc2);
             bits.set_bool(self.modulation);
             bits.set_bool(self.bender);
-            for value in self.control_slider {
-                bits.set_bool(value);
+            for key in Layer::iter() {
+                bits.set_bool(*self.control_slider.get(&key).unwrap());
             }
             bits.set_bool(self.s1);
             bits.set_bool(self.s2);
@@ -84,26 +86,42 @@ impl Bytes<14> for InternalLayer {
             let pan = data.get_u8::<7>(0, 127)?.into();
             let chorus = data.get_u8::<7>(0, 127)?;
             let reverb = data.get_u8::<7>(0, 127)?;
-            let range_lower = data.get_u8::<7>(0, 87)?.into();
+            let range_lower: PianoKey = data.get_u8::<7>(0, 87)?.into();
+            let range_upper = data.get_u8::<7>(range_lower.into(), 87)?.into();
+            let velocity_range_lower = data.get_u8::<7>(1, 127)?;
+            let velocity_range_upper = data.get_u8::<7>(1, 127)?;
+            let velocity_sensitivity = data.get_u8::<7>(1, 127)?.into();
+            let velocity_max = data.get_u8::<7>(1, 127)?;
+            let transpose = data.get_u8::<7>(16, 112)?.into();
+            let enable = data.get_bool();
+            let damper = data.get_bool();
+            let fc1 = data.get_bool();
+            let fc2 = data.get_bool();
+            let modulation = data.get_bool();
+            let bender = data.get_bool();
+            let mut control_slider = HashMap::new();
+            for key in Layer::iter() {
+                control_slider.insert(key, data.get_bool());
+            }
             Ok(Self {
                 volume,
                 pan,
                 chorus,
                 reverb,
                 range_lower,
-                range_upper: data.get_u8::<7>(range_lower.into(), 87)?.into(),
-                velocity_range_lower: data.get_u8::<7>(1, 127)?,
-                velocity_range_upper: data.get_u8::<7>(1, 127)?,
-                velocity_sensitivity: data.get_u8::<7>(1, 127)?.into(),
-                velocity_max: data.get_u8::<7>(1, 127)?,
-                transpose: data.get_u8::<7>(16, 112)?.into(),
-                enable: data.get_bool(),
-                damper: data.get_bool(),
-                fc1: data.get_bool(),
-                fc2: data.get_bool(),
-                modulation: data.get_bool(),
-                bender: data.get_bool(),
-                control_slider: [data.get_bool(), data.get_bool(), data.get_bool(), data.get_bool()],
+                range_upper,
+                velocity_range_lower,
+                velocity_range_upper,
+                velocity_sensitivity,
+                velocity_max,
+                transpose,
+                enable,
+                damper,
+                fc1,
+                fc2,
+                modulation,
+                bender,
+                control_slider,
                 s1: data.get_bool(),
                 s2: data.get_bool(),
                 receive_bank_select: data.get_bool(),
