@@ -17,7 +17,7 @@ impl Favorites {
 }
 
 impl Bytes<76> for Favorites {
-    fn to_bytes(&self) -> Result<Box<[u8; 76]>, BytesError> {
+    fn to_bytes(&self) -> Result<Box<[u8; Self::BYTE_SIZE]>, BytesError> {
         BitStream::write_fixed(|bits| {
             for value in self.one_touch_piano_current_number {
                 bits.set_u8::<7>(value, 0, 127)?;
@@ -33,24 +33,24 @@ impl Bytes<76> for Favorites {
     }
 
     fn from_bytes(bytes: Box<[u8; Self::BYTE_SIZE]>) -> Result<Self, BytesError> where Self: Sized {
-        BitStream::read_fixed(bytes, |data| {
+        BitStream::read_fixed(bytes, |bs| {
             let mut one_touch_piano_current_number = [0; 3];
             for i in 0..one_touch_piano_current_number.len() {
-                one_touch_piano_current_number[i] = data.get_u8::<7>(0, 127)?;
+                one_touch_piano_current_number[i] = bs.get_u8::<7>(0, 127)?;
             }
             let mut one_touch_e_piano_current_number = [0; 3];
             for i in 0..one_touch_e_piano_current_number.len() {
-                one_touch_e_piano_current_number[i] = data.get_u8::<7>(0, 127)?;
+                one_touch_e_piano_current_number[i] = bs.get_u8::<7>(0, 127)?;
             }
             let mut banks = Vec::new();
             for _ in 0..Self::BANKS {
-                banks.push(Bank::from_bits(data.get_bits())?);
+                banks.push(Bank::from_bits(bs.get_bits())?);
             }
             Ok(Self {
                 one_touch_piano_current_number,
                 one_touch_e_piano_current_number,
                 banks: banks.try_into().unwrap(),
-                unused: data.get_bits()
+                unused: bs.get_bits()
             })
         })
     }

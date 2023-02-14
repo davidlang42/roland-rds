@@ -19,10 +19,9 @@ pub struct Common {
     s1_assign: u8, // max 20 (OFF, COUPLE+1OCT, COUPLE-1OCT, COUPLE+2OCT, COUPLE-2OCT, COUPLE+5TH, COUPLE-4TH, OCT-UP, OCT-DOWN, START/STOP, TAP-TEMPO, SONG PLY/STP, SONG RESET, SONG BWD, SONG FWD, MFX1 SW, MFX2 SW, ROTARY SPEED, LIVE SET UP, LIVE SET DOWN, PANEL LOCK)
     s2_assign: u8, // max 20 (OFF, COUPLE+1OCT, COUPLE-1OCT, COUPLE+2OCT, COUPLE-2OCT, COUPLE+5TH, COUPLE-4TH, OCT-UP, OCT-DOWN, START/STOP, TAP-TEMPO, SONG PLY/STP, SONG RESET, SONG BWD, SONG FWD, MFX1 SW, MFX2 SW, ROTARY SPEED, LIVE SET UP, LIVE SET DOWN, PANEL LOCK)
     tone_remain: bool,
-    unknown: Bits<4>, //TODO (SYSTEM) figure this out
+    unsure: Bits<4>, //TODO figure this out & find the setting about 16PARTS/16PARTS+PERF
     unused: Bits<15>
 }
-//TODO (SYSTEM) find where the setting about 16PARTS/16PARTS+LAYERS is, because thats important too
 
 impl Bytes<10> for Common {
     fn to_bytes(&self) -> Result<Box<[u8; Self::BYTE_SIZE]>, BytesError> {
@@ -39,7 +38,7 @@ impl Bytes<10> for Common {
             bs.set_u8::<8>(self.fc1_assign, 0, 146)?;
             bs.set_u8::<8>(self.fc2_assign, 0, 146)?;
             bs.set_bool(self.tone_remain);
-            bs.set_bits(&self.unknown);
+            bs.set_bits(&self.unsure);
             bs.set_bits(&self.unused);
             Ok(())
         })
@@ -62,7 +61,7 @@ impl Bytes<10> for Common {
                 s1_assign: bs.get_u8::<5>(0, 20)?,
                 s2_assign: bs.get_u8::<5>(0, 20)?,
                 tone_remain: bs.get_bool(),
-                unknown: bs.get_bits(),
+                unsure: bs.get_bits(),
                 unused: bs.get_bits()
             })
         })
