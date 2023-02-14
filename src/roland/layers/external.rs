@@ -20,8 +20,7 @@ pub struct ExternalLayer {
     bender: bool,
     control_mfx_switch: bool,
     control_slider: [bool; 4], // index=layer (UPPER1, UPPER2, LOWER1, LOWER2)
-    //TODO these are well defined by the 700NX midi implementation, but CBF doing the boilerplate rn
-    transmit_other: Bits<177>,
+    transmit_midi_messages: Bits<177>,
     s1: bool,
     s2: bool,
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
@@ -48,7 +47,7 @@ impl Bytes<30> for ExternalLayer {
             for value in self.control_slider {
                 bits.set_bool(value);
             }
-            bits.set_bits(&self.transmit_other);
+            bits.set_bits(&self.transmit_midi_messages);
             bits.set_bool(self.s1);
             bits.set_bool(self.s2);
             bits.set_bits(&self.unused);
@@ -75,7 +74,7 @@ impl Bytes<30> for ExternalLayer {
                 bender: data.get_bool(),
                 control_mfx_switch: data.get_bool(),
                 control_slider: [data.get_bool(), data.get_bool(), data.get_bool(), data.get_bool()],
-                transmit_other: data.get_bits(),
+                transmit_midi_messages: data.get_bits(),
                 s1: data.get_bool(),
                 s2: data.get_bool(),
                 unused: data.get_bits()
