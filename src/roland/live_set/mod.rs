@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
-use crate::json::{Json, StructuredJson};
+use crate::json::{Json, StructuredJson, StructuredJsonError};
 use self::chorus::Chorus;
 use self::common::Common;
 use self::mfx::Mfx;
@@ -130,16 +130,16 @@ impl Json for LiveSet {
         ])
     }
 
-    fn from_structured_json(mut structured_json: StructuredJson) -> Self {
-        let common = structured_json.extract("ls_common").to();
-        let song_rhythm = structured_json.extract("song_rhythm").to();
-        let chorus = structured_json.extract("chorus").to();
-        let reverb = structured_json.extract("reverb").to();
-        let mfx = structured_json.extract("mfx").to_array();
-        let resonance = structured_json.extract("resonance").to();
-        let layers = structured_json.extract("layers").to_array();
-        structured_json.done();
-        Self {
+    fn from_structured_json(mut structured_json: StructuredJson) -> Result<Self, StructuredJsonError> {
+        let common = structured_json.extract("ls_common")?.to()?;
+        let song_rhythm = structured_json.extract("song_rhythm")?.to()?;
+        let chorus = structured_json.extract("chorus")?.to()?;
+        let reverb = structured_json.extract("reverb")?.to()?;
+        let mfx = structured_json.extract("mfx")?.to_array()?;
+        let resonance = structured_json.extract("resonance")?.to()?;
+        let layers = structured_json.extract("layers")?.to_array()?;
+        structured_json.done()?;
+        Ok(Self {
             common,
             song_rhythm,
             chorus,
@@ -148,15 +148,15 @@ impl Json for LiveSet {
             resonance,
             layers,
             padding: Bits::unit()
-        }
+        })
     }
 
     fn to_json(&self) -> String {
-        serde_json::to_string_pretty(&self).expect("Error serializing JSON")
+        serde_json::to_string_pretty(&self).unwrap()
     }
 
-    fn from_json(json: String) -> Self {
-        serde_json::from_str(&json).expect("Error deserializing JSON")
+    fn from_json(json: String) -> Result<Self, serde_json::Error> {
+        serde_json::from_str(&json)
     }
 }
 

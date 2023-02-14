@@ -1,7 +1,6 @@
 use std::fmt::Debug;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
-use crate::json::{Json, StructuredJson};
 
 use super::super::tones::ToneNumber;
 
@@ -73,23 +72,5 @@ impl Bytes<12> for ToneLayer {
                 unused: data.get_bits()
             })
         })
-    }
-}
-
-impl Json for ToneLayer {
-    fn to_structured_json(&self) -> StructuredJson {
-        StructuredJson::SingleJson(self.to_json())
-    }
-
-    fn from_structured_json(structured_json: StructuredJson) -> Self {
-        Self::from_json(structured_json.to_single_json())
-    }
-
-    fn to_json(&self) -> String {
-        serde_json::to_string_pretty(&self).expect("Error serializing JSON")
-    }
-
-    fn from_json(json: String) -> Self {
-        serde_json::from_str(&json).expect("Error deserializing JSON")
     }
 }

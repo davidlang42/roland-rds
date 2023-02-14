@@ -95,7 +95,7 @@ fn encode(input_json: Option<String>, output_rds: Option<String>) -> Result<(), 
     Ok(())
 }
 
-fn split(input_json: Option<String>, output_folder: String) -> Result<(), io::Error> {
+fn split(input_json: Option<String>, output_folder: String) -> Result<(), Box<dyn Error>> {
     let rds = read_json(&input_json)?;
     let structure = rds.to_structured_json();
     let count = structure.save(PathBuf::from(&output_folder))?;
@@ -103,9 +103,9 @@ fn split(input_json: Option<String>, output_folder: String) -> Result<(), io::Er
     Ok(())
 }
 
-fn merge(input_folder: String, output_json: Option<String>) -> Result<(), io::Error> {
+fn merge(input_folder: String, output_json: Option<String>) -> Result<(), Box<dyn Error>> {
     let structure = StructuredJson::load(PathBuf::from(&input_folder))?;
-    let rds = RD300NX::from_structured_json(structure);
+    let rds = RD300NX::from_structured_json(structure)?;
     write_json(&output_json, rds.to_json())?;
     if let Some(file) = &output_json {
         println!("Merged JSON into '{}'", file);
@@ -113,10 +113,10 @@ fn merge(input_folder: String, output_json: Option<String>) -> Result<(), io::Er
     Ok(())
 }
 
-fn read_json(path: &Option<String>) -> Result<Box<RD300NX>, io::Error> {
+fn read_json(path: &Option<String>) -> Result<Box<RD300NX>, Box<dyn Error>> {
     let (_, bytes) = read_data(path)?;
     let text: String = bytes.into_iter().map(|u| u as char).collect();
-    let rds = RD300NX::from_json(text);
+    let rds = RD300NX::from_json(text)?;
     Ok(Box::new(rds))
 }
 

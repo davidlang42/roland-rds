@@ -13,7 +13,7 @@ impl ToneNumber {
     pub fn details(&self) -> &Tone {
         let number = self.0 as usize;
         if number == 0 || number > TONE_LIST.len() {
-            panic!("Invalid tone number: {}", self.0);
+            panic!("Invalid tone number")
         }
         &TONE_LIST[number - 1]
     }

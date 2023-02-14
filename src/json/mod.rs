@@ -1,3 +1,4 @@
+use std::error::Error;
 use std::fmt::Debug;
 use std::ops::AddAssign;
 use std::path::PathBuf;
@@ -10,11 +11,33 @@ pub mod serialize_chars_as_string;
 pub mod serialize_array_as_vec;
 
 pub trait Json {
-    //TODO (ERRORS) make JSON trait functions return errors rather than panicing, and show them nicely to the user
-    fn to_json(&self) -> String; // no errors?
-    fn from_json(json: String) -> Self; // json parsing errors
-    fn to_structured_json(&self) -> StructuredJson; // file io errors
-    fn from_structured_json(structured_json: StructuredJson) -> Self; // file io errors & json parsing errors
+    fn to_json(&self) -> String;
+    fn from_json(json: String) -> Result<Self, serde_json::Error> where Self: Sized;
+    fn to_structured_json(&self) -> StructuredJson;
+    fn from_structured_json(structured_json: StructuredJson) -> Result<Self, StructuredJsonError> where Self: Sized;
+}
+
+#[derive(Debug)]
+pub enum StructuredJsonError {
+    JsonError(serde_json::Error),
+    NodeNotFound(String),
+    ExpectedFolderButFoundFile,
+    ExpectedFileButFoundFolder,
+    UnusedNodes(Vec<String>)
+}
+
+impl From<serde_json::Error> for StructuredJsonError {
+    fn from(value: serde_json::Error) -> Self {
+        StructuredJsonError::JsonError(value)
+    }
+}
+
+impl Error for StructuredJsonError {}
+
+impl Display for StructuredJsonError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }
 
 pub enum StructuredJson {
@@ -25,7 +48,7 @@ pub enum StructuredJson {
 impl StructuredJson {
     pub fn save(&self, path: PathBuf) -> Result<FileCount, io::Error> {
         if path.exists() {
-            panic!("Cannot save structured json, '{}' already exists", path.display());
+            return Err(io::Error::new(io::ErrorKind::AlreadyExists, format!("Cannot save structured json, '{}' already exists", path.display())));
         }
         let mut count = FileCount::new();
         match self {
@@ -62,11 +85,11 @@ impl StructuredJson {
 
     pub fn load(path: PathBuf) -> Result<Self, io::Error> {
         if !path.exists() {
-            panic!("Cannot load structured json, '{}' does not exist", path.display());
+            return Err(io::Error::new(io::ErrorKind::NotFound, format!("Cannot load structured json, '{}' does not exist", path.display())));
         }
         Ok(if path.is_dir() {
             let mut vec = Vec::new();
-            for entry in path.read_dir().expect(&format!("Error reading directory '{}'", path.display())) {
+            for entry in path.read_dir()? {
                 let e = entry?;
                 vec.push((e.file_name().to_string_lossy().to_string(), Self::load(e.path())?));
             }
@@ -77,52 +100,54 @@ impl StructuredJson {
         })
     }
 
-    pub fn extract(&mut self, name: &str) -> Self {
+    pub fn extract(&mut self, name: &str) -> Result<Self, StructuredJsonError> {
         match self {
-            Self::SingleJson(_) => panic!("Cannot extract from StructuredJson::SingleJson"),
+            Self::SingleJson(_) => Err(StructuredJsonError::ExpectedFolderButFoundFile),
             Self::NestedCollection(vec) => {
                 if let Some(i) = vec.iter().position(|(n, _)| n == name) {
-                    vec.remove(i).1
+                    Ok(vec.remove(i).1)
                 } else {
-                    panic!("'{}' not found in StructuredJson::NestedCollection", name);
+                    Err(StructuredJsonError::NodeNotFound(name.to_owned()))
                 }
             }
         }
     }
 
-    pub fn done(self) {
+    pub fn done(self) -> Result<(), StructuredJsonError> {
         match self {
-            Self::SingleJson(_) => panic!("Cannot call done on StructuredJson::SingleJson"),
+            Self::SingleJson(_) => Err(StructuredJsonError::ExpectedFolderButFoundFile),
             Self::NestedCollection(vec) => {
                 if vec.len() > 0 {
                     let unused: Vec<String> = vec.into_iter().map(|(n, _)| n).collect();
-                    panic!("Unused items in StructuredJson::NestedCollection {:?}", unused)
+                    Err(StructuredJsonError::UnusedNodes(unused))
+                } else {
+                    Ok(())
                 }
             }
         }
     }
 
-    pub fn to<T: Json>(self) -> T {
+    pub fn to<T: Json>(self) -> Result<T, StructuredJsonError> {
         T::from_structured_json(self)
     }
 
-    pub fn to_vec<T: Json>(self) -> Vec<T> {
+    pub fn to_vec<T: Json>(self) -> Result<Vec<T>, StructuredJsonError> {
         match self {
-            Self::SingleJson(_) => panic!("Cannot create collection from StructuredJson::SingleJson"),
+            Self::SingleJson(_) => Err(StructuredJsonError::ExpectedFolderButFoundFile),
             Self::NestedCollection(vec) => vec.into_iter().map(|(_, s)| T::from_structured_json(s)).collect()
         }
     }
 
-    pub fn to_array<T: Json + Debug, const N: usize>(self) -> Box<[T; N]> {
-        let vec = self.to_vec();
+    pub fn to_array<T: Json + Debug, const N: usize>(self) -> Result<Box<[T; N]>, StructuredJsonError> {
+        let vec = self.to_vec()?;
         let array: [T; N] = vec.try_into().unwrap();
-        Box::new(array)
+        Ok(Box::new(array))
     }
 
-    pub fn to_single_json(self) -> String {
+    pub fn to_single_json(self) -> Result<String, StructuredJsonError> {
         match self {
-            Self::SingleJson(json) => json,
-            Self::NestedCollection(_) => panic!("Cannot call to_single_json on StructuredJson::NestedCollection")
+            Self::SingleJson(json) => Ok(json),
+            Self::NestedCollection(_) => Err(StructuredJsonError::ExpectedFileButFoundFolder)
         }
     }
 }

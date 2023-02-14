@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
-use crate::json::{StructuredJson, Json};
+use crate::json::{StructuredJson, Json, StructuredJsonError};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Favorites {
@@ -61,16 +61,16 @@ impl Json for Favorites {
         StructuredJson::SingleJson(self.to_json())
     }
 
-    fn from_structured_json(structured_json: StructuredJson) -> Self {
-        Self::from_json(structured_json.to_single_json())
+    fn from_structured_json(structured_json: StructuredJson) -> Result<Self, StructuredJsonError> {
+        Self::from_json(structured_json.to_single_json()?).map_err(|e| e.into())
     }
 
     fn to_json(&self) -> String {
-        serde_json::to_string_pretty(&self).expect("Error serializing JSON")
+        serde_json::to_string_pretty(&self).unwrap()
     }
 
-    fn from_json(json: String) -> Self {
-        serde_json::from_str(&json).expect("Error deserializing JSON")
+    fn from_json(json: String) -> Result<Self, serde_json::Error> {
+        serde_json::from_str(&json)
     }
 }
 

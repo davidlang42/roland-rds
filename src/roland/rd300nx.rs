@@ -1,5 +1,5 @@
 use crate::bytes::{Bytes, BytesError, BitStream};
-use crate::json::{StructuredJson, Json};
+use crate::json::{StructuredJson, Json, StructuredJsonError};
 use crate::json::serialize_array_as_vec;
 use super::live_set::LiveSet;
 use super::system::System;
@@ -61,26 +61,26 @@ impl Json for RD300NX {
         ])
     }
 
-    fn from_structured_json(mut structured_json: StructuredJson) -> Self {
-        let user_sets = structured_json.extract("user_sets").to_array();
-        let piano = structured_json.extract("piano").to_array();
-        let e_piano = structured_json.extract("e_piano").to_array();
-        let system = structured_json.extract("system").to();
-        structured_json.done();
-        Self {
+    fn from_structured_json(mut structured_json: StructuredJson) -> Result<Self, StructuredJsonError> {
+        let user_sets = structured_json.extract("user_sets")?.to_array()?;
+        let piano = structured_json.extract("piano")?.to_array()?;
+        let e_piano = structured_json.extract("e_piano")?.to_array()?;
+        let system = structured_json.extract("system")?.to()?;
+        structured_json.done()?;
+        Ok(Self {
             user_sets,
             piano,
             e_piano,
             system
-        }
+        })
     }
 
     fn to_json(&self) -> String {
-        serde_json::to_string_pretty(&self).expect("Error serializing JSON")
+        serde_json::to_string_pretty(&self).unwrap()
     }
 
-    fn from_json(json: String) -> Self {
-        serde_json::from_str(&json).expect("Error deserializing JSON")
+    fn from_json(json: String) -> Result<Self, serde_json::Error> {
+        serde_json::from_str(&json)
     }
 }
 
