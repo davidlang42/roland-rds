@@ -338,3 +338,147 @@ impl Default for Polarity {
         Self::from(false)
     }
 }
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
+pub enum Layer { // 0-3
+    Upper1,
+    Upper2,
+    Lower1,
+    Lower2
+}
+
+impl From<u8> for Layer {
+    fn from(value: u8) -> Self {
+        Self::iter().nth(value as usize).unwrap()
+    }
+}
+
+impl Into<u8> for Layer {
+    fn into(self) -> u8 {
+        Self::iter().position(|s| s == self).unwrap() as u8
+    }
+}
+
+impl Default for Layer {
+    fn default() -> Self {
+        Self::from(0)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+pub enum KeyOffPosition {
+    Standard,
+    Deep
+}
+
+impl From<bool> for KeyOffPosition {
+    fn from(value: bool) -> Self {
+        match value {
+            false => Self::Standard,
+            true => Self::Deep
+        }
+    }
+}
+
+impl Into<bool> for KeyOffPosition {
+    fn into(self) -> bool {
+        match self {
+            Self::Standard => false,
+            Self::Deep => true
+        }
+    }
+}
+
+impl Default for KeyOffPosition {
+    fn default() -> Self {
+        Self::from(false)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+pub enum SliderSelect {
+    LayerLevel,
+    Control
+}
+
+impl From<bool> for SliderSelect {
+    fn from(value: bool) -> Self {
+        match value {
+            false => Self::LayerLevel,
+            true => Self::Control
+        }
+    }
+}
+
+impl Into<bool> for SliderSelect {
+    fn into(self) -> bool {
+        match self {
+            Self::LayerLevel => false,
+            Self::Control => true
+        }
+    }
+}
+
+impl Default for SliderSelect {
+    fn default() -> Self {
+        Self::from(false)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+pub enum KeyTouchVelocity { // 0-127 (REAL, 1-127)
+    Real,
+    Fixed(u8)
+}
+
+impl From<u8> for KeyTouchVelocity {
+    fn from(value: u8) -> Self {
+        if value == 0 {
+            Self::Real
+        } else {
+            Self::Fixed(value)
+        }
+    }
+}
+
+impl Into<u8> for KeyTouchVelocity {
+    fn into(self) -> u8 {
+        match self {
+            Self::Real => 0,
+            Self::Fixed(v) => v
+        }
+    }
+}
+
+impl Default for KeyTouchVelocity {
+    fn default() -> Self {
+        Self::from(0)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
+pub enum KeyTouchCurveType { // 1-5
+    SuperLight,
+    Light,
+    Medium,
+    Heavy,
+    SuperHeavy
+}
+
+impl From<u8> for KeyTouchCurveType {
+    fn from(value: u8) -> Self {
+        Self::iter().nth(value as usize - 1).unwrap()
+    }
+}
+
+impl Into<u8> for KeyTouchCurveType {
+    fn into(self) -> u8 {
+        Self::iter().position(|s| s == self).unwrap() as u8 + 1
+    }
+}
+
+impl Default for KeyTouchCurveType {
+    fn default() -> Self {
+        Self::from(1)
+    }
+}
