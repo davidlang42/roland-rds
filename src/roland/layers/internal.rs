@@ -4,7 +4,8 @@ use std::fmt::Debug;
 use strum::IntoEnumIterator;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
-use crate::roland::types::enums::{PianoKey, Pan, Layer};
+use crate::roland::types::enums::{Pan, Layer};
+use crate::roland::types::notes::PianoKey;
 use crate::roland::types::numeric::OffsetU8;
 
 #[derive(Serialize, Deserialize, Debug)]

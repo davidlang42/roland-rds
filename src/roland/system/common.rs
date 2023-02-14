@@ -3,11 +3,12 @@ use std::fmt::Debug;
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{StructuredJson, Json, StructuredJsonError};
 use crate::roland::types::enums::{Polarity, SettingMode, MidiChannel, PartMode};
+use crate::roland::types::numeric::Offset1Dp;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Common {
     //TODO type for master_tune
-    master_tune: u16, // 24-2024 (-100.0 - +100.0)
+    master_tune_percent: Offset1Dp<1024>, // 24-2024 (-100.0 - +100.0)
     master_level: u8, // max 127
     live_set_control_channel: MidiChannel,
     damper_polarity: Polarity,
@@ -33,7 +34,7 @@ pub struct Common {
 impl Bytes<10> for Common {
     fn to_bytes(&self) -> Result<Box<[u8; Self::BYTE_SIZE]>, BytesError> {
         BitStream::write_fixed(|bs| {
-            bs.set_u16::<16>(self.master_tune, 24, 2024)?;
+            bs.set_u16::<16>(self.master_tune_percent.into(), 24, 2024)?;
             bs.set_u8::<7>(self.master_level, 0, 127)?;
             bs.set_u8::<5>(self.live_set_control_channel.into(), 0, 16)?;
             bs.set_bool(self.damper_polarity.into());
@@ -56,7 +57,7 @@ impl Bytes<10> for Common {
     fn from_bytes(bytes: Box<[u8; Self::BYTE_SIZE]>) -> Result<Self, BytesError> where Self: Sized {
         BitStream::read_fixed(bytes, |bs| {
             Ok(Self {
-                master_tune: bs.get_u16::<16>(24, 2024)?,
+                master_tune_percent: bs.get_u16::<16>(24, 2024)?.into(),
                 master_level: bs.get_u8::<7>(0, 127)?,
                 live_set_control_channel: bs.get_u8::<5>(0, 16)?.into(),
                 damper_polarity: bs.get_bool().into(),

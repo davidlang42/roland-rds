@@ -5,7 +5,8 @@ use strum::IntoEnumIterator;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::roland::types::numeric::OffsetU8;
-use crate::roland::types::enums::{PianoKey, Layer};
+use crate::roland::types::notes::PianoKey;
+use crate::roland::types::enums::Layer;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ExternalLayer {
