@@ -278,3 +278,63 @@ impl Default for PatchCategory {
         Self::from(0)
     }
 }
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+pub enum SettingMode {
+    LiveSet,
+    System
+}
+
+impl From<bool> for SettingMode {
+    fn from(value: bool) -> Self {
+        match value {
+            false => Self::LiveSet,
+            true => Self::System
+        }
+    }
+}
+
+impl Into<bool> for SettingMode {
+    fn into(self) -> bool {
+        match self {
+            Self::LiveSet => false,
+            Self::System => true
+        }
+    }
+}
+
+impl Default for SettingMode {
+    fn default() -> Self {
+        Self::from(false)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+pub enum Polarity {
+    Standard,
+    Reverse
+}
+
+impl From<bool> for Polarity {
+    fn from(value: bool) -> Self {
+        match value {
+            false => Self::Standard,
+            true => Self::Reverse
+        }
+    }
+}
+
+impl Into<bool> for Polarity {
+    fn into(self) -> bool {
+        match self {
+            Self::Standard => false,
+            Self::Reverse => true
+        }
+    }
+}
+
+impl Default for Polarity {
+    fn default() -> Self {
+        Self::from(false)
+    }
+}
