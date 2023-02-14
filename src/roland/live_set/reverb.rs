@@ -2,6 +2,7 @@ use std::fmt::Debug;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{Json, StructuredJson, StructuredJsonError};
+use crate::roland::types::Parameter;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Reverb {
@@ -9,7 +10,7 @@ pub struct Reverb {
     depth: u8, // max 127
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused1: Bits<2>,
-    parameters: [u16; 20], // each 12768-52768 (-20000 - +20000)
+    parameters: [Parameter; 20],
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused2: Bits<3>
 }
@@ -21,7 +22,7 @@ impl Bytes<42> for Reverb {
             bs.set_u8::<7>(self.depth, 0, 127)?;
             bs.set_bits(&self.unused1);
             for i in 0..self.parameters.len() {
-                bs.set_u16::<16>(self.parameters[i], 12768, 52768)?;
+                bs.set_u16::<16>(self.parameters[i].into(), 12768, 52768)?;
             }
             bs.set_bits(&self.unused2);
             Ok(())
@@ -33,9 +34,9 @@ impl Bytes<42> for Reverb {
             let reverb_type = bs.get_u8::<4>(0, 6)?;
             let depth = bs.get_u8::<7>(0, 127)?;
             let unused1 = bs.get_bits();
-            let mut parameters = [0; 20];
+            let mut parameters = [Parameter::default(); 20];
             for i in 0..parameters.len() {
-                parameters[i] = bs.get_u16::<16>(12768, 52768)?;
+                parameters[i] = bs.get_u16::<16>(12768, 52768)?.into();
             }
             Ok(Self {
                 reverb_type,

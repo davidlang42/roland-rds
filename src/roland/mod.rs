@@ -3,6 +3,7 @@ pub mod live_set;
 pub mod layers;
 pub mod tones;
 pub mod system;
+pub mod types;
 
 //TODO (TYPES) handle types better than all u8 (across entire project)
 //TODO (TYPES) factor out common sets of settings between layers and live set common/etc, or system and live set

@@ -2,6 +2,7 @@ use std::fmt::Debug;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{Json, StructuredJson, StructuredJsonError};
+use crate::roland::types::Parameter;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Mfx {
@@ -19,7 +20,7 @@ pub struct Mfx {
     padding4: Bits<14>,
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused2: Bits<26>,
-    parameters: [u16; 32], // 12768-52768 (-20000 - +20000)
+    parameters: [Parameter; 32],
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused3: Bits<3>
 }
@@ -36,7 +37,7 @@ impl Bytes<76> for Mfx {
             bs.set_bits(&self.padding4);
             bs.set_bits(&self.unused2);
             for i in 0..self.parameters.len() {
-                bs.set_u16::<16>(self.parameters[i], 12768, 52768)?;
+                bs.set_u16::<16>(self.parameters[i].into(), 12768, 52768)?;
             }
             bs.set_bits(&self.unused3);
             Ok(())
@@ -53,9 +54,9 @@ impl Bytes<76> for Mfx {
             let padding3 = bs.get_bits();
             let padding4 = bs.get_bits();
             let unused2 = bs.get_bits();
-            let mut parameters = [0; 32];
+            let mut parameters = [Parameter::default(); 32];
             for i in 0..parameters.len() {
-                parameters[i] = bs.get_u16::<16>(12768, 52768)?;
+                parameters[i] = bs.get_u16::<16>(12768, 52768)?.into();
             }
             Ok(Self {
                 enable,
