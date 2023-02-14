@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{StructuredJson, Json, StructuredJsonError};
-use crate::roland::types::enums::{Polarity, SettingMode, MidiChannel};
+use crate::roland::types::enums::{Polarity, SettingMode, MidiChannel, PartMode};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Common {
@@ -23,7 +23,10 @@ pub struct Common {
     s1_assign: u8, // max 20 (OFF, COUPLE+1OCT, COUPLE-1OCT, COUPLE+2OCT, COUPLE-2OCT, COUPLE+5TH, COUPLE-4TH, OCT-UP, OCT-DOWN, START/STOP, TAP-TEMPO, SONG PLY/STP, SONG RESET, SONG BWD, SONG FWD, MFX1 SW, MFX2 SW, ROTARY SPEED, LIVE SET UP, LIVE SET DOWN, PANEL LOCK)
     s2_assign: u8, // max 20 (OFF, COUPLE+1OCT, COUPLE-1OCT, COUPLE+2OCT, COUPLE-2OCT, COUPLE+5TH, COUPLE-4TH, OCT-UP, OCT-DOWN, START/STOP, TAP-TEMPO, SONG PLY/STP, SONG RESET, SONG BWD, SONG FWD, MFX1 SW, MFX2 SW, ROTARY SPEED, LIVE SET UP, LIVE SET DOWN, PANEL LOCK)
     tone_remain: bool,
-    unsure: Bits<4>, //TODO figure this out & find the setting about 16PARTS/16PARTS+PERF
+    unsure1: Bits<2>, //TODO figure this out
+    part_mode: PartMode,
+    unsure2: Bits<1>, //TODO figure this out
+    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused: Bits<15>
 }
 
@@ -42,7 +45,9 @@ impl Bytes<10> for Common {
             bs.set_u8::<8>(self.fc1_assign, 0, 146)?;
             bs.set_u8::<8>(self.fc2_assign, 0, 146)?;
             bs.set_bool(self.tone_remain);
-            bs.set_bits(&self.unsure);
+            bs.set_bits(&self.unsure1);
+            bs.set_bool(self.part_mode.into());
+            bs.set_bits(&self.unsure2);
             bs.set_bits(&self.unused);
             Ok(())
         })
@@ -65,7 +70,9 @@ impl Bytes<10> for Common {
                 s1_assign: bs.get_u8::<5>(0, 20)?,
                 s2_assign: bs.get_u8::<5>(0, 20)?,
                 tone_remain: bs.get_bool(),
-                unsure: bs.get_bits(),
+                unsure1: bs.get_bits(),
+                part_mode: bs.get_bool().into(),
+                unsure2: bs.get_bits(),
                 unused: bs.get_bits()
             })
         })

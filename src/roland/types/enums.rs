@@ -772,3 +772,33 @@ impl Default for HarmonicBar {
         Self::from(1)
     }
 }
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+pub enum PartMode {
+    Parts16,
+    Parts16PlusPerformance
+}
+
+impl From<bool> for PartMode {
+    fn from(value: bool) -> Self {
+        match value {
+            false => Self::Parts16,
+            true => Self::Parts16PlusPerformance
+        }
+    }
+}
+
+impl Into<bool> for PartMode {
+    fn into(self) -> bool {
+        match self {
+            Self::Parts16 => false,
+            Self::Parts16PlusPerformance => true
+        }
+    }
+}
+
+impl Default for PartMode {
+    fn default() -> Self {
+        Self::from(false)
+    }
+}
