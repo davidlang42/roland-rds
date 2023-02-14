@@ -3,8 +3,6 @@ use std::fmt::Debug;
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{Json, StructuredJson};
 
-use super::super::{max, in_range};
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ExternalLayer {
     range_lower: u8, // max 87 (A0-C8)
@@ -22,7 +20,8 @@ pub struct ExternalLayer {
     bender: bool,
     control_mfx_switch: bool,
     control_slider: [bool; 4], // index=layer (UPPER1, UPPER2, LOWER1, LOWER2)
-    transmit_other: Bits<177>, //TODO (not relevant, but probably best to just do it) these are well defined by the 700NX midi implementation, but CBF doing the boilerplate rn
+    //TODO these are well defined by the 700NX midi implementation, but CBF doing the boilerplate rn
+    transmit_other: Bits<177>,
     s1: bool,
     s2: bool,
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
@@ -30,15 +29,15 @@ pub struct ExternalLayer {
 }
 
 impl Bytes<30> for ExternalLayer {
-    fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {
+    fn to_bytes(&self) -> Result<Box<[u8; 30]>, BytesError> {
         BitStream::write_fixed(|bits| {
-            bits.set_u8::<7>(max(self.range_lower, 87));
-            bits.set_u8::<7>(in_range(self.range_upper, self.range_lower, 87));
-            bits.set_u8::<7>(in_range(self.velocity_range_lower, 1, 127));
-            bits.set_u8::<7>(in_range(self.velocity_range_upper, 1, 127));
-            bits.set_u8::<7>(in_range(self.velocity_sensitivity, 1, 127));
-            bits.set_u8::<7>(in_range(self.velocity_max, 1, 127));
-            bits.set_u8::<7>(in_range(self.transpose, 16, 112));
+            bits.set_u8::<7>(self.range_lower, 0, 87)?;
+            bits.set_u8::<7>(self.range_upper, self.range_lower, 87)?;
+            bits.set_u8::<7>(self.velocity_range_lower, 1, 127)?;
+            bits.set_u8::<7>(self.velocity_range_upper, 1, 127)?;
+            bits.set_u8::<7>(self.velocity_sensitivity, 1, 127)?;
+            bits.set_u8::<7>(self.velocity_max, 1, 127)?;
+            bits.set_u8::<7>(self.transpose, 16, 112)?;
             bits.set_bool(self.enable);
             bits.set_bool(self.damper);
             bits.set_bool(self.fc1);
@@ -53,19 +52,21 @@ impl Bytes<30> for ExternalLayer {
             bits.set_bool(self.s1);
             bits.set_bool(self.s2);
             bits.set_bits(&self.unused);
+            Ok(())
         })
     }
 
     fn from_bytes(bytes: Box<[u8; Self::BYTE_SIZE]>) -> Result<Self, BytesError> where Self: Sized {
         BitStream::read_fixed(bytes, |data| {
+            let range_lower = data.get_u8::<7>(0, 87)?;
             Ok(Self {
-                range_lower: data.get_u8::<7>(),
-                range_upper: data.get_u8::<7>(),
-                velocity_range_lower: data.get_u8::<7>(),
-                velocity_range_upper: data.get_u8::<7>(),
-                velocity_sensitivity: data.get_u8::<7>(),
-                velocity_max: data.get_u8::<7>(),
-                transpose: data.get_u8::<7>(),
+                range_lower,
+                range_upper: data.get_u8::<7>(range_lower, 87)?,
+                velocity_range_lower: data.get_u8::<7>(1, 127)?,
+                velocity_range_upper: data.get_u8::<7>(1, 127)?,
+                velocity_sensitivity: data.get_u8::<7>(1, 127)?,
+                velocity_max: data.get_u8::<7>(1, 127)?,
+                transpose: data.get_u8::<7>(16, 112)?,
                 enable: data.get_bool(),
                 damper: data.get_bool(),
                 fc1: data.get_bool(),

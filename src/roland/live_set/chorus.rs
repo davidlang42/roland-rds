@@ -2,7 +2,6 @@ use std::fmt::Debug;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{Json, StructuredJson};
-use crate::roland::in_range_u16;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Chorus {
@@ -15,31 +14,31 @@ pub struct Chorus {
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused: Bits<1>
 }
-//TODO (might be relevant) fields are well defined by the 700NX midi implementation, but CBF doing the boilerplate rn (should be 335 bits + 1 unused)
 
 impl Bytes<42> for Chorus {
-    fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {
+    fn to_bytes(&self) -> Result<Box<[u8; 42]>, BytesError> {
         BitStream::write_fixed(|bs| {
-            bs.set_u8::<4>(self.chorus_type);
-            bs.set_u8::<7>(self.depth);
+            bs.set_u8::<4>(self.chorus_type, 0, 3)?;
+            bs.set_u8::<7>(self.depth, 0, 127)?;
             bs.set_bits(&self.unused1);
-            bs.set_u8::<2>(self.output_select);
+            bs.set_u8::<2>(self.output_select, 0, 2)?;
             for i in 0..self.parameters.len() {
-                bs.set_u16::<16>(in_range_u16(self.parameters[i], 12768, 52768));
+                bs.set_u16::<16>(self.parameters[i], 12768, 52768)?;
             }
             bs.set_bits(&self.unused);
+            Ok(())
         })
     }
 
     fn from_bytes(bytes: Box<[u8; Self::BYTE_SIZE]>) -> Result<Self, BytesError> where Self: Sized {
         BitStream::read_fixed(bytes, |bs| {
-            let chorus_type = bs.get_u8::<4>();
-            let depth = bs.get_u8::<7>();
+            let chorus_type = bs.get_u8::<4>(0, 3)?;
+            let depth = bs.get_u8::<7>(0, 127)?;
             let unused1 = bs.get_bits();
-            let output_select = bs.get_u8::<2>();
+            let output_select = bs.get_u8::<2>(0, 2)?;
             let mut parameters = [0; 20];
             for i in 0..parameters.len() {
-                parameters[i] = bs.get_u16::<16>();
+                parameters[i] = bs.get_u16::<16>(12768, 52768)?;
             }
             Ok(Self {
                 chorus_type,

@@ -10,10 +10,11 @@ pub mod serialize_chars_as_string;
 pub mod serialize_array_as_vec;
 
 pub trait Json {
-    fn to_json(&self) -> String;
-    fn from_json(json: String) -> Self;
-    fn to_structured_json(&self) -> StructuredJson;
-    fn from_structured_json(structured_json: StructuredJson) -> Self;
+    //TODO (ERRORS) make JSON trait functions return errors rather than panicing, and show them nicely to the user
+    fn to_json(&self) -> String; // no errors?
+    fn from_json(json: String) -> Self; // json parsing errors
+    fn to_structured_json(&self) -> StructuredJson; // file io errors
+    fn from_structured_json(structured_json: StructuredJson) -> Self; // file io errors & json parsing errors
 }
 
 pub enum StructuredJson {

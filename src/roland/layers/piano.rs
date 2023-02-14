@@ -4,8 +4,6 @@ use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{Json, StructuredJson};
 use crate::json::serialize_array_as_vec;
 
-use super::super::{max, in_range_u16};
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PianoLayer {
     tone_number: u8, // max 8
@@ -26,42 +24,43 @@ pub struct PianoLayer {
 }
 
 impl Bytes<264> for PianoLayer {
-    fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {
+    fn to_bytes(&self) -> Result<Box<[u8; 264]>, BytesError> {
         BitStream::write_fixed(|bits| {
-            bits.set_u8::<7>(max(self.tone_number, 8));
-            bits.set_u8::<6>(max(self.stereo_width, 63));
-            bits.set_u8::<2>(max(self.nuance, 2));
-            bits.set_u8::<7>(max(self.duplex_scale_level, 127));
-            bits.set_u8::<3>(self.hammer_noise_level);
-            bits.set_u8::<7>(max(self.damper_noise_level, 127));
-            bits.set_u8::<7>(max(self.string_resonance_level, 127));
-            bits.set_u8::<7>(max(self.key_off_resonance_level, 127));
-            bits.set_u8::<7>(max(self.sound_lift, 127));
-            bits.set_u8::<4>(self.tone_character);
-            bits.set_u8::<2>(max(self.stretch_tune_type, 2));
+            bits.set_u8::<7>(self.tone_number, 0, 8)?;
+            bits.set_u8::<6>(self.stereo_width, 0, 63)?;
+            bits.set_u8::<2>(self.nuance, 0, 2)?;
+            bits.set_u8::<7>(self.duplex_scale_level, 0, 127)?;
+            bits.set_u8::<3>(self.hammer_noise_level, 0, 255)?; // MI is wrong: "62-66 (-2 - +2)"
+            bits.set_u8::<7>(self.damper_noise_level, 0, 127)?;
+            bits.set_u8::<7>(self.string_resonance_level, 0, 127)?;
+            bits.set_u8::<7>(self.key_off_resonance_level, 0, 127)?;
+            bits.set_u8::<7>(self.sound_lift, 0, 127)?;
+            bits.set_u8::<4>(self.tone_character, 0, 255)?; // MI is wrong: "59-69 (-5 - +5)"
+            bits.set_u8::<2>(self.stretch_tune_type, 0, 2)?;
             for value in *self.micro_tune {
-                bits.set_u16::<16>(in_range_u16(value, 12, 1012));
+                bits.set_u16::<16>(value, 12, 1012)?;
             }
             bits.set_bits(&self.unused);
+            Ok(())
         })
     }
 
     fn from_bytes(bytes: Box<[u8; Self::BYTE_SIZE]>) -> Result<Self, BytesError> where Self: Sized {
         BitStream::read_fixed(bytes, |data| {
-            let tone_number = data.get_u8::<7>();
-            let stereo_width = data.get_u8::<6>();
-            let nuance = data.get_u8::<2>();
-            let duplex_scale_level = data.get_u8::<7>();
-            let hammer_noise_level = data.get_u8::<3>();
-            let damper_noise_level = data.get_u8::<7>();
-            let string_resonance_level = data.get_u8::<7>();
-            let key_off_resonance_level = data.get_u8::<7>();
-            let sound_lift = data.get_u8::<7>();
-            let tone_character = data.get_u8::<4>();
-            let stretch_tune_type = data.get_u8::<2>();
+            let tone_number = data.get_u8::<7>(0, 8)?;
+            let stereo_width = data.get_u8::<6>(0, 63)?;
+            let nuance = data.get_u8::<2>(0, 2)?;
+            let duplex_scale_level = data.get_u8::<7>(0, 127)?;
+            let hammer_noise_level = data.get_u8::<3>(0, 255)?; // MI is wrong: "62-66 (-2 - +2)"
+            let damper_noise_level = data.get_u8::<7>(0, 127)?;
+            let string_resonance_level = data.get_u8::<7>(0, 127)?;
+            let key_off_resonance_level = data.get_u8::<7>(0, 127)?;
+            let sound_lift = data.get_u8::<7>(0, 127)?;
+            let tone_character = data.get_u8::<4>(0, 255)?; // MI is wrong: "59-69 (-5 - +5)"
+            let stretch_tune_type = data.get_u8::<2>(0, 2)?;
             let mut micro_tune = [0; 128];
             for i in 0..micro_tune.len() {
-                micro_tune[i] = data.get_u16::<16>();
+                micro_tune[i] = data.get_u16::<16>(12, 1012)?;
             }
             Ok(Self {
                 tone_number,

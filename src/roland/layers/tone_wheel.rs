@@ -7,9 +7,9 @@ use crate::json::{Json, StructuredJson};
 pub struct ToneWheelLayer(Bits<48>);
 
 impl Bytes<6> for ToneWheelLayer {
-    fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {
+    fn to_bytes(&self) -> Result<Box<[u8; Self::BYTE_SIZE]>, BytesError> {
         BitStream::write_fixed(|bs| {
-            bs.set_bits(&self.0);
+            Ok(bs.set_bits(&self.0))
         })
     }
 

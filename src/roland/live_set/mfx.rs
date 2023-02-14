@@ -2,7 +2,6 @@ use std::fmt::Debug;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{Json, StructuredJson};
-use crate::roland::in_range_u16;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Mfx {
@@ -26,20 +25,21 @@ pub struct Mfx {
 }
 
 impl Bytes<76> for Mfx {
-    fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {
+    fn to_bytes(&self) -> Result<Box<[u8; Self::BYTE_SIZE]>, BytesError> {
         BitStream::write_fixed(|bs| {
             bs.set_bool(self.enable);
             bs.set_bits(&self.unused1);
-            bs.set_u8::<8>(self.effect_type);
+            bs.set_full_u8(self.effect_type);
             bs.set_bits(&self.padding1);
             bs.set_bits(&self.padding2);
             bs.set_bits(&self.padding3);
             bs.set_bits(&self.padding4);
             bs.set_bits(&self.unused2);
             for i in 0..self.parameters.len() {
-                bs.set_u16::<16>(in_range_u16(self.parameters[i], 12768, 52768));
+                bs.set_u16::<16>(self.parameters[i], 12768, 52768)?;
             }
             bs.set_bits(&self.unused3);
+            Ok(())
         })
     }
 
@@ -47,7 +47,7 @@ impl Bytes<76> for Mfx {
         BitStream::read_fixed(bytes, |bs| {
             let enable = bs.get_bool();
             let unused1 = bs.get_bits();
-            let effect_type = bs.get_u8::<8>();
+            let effect_type = bs.get_full_u8();
             let padding1 = bs.get_bits();
             let padding2 = bs.get_bits();
             let padding3 = bs.get_bits();
@@ -55,7 +55,7 @@ impl Bytes<76> for Mfx {
             let unused2 = bs.get_bits();
             let mut parameters = [0; 32];
             for i in 0..parameters.len() {
-                parameters[i] = bs.get_u16::<16>();
+                parameters[i] = bs.get_u16::<16>(12768, 52768)?;
             }
             Ok(Self {
                 enable,

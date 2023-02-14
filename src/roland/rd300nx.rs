@@ -2,7 +2,6 @@ use crate::bytes::{Bytes, BytesError, BitStream};
 use crate::json::{StructuredJson, Json};
 use crate::json::serialize_array_as_vec;
 use super::live_set::LiveSet;
-use super::parse_many;
 use super::system::System;
 
 #[derive(Serialize, Deserialize)]
@@ -18,47 +17,37 @@ pub struct RD300NX {
 impl Bytes<183762> for RD300NX {
     fn from_bytes(bytes: Box<[u8; Self::BYTE_SIZE]>) -> Result<Self, BytesError> {
         BitStream::read_fixed(bytes, |data| {
-            let user_sets = parse_many(data)?;
-            let piano = parse_many(data)?;
-            let e_piano = parse_many(data)?;
-            let system = System::from_bytes(Box::new(data.get_bytes()))?;
-            let found_check_sum = [
-                data.get_u8::<8>(),
-                data.get_u8::<8>(),
-            ];
-            let rds = Self {
+            let user_sets = LiveSet::array_from_bytes(data)?;
+            let piano = LiveSet::array_from_bytes(data)?;
+            let e_piano = LiveSet::array_from_bytes(data)?;
+            let system = System::from_bytes(data.get_bytes())?;
+            let expected_sum = data.sum_previous_bytes().to_be_bytes();
+            let found_sum = data.get_full_u16().to_be_bytes();
+            if found_sum != expected_sum {
+                return Err(BytesError::IncorrectCheckSum {
+                    expected: expected_sum.into_iter().collect(),
+                    found: found_sum.into_iter().collect()
+                });
+            }
+            Ok(Self {
                 user_sets,
                 piano,
                 e_piano,
                 system
-            };
-            let bytes = rds.to_bytes();
-            let expected_check_sum: [u8; 2] = bytes[(bytes.len()-2)..bytes.len()].try_into().unwrap();
-            if found_check_sum != expected_check_sum {
-                return Err(BytesError::IncorrectCheckSum {
-                    expected: expected_check_sum.into_iter().collect(),
-                    found: found_check_sum.into_iter().collect()
-                });
-            }
-            Ok(rds)
+            })
         })
     }
 
-    fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {
-        let mut bytes = Vec::new();
-        for live_set in self.all_live_sets() {
-            for byte in *live_set.to_bytes() {
-                bytes.push(byte);
+    fn to_bytes(&self) -> Result<Box<[u8; Self::BYTE_SIZE]>, BytesError> {
+        BitStream::write_fixed(|bs| {
+            for live_set in self.all_live_sets() {
+                bs.set_bytes(live_set.to_bytes()?);
             }
-        }
-        for byte in *self.system.to_bytes() {
-            bytes.push(byte);
-        }
-        let check_sum = Self::check_sum(&bytes);
-        for byte in check_sum.to_be_bytes() {
-            bytes.push(byte);
-        }
-        bytes.try_into().unwrap()
+            bs.set_bytes(self.system.to_bytes()?);
+            let check_sum = bs.sum_previous_bytes();           
+            bs.set_full_u16(check_sum);
+            Ok(())
+        })
     }
 }
 
@@ -99,14 +88,6 @@ impl RD300NX {
     const USER_SETS: usize = 60;
     const PIANO_SETS: usize = 10;
     const E_PIANO_SETS: usize = 15;
-
-    fn check_sum(bytes_without_checksum: &Vec<u8>) -> u16 {
-        let mut sum: u16 = 0;
-        for byte in bytes_without_checksum {
-            sum = sum.wrapping_add(*byte as u16);
-        }
-        sum
-    }
 
     pub fn all_live_sets(&self) -> Vec<&LiveSet> {
         self.user_sets.iter().chain(self.piano.iter()).chain(self.e_piano.iter()).collect()

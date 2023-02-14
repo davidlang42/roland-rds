@@ -4,7 +4,6 @@ use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{Json, StructuredJson};
 
 use super::super::tones::ToneNumber;
-use super::super::{max, in_range};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ToneLayer {
@@ -31,45 +30,46 @@ impl ToneLayer {
 }
 
 impl Bytes<12> for ToneLayer {
-    fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {
+    fn to_bytes(&self) -> Result<Box<[u8; 12]>, BytesError> {
         BitStream::write_fixed(|bits| {
             let tone = self.tone_number.details();
-            bits.set_u8::<7>(tone.msb);
-            bits.set_u8::<7>(tone.lsb);
-            bits.set_u8::<7>(tone.pc);
-            bits.set_u8::<7>(in_range(self.course_tune, 16, 112));
-            bits.set_u8::<7>(in_range(self.fine_tune, 14, 114));
-            bits.set_u8::<2>(max(self.mono_poly, 2));
-            bits.set_u8::<5>(max(self.pitch_bend_range, 24));
+            bits.set_u8::<7>(tone.msb, 0, 127)?;
+            bits.set_u8::<7>(tone.lsb, 0, 127)?;
+            bits.set_u8::<7>(tone.pc, 0, 127)?;
+            bits.set_u8::<7>(self.course_tune, 16, 112)?;
+            bits.set_u8::<7>(self.fine_tune, 14, 114)?;
+            bits.set_u8::<2>(self.mono_poly, 0, 2)?;
+            bits.set_u8::<5>(self.pitch_bend_range, 0, 24)?;
             bits.set_bool(self.portamento_switch);
-            bits.set_u8::<8>(max(self.portamento_time, 127));
-            bits.set_u8::<7>(self.cutoff);
-            bits.set_u8::<7>(self.resonance);
-            bits.set_u8::<7>(self.attack_time);
-            bits.set_u8::<7>(self.decay_time);
-            bits.set_u8::<7>(self.release_time);
+            bits.set_u8::<8>(self.portamento_time, 0, 127)?;
+            bits.set_u8::<7>(self.cutoff, 0, 127)?;
+            bits.set_u8::<7>(self.resonance, 0, 127)?;
+            bits.set_u8::<7>(self.attack_time, 0, 127)?;
+            bits.set_u8::<7>(self.decay_time, 0, 127)?;
+            bits.set_u8::<7>(self.release_time, 0, 127)?;
             bits.set_bits(&self.unused);
+            Ok(())
         })
     }
 
     fn from_bytes(bytes: Box<[u8; Self::BYTE_SIZE]>) -> Result<Self, BytesError> where Self: Sized {
         BitStream::read_fixed(bytes, |data| {
-            let msb = data.get_u8::<7>();
-            let lsb = data.get_u8::<7>();
-            let pc = data.get_u8::<7>();
+            let msb = data.get_u8::<7>(0, 127)?;
+            let lsb = data.get_u8::<7>(0, 127)?;
+            let pc = data.get_u8::<7>(0, 127)?;
             Ok(Self {
-                tone_number: ToneNumber::find(msb, lsb, pc).expect(&format!("Tone not found: MSB({}) LSB({}) PC({})", msb, lsb, pc)),
-                course_tune: data.get_u8::<7>(),
-                fine_tune: data.get_u8::<7>(),
-                mono_poly: data.get_u8::<2>(),
-                pitch_bend_range: data.get_u8::<5>(),
+                tone_number: ToneNumber::find(msb, lsb, pc).ok_or(BytesError::InvalidTone { msb, lsb, pc })?,
+                course_tune: data.get_u8::<7>(16, 112)?,
+                fine_tune: data.get_u8::<7>(14, 114)?,
+                mono_poly: data.get_u8::<2>(0, 2)?,
+                pitch_bend_range: data.get_u8::<5>(0, 24)?,
                 portamento_switch: data.get_bool(),
-                portamento_time: data.get_u8::<8>(),
-                cutoff: data.get_u8::<7>(),
-                resonance: data.get_u8::<7>(),
-                attack_time: data.get_u8::<7>(),
-                decay_time: data.get_u8::<7>(),
-                release_time: data.get_u8::<7>(),
+                portamento_time: data.get_u8::<8>(0, 127)?,
+                cutoff: data.get_u8::<7>(0, 127)?,
+                resonance: data.get_u8::<7>(0, 127)?,
+                attack_time: data.get_u8::<7>(0, 127)?,
+                decay_time: data.get_u8::<7>(0, 127)?,
+                release_time: data.get_u8::<7>(0, 127)?,
                 unused: data.get_bits()
             })
         })

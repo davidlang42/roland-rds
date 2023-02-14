@@ -7,9 +7,9 @@ use crate::json::{Json, StructuredJson};
 pub struct SwitchAssign(Bits<160>);
 
 impl Bytes<20> for SwitchAssign {
-    fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {
+    fn to_bytes(&self) -> Result<Box<[u8; Self::BYTE_SIZE]>, BytesError> {
         BitStream::write_fixed(|bs| {
-            bs.set_bits(&self.0);
+            Ok(bs.set_bits(&self.0))
         })
     }
 

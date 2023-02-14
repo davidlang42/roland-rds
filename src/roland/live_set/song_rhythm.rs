@@ -2,7 +2,6 @@ use std::fmt::Debug;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{Json, StructuredJson};
-use crate::roland::max;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SongRhythm {
@@ -23,19 +22,20 @@ pub struct SongRhythm {
 }
 
 impl Bytes<6> for SongRhythm {
-    fn to_bytes(&self) -> Box<[u8; Self::BYTE_SIZE]> {
+    fn to_bytes(&self) -> Result<Box<[u8; 6]>, BytesError> {
         BitStream::write_fixed(|bits| {
             bits.set_bits(&self.unused1);
-            bits.set_u8::<7>(self.audio_level);
-            bits.set_u8::<7>(self.song_level);
-            bits.set_u8::<3>(max(self.song_output_port, 5));
+            bits.set_u8::<7>(self.audio_level, 0, 127)?;
+            bits.set_u8::<7>(self.song_level, 0, 127)?;
+            bits.set_u8::<3>(self.song_output_port, 0, 5)?;
             bits.set_bits(&self.unused2);
-            bits.set_u8::<4>(max(self.rhythm_set, 13));
-            bits.set_u8::<7>(self.rhythm_level);
-            bits.set_u8::<8>(max(self.rhythm_pattern, 200));
-            bits.set_u8::<5>(max(self.rhythm_midi_out_channel, 16));
-            bits.set_u8::<3>(max(self.rhythm_output_port, 5));
+            bits.set_u8::<4>(self.rhythm_set, 0, 13)?;
+            bits.set_u8::<7>(self.rhythm_level, 0, 127)?;
+            bits.set_u8::<8>(self.rhythm_pattern, 0, 200)?;
+            bits.set_u8::<5>(self.rhythm_midi_out_channel, 0, 16)?;
+            bits.set_u8::<3>(self.rhythm_output_port, 0, 5)?;
             bits.set_bits(&self.unused3);
+            Ok(())
         })
     }
 
@@ -43,15 +43,15 @@ impl Bytes<6> for SongRhythm {
         BitStream::read_fixed(bytes, |data| {
             Ok(Self {
                 unused1: data.get_bits(),
-                audio_level: data.get_u8::<7>(),
-                song_level: data.get_u8::<7>(),
-                song_output_port: data.get_u8::<3>(),
+                audio_level: data.get_u8::<7>(0, 127)?,
+                song_level: data.get_u8::<7>(0, 127)?,
+                song_output_port: data.get_u8::<3>(0, 5)?,
                 unused2: data.get_bits(),
-                rhythm_set: data.get_u8::<4>(),
-                rhythm_level: data.get_u8::<7>(),
-                rhythm_pattern: data.get_u8::<8>(),
-                rhythm_midi_out_channel: data.get_u8::<5>(),
-                rhythm_output_port: data.get_u8::<3>(),
+                rhythm_set: data.get_u8::<4>(0, 13)?,
+                rhythm_level: data.get_u8::<7>(0, 127)?,
+                rhythm_pattern: data.get_u8::<8>(0, 200)?,
+                rhythm_midi_out_channel: data.get_u8::<5>(0, 16)?,
+                rhythm_output_port: data.get_u8::<3>(0, 5)?,
                 unused3: data.get_bits()
             })
         })

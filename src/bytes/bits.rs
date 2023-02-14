@@ -56,16 +56,21 @@ impl<const N: usize> Display for Bits<N> {
     }
 }
 
-pub enum BitsError {//TODO is this ever used?
+pub enum BitsError {
     IncompleteByteBeforeEnd(String),
-    InvalidDigit(char)
+    InvalidDigit(char),
+    WrongNumberOfBits {
+        expected: usize,
+        found: usize
+    }
 }
 
 impl Display for BitsError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::IncompleteByteBeforeEnd(s) => write!(f, "Incomplete byte before end: {}", s),
-            Self::InvalidDigit(c) => write!(f, "Invalid bit digit: {}", c),
+            Self::IncompleteByteBeforeEnd(s) => write!(f, "incomplete byte before end ({})", s),
+            Self::InvalidDigit(c) => write!(f, "invalid bit digit ({})", c),
+            Self::WrongNumberOfBits { expected, found } => write!(f, "wrong number of bits (expected {}, found {})", expected, found)
         }
     }
 }
@@ -89,7 +94,11 @@ impl<const N: usize> FromStr for Bits<N> {
                 bits.push(bit);
             }
         }
-        Ok(Bits(bits.try_into().unwrap()))
+        if bits.len() != N {
+            Err(BitsError::WrongNumberOfBits { expected: N, found: bits.len() })
+        } else {
+            Ok(Bits(bits.try_into().unwrap()))
+        }
     }
 }
 
@@ -190,19 +199,5 @@ impl<const N: usize> Bits<N> {
             bit_value /= 2;
         }
         Bits(bits)
-    }
-
-    pub fn to_bytes(&self) -> Vec<u8> {
-        if N % 8 != 0 {
-            panic!("Bits size ({}) must be a multiple of 8 to avoid incomplete bytes", N);
-        }
-        let mut start = 0;
-        let mut bytes = Vec::new();
-        while start < self.0.len() {
-            let end = start + 8;
-            bytes.push(Bits::<8>(self.0[start..end].try_into().unwrap()).to_u8());
-            start = end;
-        }
-        bytes
     }
 }
