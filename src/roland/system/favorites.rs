@@ -7,8 +7,10 @@ use crate::roland::types::numeric::{OneIndexedU16, OneIndexedU8};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Favorites {
-    one_touch_piano_current_number: [OneIndexedU8; 3],
-    one_touch_e_piano_current_number: [OneIndexedU8; 3],
+    one_touch_piano_current_number: OneIndexedU8,
+    unused_one_touch_piano_current_number: [OneIndexedU8; 2],
+    one_touch_e_piano_current_number: OneIndexedU8,
+    unused_one_touch_e_piano_current_number: [OneIndexedU8; 2],
     bank_a: Bank,
     bank_b: Bank,
     bank_c: Bank,
@@ -31,10 +33,12 @@ impl Favorites {
 impl Bytes<76> for Favorites {
     fn to_bytes(&self) -> Result<Box<[u8; Self::BYTE_SIZE]>, BytesError> {
         BitStream::write_fixed(|bits| {
-            for value in self.one_touch_piano_current_number {
+            bits.set_u8::<7>(self.one_touch_piano_current_number.into(), 0, 127)?;
+            for value in self.unused_one_touch_piano_current_number {
                 bits.set_u8::<7>(value.into(), 0, 127)?;
             }
-            for value in self.one_touch_e_piano_current_number {
+            bits.set_u8::<7>(self.one_touch_e_piano_current_number.into(), 0, 127)?;
+            for value in self.unused_one_touch_e_piano_current_number {
                 bits.set_u8::<7>(value.into(), 0, 127)?;
             }
             for bank in self.all_banks() {
@@ -46,13 +50,15 @@ impl Bytes<76> for Favorites {
 
     fn from_bytes(bytes: Box<[u8; Self::BYTE_SIZE]>) -> Result<Self, BytesError> where Self: Sized {
         BitStream::read_fixed(bytes, |bs| {
-            let mut one_touch_piano_current_number = [OneIndexedU8::default(); 3];
-            for i in 0..one_touch_piano_current_number.len() {
-                one_touch_piano_current_number[i] = bs.get_u8::<7>(0, 127)?.into();
+            let one_touch_piano_current_number = bs.get_u8::<7>(0, 127)?.into();
+            let mut unused_one_touch_piano_current_number = [OneIndexedU8::default(); 2];
+            for i in 0..unused_one_touch_piano_current_number.len() {
+                unused_one_touch_piano_current_number[i] = bs.get_u8::<7>(0, 127)?.into();
             }
-            let mut one_touch_e_piano_current_number = [OneIndexedU8::default(); 3];
-            for i in 0..one_touch_e_piano_current_number.len() {
-                one_touch_e_piano_current_number[i] = bs.get_u8::<7>(0, 127)?.into();
+            let one_touch_e_piano_current_number = bs.get_u8::<7>(0, 127)?.into();
+            let mut unused_one_touch_e_piano_current_number = [OneIndexedU8::default(); 2];
+            for i in 0..unused_one_touch_e_piano_current_number.len() {
+                unused_one_touch_e_piano_current_number[i] = bs.get_u8::<7>(0, 127)?.into();
             }
             let bank_a = Bank::from_bits(bs.get_bits())?;
             let bank_b = Bank::from_bits(bs.get_bits())?;
@@ -60,7 +66,9 @@ impl Bytes<76> for Favorites {
             let bank_d = Bank::from_bits(bs.get_bits())?;
             Ok(Self {
                 one_touch_piano_current_number,
+                unused_one_touch_piano_current_number,
                 one_touch_e_piano_current_number,
+                unused_one_touch_e_piano_current_number,
                 bank_a,
                 bank_b,
                 bank_c,
@@ -90,16 +98,23 @@ impl Json for Favorites {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Bank([Favorite; Self::FAVORITES_PER_BANK]);
+pub struct Bank {
+    favorites: [Favorite; Self::USED_FAVORITES],
+    unused_favorites: [Favorite; Self::FAVORITES_PER_BANK - Self::USED_FAVORITES]
+}
 
 impl Bank {
+    const USED_FAVORITES: usize = 6;
     const FAVORITES_PER_BANK: usize = 10;
     const BITS_SIZE: usize = Favorite::BITS_SIZE * Self::FAVORITES_PER_BANK;
 
     fn to_bits(&self) -> Result<Bits<{Self::BITS_SIZE}>, BytesError> {
         BitStream::write_fixed_bits(|bits| {
-            for favorite in &self.0 {
+            for favorite in &self.favorites {
                 bits.set_bits(&favorite.to_bits()?);
+            }
+            for unused_favorite in &self.unused_favorites {
+                bits.set_bits(&unused_favorite.to_bits()?);
             }
             Ok(())
         })
@@ -108,10 +123,17 @@ impl Bank {
     fn from_bits(bits: Bits<{Self::BITS_SIZE}>) -> Result<Self, BytesError> where Self: Sized {
         BitStream::read_fixed_bits(bits, |data| {
             let mut favorites = Vec::new();
-            for _ in 0..Self::FAVORITES_PER_BANK {
+            for _ in 0..Self::USED_FAVORITES {
                 favorites.push(Favorite::from_bits(data.get_bits())?);
             }
-            Ok(Self(favorites.try_into().unwrap()))
+            let mut unused_favorites = Vec::new();
+            for _ in 0..Self::FAVORITES_PER_BANK - Self::USED_FAVORITES {
+                unused_favorites.push(Favorite::from_bits(data.get_bits())?);
+            }
+            Ok(Self {
+                favorites: favorites.try_into().unwrap(),
+                unused_favorites: unused_favorites.try_into().unwrap()
+            })
         })
     }
 }

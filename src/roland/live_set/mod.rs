@@ -18,17 +18,17 @@ mod song_rhythm;
 mod mfx;
 mod resonance;
 
-//TODO (LAST) modify live set to separate real and unused layers/parameters in 300nx vs 700nx
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct LiveSet {
     common: Common, // 56 bytes
     song_rhythm: SongRhythm, // 6 bytes
     chorus: Chorus, // 42 bytes
     reverb: Reverb, // 42 bytes
-    mfx: Box<[Mfx; 8]>, // 608 bytes
-    resonance: Resonance, // 76 bytes
-    layers: Box<[LogicalLayer; 4]>, // 332*4=1328 bytes
+    mfx: Mfx, // 76 bytes
+    unused_mfx: Box<[Mfx; 7]>, // 532 bytes
+    unused_resonance: Resonance, // 76 bytes
+    layers: Box<[LogicalLayer; 3]>, // 332*3=996 bytes
+    unused_layer: LogicalLayer, // 332 bytes
     #[serde(skip_serializing_if="Bits::is_unit", default="Bits::unit")]
     padding: Bits<8>, // 1 byte
     // checksum: 1 byte
@@ -47,15 +47,30 @@ impl Bytes<2160> for LiveSet {
             let song_rhythm = SongRhythm::from_bytes(data.get_bytes())?;
             let chorus = Chorus::from_bytes(data.get_bytes())?;
             let reverb = Reverb::from_bytes(data.get_bytes())?;
-            let mfx = Mfx::array_from_bytes(data)?;
-            let resonance = Resonance::from_bytes(data.get_bytes())?;
+            let mfx = Mfx::from_bytes(data.get_bytes())?;
+            let unused_mfx = Mfx::array_from_bytes(data)?;
+            let unused_resonance = Resonance::from_bytes(data.get_bytes())?;
             let internal_layers = InternalLayer::array_from_bytes(data)?;
+            let unused_internal_layer = InternalLayer::from_bytes(data.get_bytes())?;
             let external_layers = ExternalLayer::array_from_bytes(data)?;
+            let unused_external_layer = ExternalLayer::from_bytes(data.get_bytes())?;
             let tone_layers = ToneLayer::array_from_bytes(data)?;
+            let unused_tone_layer = ToneLayer::from_bytes(data.get_bytes())?;
             let piano_layers = PianoLayer::array_from_bytes(data)?;
+            let unused_piano_layer = PianoLayer::from_bytes(data.get_bytes())?;
             let e_piano_layers = EPianoLayer::array_from_bytes(data)?;
+            let unused_e_piano_layer = EPianoLayer::from_bytes(data.get_bytes())?;
             let tone_wheel_layers = ToneWheelLayer::array_from_bytes(data)?;
+            let unused_tone_wheel_layer = ToneWheelLayer::from_bytes(data.get_bytes())?;
             let layers = LogicalLayer::from_layers(internal_layers, external_layers, tone_layers, piano_layers, e_piano_layers, tone_wheel_layers);
+            let unused_layer = LogicalLayer {
+                internal: unused_internal_layer,
+                external: unused_external_layer,
+                tone: unused_tone_layer,
+                piano: unused_piano_layer,
+                unused_e_piano: unused_e_piano_layer,
+                unused_tone_wheel: unused_tone_wheel_layer,
+            };
             let padding = data.get_bits();
             let expected_sum_to_zero = sum_to_zero(data.sum_previous_bytes());
             let found_sum_to_zero = data.get_full_u8();
@@ -71,8 +86,10 @@ impl Bytes<2160> for LiveSet {
                 chorus,
                 reverb,
                 mfx,
-                resonance,
+                unused_mfx,
+                unused_resonance,
                 layers,
+                unused_layer,
                 padding
             })
         })
@@ -84,28 +101,35 @@ impl Bytes<2160> for LiveSet {
             bs.set_bytes(self.song_rhythm.to_bytes()?);
             bs.set_bytes(self.chorus.to_bytes()?);
             bs.set_bytes(self.reverb.to_bytes()?);
-            for mfx in self.mfx.iter() {
+            bs.set_bytes(self.mfx.to_bytes()?);
+            for mfx in self.unused_mfx.iter() {
                 bs.set_bytes(mfx.to_bytes()?);
             }
-            bs.set_bytes(self.resonance.to_bytes()?);
+            bs.set_bytes(self.unused_resonance.to_bytes()?);
             for layer in self.layers.iter() {
                 bs.set_bytes(layer.internal.to_bytes()?);
             }
+            bs.set_bytes(self.unused_layer.internal.to_bytes()?);
             for layer in self.layers.iter() {
                 bs.set_bytes(layer.external.to_bytes()?);
             }
+            bs.set_bytes(self.unused_layer.external.to_bytes()?);
             for layer in self.layers.iter() {
                 bs.set_bytes(layer.tone.to_bytes()?);
             }
+            bs.set_bytes(self.unused_layer.tone.to_bytes()?);
             for layer in self.layers.iter() {
                 bs.set_bytes(layer.piano.to_bytes()?);
             }
+            bs.set_bytes(self.unused_layer.piano.to_bytes()?);
             for layer in self.layers.iter() {
-                bs.set_bytes(layer.e_piano.to_bytes()?);
+                bs.set_bytes(layer.unused_e_piano.to_bytes()?);
             }
+            bs.set_bytes(self.unused_layer.unused_e_piano.to_bytes()?);
             for layer in self.layers.iter() {
-                bs.set_bytes(layer.tone_wheel.to_bytes()?);
+                bs.set_bytes(layer.unused_tone_wheel.to_bytes()?);
             }
+            bs.set_bytes(self.unused_layer.unused_tone_wheel.to_bytes()?);
             bs.set_bits(&self.padding);
             let sum_to_zero = sum_to_zero(bs.sum_previous_bytes());
             bs.set_full_u8(sum_to_zero);
@@ -124,9 +148,11 @@ impl Json for LiveSet {
             ("song_rhythm".to_string(), self.song_rhythm.to_structured_json()),
             ("chorus".to_string(), self.chorus.to_structured_json()),
             ("reverb".to_string(), self.reverb.to_structured_json()),
-            ("mfx".to_string(), StructuredJson::from_collection(self.mfx.as_slice(), |_| None)),
-            ("resonance".to_string(), self.resonance.to_structured_json()),
-            ("layers".to_string(), StructuredJson::from_collection(self.layers.as_slice(), |l| Some(l.tone.tone_name())))
+            ("mfx".to_string(), self.mfx.to_structured_json()),
+            ("unused_mfx".to_string(), StructuredJson::from_collection(self.unused_mfx.as_slice(), |_| None)),
+            ("unused_resonance".to_string(), self.unused_resonance.to_structured_json()),
+            ("layers".to_string(), StructuredJson::from_collection(self.layers.as_slice(), |l| Some(l.tone.tone_name()))),
+            ("unused_layer".to_string(), self.unused_layer.to_structured_json())
         ])
     }
 
@@ -135,9 +161,11 @@ impl Json for LiveSet {
         let song_rhythm = structured_json.extract("song_rhythm")?.to()?;
         let chorus = structured_json.extract("chorus")?.to()?;
         let reverb = structured_json.extract("reverb")?.to()?;
-        let mfx = structured_json.extract("mfx")?.to_array()?;
-        let resonance = structured_json.extract("resonance")?.to()?;
+        let mfx = structured_json.extract("mfx")?.to()?;
+        let unused_mfx = structured_json.extract("unused_mfx")?.to_array()?;
+        let unused_resonance = structured_json.extract("unused_resonance")?.to()?;
         let layers = structured_json.extract("layers")?.to_array()?;
+        let unused_layer = structured_json.extract("unused_layer")?.to()?;
         structured_json.done()?;
         Ok(Self {
             common,
@@ -145,8 +173,10 @@ impl Json for LiveSet {
             chorus,
             reverb,
             mfx,
-            resonance,
+            unused_mfx,
+            unused_resonance,
             layers,
+            unused_layer,
             padding: Bits::unit()
         })
     }

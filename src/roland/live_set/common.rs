@@ -26,7 +26,7 @@ pub struct Common {
     s2_assign: ButtonFunction, // 0-17
     s1_state: bool,
     s2_state: bool,
-    eq_settings: Bits<68>,
+    unused_eq_settings: Bits<68>,
     key_touch_velocity: KeyTouchVelocity,
     key_touch_curve_type: KeyTouchCurveType,
     key_touch_curve_offset: OffsetU8<10>, // 0-19 (-10 - +9)
@@ -39,8 +39,8 @@ pub struct Common {
     split_switch_internal: bool,
     split_switch_external: bool,
     #[serde(with = "serialize_map_keys_in_order")]
-    harmonic_bar_assign: HashMap<Layer, StateMap<HarmonicBar>>, // index=(LOWER2:ON, LOWER2:OFF, LOWER1:ON, LOWER1:OFF, UPPER2:ON, UPPER2:OFF, UPPER1:ON, UPPER1:OFF)
-    mfx_control_destination: Layer,
+    unused_harmonic_bar_assign: HashMap<Layer, StateMap<HarmonicBar>>, // index=(LOWER2:ON, LOWER2:OFF, LOWER1:ON, LOWER1:OFF, UPPER2:ON, UPPER2:OFF, UPPER1:ON, UPPER1:OFF)
+    unused_mfx_control_destination: Layer,
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused: Bits<7>
 }
@@ -68,7 +68,7 @@ impl Bytes<56> for Common {
             bits.set_u8::<5>(self.s2_assign.into(), 0, 17)?;
             bits.set_bool(self.s1_state);
             bits.set_bool(self.s2_state);
-            bits.set_bits(&self.eq_settings);
+            bits.set_bits(&self.unused_eq_settings);
             bits.set_u8::<7>(self.key_touch_velocity.into(), 0, 127)?;
             bits.set_u8::<3>(self.key_touch_curve_type.into(), 1, 5)?;
             bits.set_u8::<5>(self.key_touch_curve_offset.into(), 0, 19)?;
@@ -82,11 +82,11 @@ impl Bytes<56> for Common {
             bits.set_bool(self.split_switch_internal);
             bits.set_bool(self.split_switch_external);
             for layer in Layer::iter().rev() {
-                let state_map = self.harmonic_bar_assign.get(&layer).unwrap();
+                let state_map = self.unused_harmonic_bar_assign.get(&layer).unwrap();
                 bits.set_u8::<4>(state_map.on.into(), 1, 9)?;
                 bits.set_u8::<4>(state_map.off.into(), 1, 9)?;
             }
-            bits.set_u8::<2>(self.mfx_control_destination.into(), 0, 3)?;
+            bits.set_u8::<2>(self.unused_mfx_control_destination.into(), 0, 3)?;
             bits.set_bits(&self.unused);
             Ok(())
         })
@@ -149,7 +149,7 @@ impl Bytes<56> for Common {
                 s2_assign,
                 s1_state,
                 s2_state,
-                eq_settings,
+                unused_eq_settings: eq_settings,
                 key_touch_velocity,
                 key_touch_curve_type,
                 key_touch_curve_offset,
@@ -160,8 +160,8 @@ impl Bytes<56> for Common {
                 slider_assign,
                 split_switch_internal,
                 split_switch_external,
-                harmonic_bar_assign,
-                mfx_control_destination: data.get_u8::<2>(0, 3)?.into(),
+                unused_harmonic_bar_assign: harmonic_bar_assign,
+                unused_mfx_control_destination: data.get_u8::<2>(0, 3)?.into(),
                 unused: data.get_bits()
             })
         })

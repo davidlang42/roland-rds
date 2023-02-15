@@ -234,7 +234,7 @@ pub enum Layer { // 0-3
     Upper1,
     Upper2,
     Lower1,
-    Lower2
+    UnusedLower2
 }
 
 impl From<u8> for Layer {
@@ -457,7 +457,7 @@ impl Default for ReverbType {
 pub enum SoundFocusType { // 0-31
     PianoType1,
     PianoType2,
-    EPianoType, // RD700NX only
+    UnusedEPianoType, // RD700NX only
     SoundLift,
     Enhancer,
     MidBoost,
@@ -570,13 +570,13 @@ pub enum MfxType { // 0-255
     ChorusDelay,
     FlangerDelay,
     ChorusFlanger,
-    VrChorus, //RD700NX only
-    VrTremolo, //RD700NX only
-    VrAutoWah, //RD700NX only
-    VrPhaser, //RD700NX only
-    OrganMulti, //RD700NX only
-    Linedrive, //RD700NX only
-    SmallPhaser, //RD700NX only
+    UnusedVrChorus, //RD700NX only
+    UnusedVrTremolo, //RD700NX only
+    UnusedVrAutoWah, //RD700NX only
+    UnusedVrPhaser, //RD700NX only
+    UnusedOrganMulti, //RD700NX only
+    UnusedLinedrive, //RD700NX only
+    UnusedSmallPhaser, //RD700NX only
     SympatheticResonance, //RD300NX only
     Other(u8)
 }
@@ -794,7 +794,7 @@ pub enum ButtonFunction { // 0-20
     SongBackward,
     SongForward,
     Mfx1Switch,
-    Mfx2Switch,
+    UnusedMfx2Switch,
     RotarySpeed,
     LiveSetUp, // system only
     LiveSetDown, // system only
@@ -834,7 +834,7 @@ pub enum PedalFunction { // 0-146 (OFF, CC00 - CC127, BEND-UP, BEND-DOWN, AFTERT
     SongPlayStop,
     SongReset,
     Mfx1Switch,
-    Mfx2Switch,
+    UnusedMfx2Switch,
     RotarySpeed,
     SoundFocusValue,
     LiveSetUp, // system only
@@ -878,7 +878,7 @@ pub enum SliderFunction { // 0-133 (OFF, CC00 - CC127, BEND-UP, BEND-DOWN, AFTER
     BendDown,
     AfterTouch,
     Mfx1Control,
-    Mfx2Control
+    UnusedMfx2Control
 }
 
 impl From<u8> for SliderFunction {

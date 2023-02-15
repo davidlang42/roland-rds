@@ -20,8 +20,8 @@ pub struct LogicalLayer {
     pub external: ExternalLayer,
     pub tone: ToneLayer,
     pub piano: PianoLayer,
-    pub e_piano: EPianoLayer,
-    pub tone_wheel: ToneWheelLayer
+    pub unused_e_piano: EPianoLayer,
+    pub unused_tone_wheel: ToneWheelLayer
 }
 
 impl LogicalLayer {
@@ -39,8 +39,8 @@ impl LogicalLayer {
                 external: ext.remove(0),
                 tone: tone.remove(0),
                 piano: pno.remove(0),
-                e_piano: ep.remove(0),
-                tone_wheel: tw.remove(0),
+                unused_e_piano: ep.remove(0),
+                unused_tone_wheel: tw.remove(0),
             });
         }
         Box::new(layers.try_into().unwrap())
