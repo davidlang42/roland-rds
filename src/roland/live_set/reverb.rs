@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
-use crate::json::{Json, StructuredJson, StructuredJsonError};
+use crate::json::{Json, StructuredJson, StructuredJsonError, serialize_default_terminated_array};
 use crate::roland::types::numeric::Parameter;
 use crate::roland::types::enums::ReverbType;
 
@@ -11,8 +11,8 @@ pub struct Reverb {
     depth: u8, // max 127
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused1: Bits<2>,
-    //TODO stop storing parameters once the rest are default
-    parameters: [Parameter; 20],
+    #[serde(with = "serialize_default_terminated_array")]
+    parameters: Box<[Parameter; 20]>,
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused2: Bits<3>
 }
@@ -44,7 +44,7 @@ impl Bytes<42> for Reverb {
                 reverb_type,
                 depth,
                 unused1,
-                parameters,
+                parameters: Box::new(parameters),
                 unused2: bs.get_bits()
             })
         })

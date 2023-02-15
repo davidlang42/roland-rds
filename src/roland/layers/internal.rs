@@ -4,6 +4,7 @@ use std::fmt::Debug;
 use strum::IntoEnumIterator;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
+use crate::json::serialize_map_keys_in_order;
 use crate::roland::types::enums::{Pan, Layer};
 use crate::roland::types::notes::PianoKey;
 use crate::roland::types::numeric::OffsetU8;
@@ -27,6 +28,7 @@ pub struct InternalLayer {
     fc2: bool,
     modulation: bool,
     bender: bool,
+    #[serde(with = "serialize_map_keys_in_order")]
     control_slider: HashMap<Layer, bool>,
     s1: bool,
     s2: bool,

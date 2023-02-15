@@ -30,7 +30,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             )?,
             "decode" => decode(
                 optional(args.next().ok_or("The 2nd argument should be the FILENAME for the input RDS file (or '-' for STDIN)")?),
-                optional(args.next().ok_or("The 3rd argument should be the FILENAME for the output JSON file (or '-' for STDOUT)")?) //TODO output_json arg not working as file
+                optional(args.next().ok_or("The 3rd argument should be the FILENAME for the output JSON file (or '-' for STDOUT)")?)
             )?,
             "split" => split(
                 optional(args.next().ok_or("The 2nd argument should be the FILENAME for the input JSON file (or '-' for STDIN)")?),
@@ -140,7 +140,7 @@ fn read_data(path: &Option<String>) -> Result<(usize, Vec<u8>), io::Error> {
 
 fn write_data(path: &Option<String>, bytes: &[u8]) -> Result<(), io::Error> {
     if let Some(filename) = path {
-        let mut f = fs::File::options().write(true).open(&filename)?;
+        let mut f = fs::File::options().create(true).write(true).truncate(true).open(&filename)?;
         f.write_all(&bytes)?;
         f.flush()?;
     } else {

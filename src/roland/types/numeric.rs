@@ -1,4 +1,4 @@
-#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq)]
 pub struct Parameter(i16); // 12768-52768 (-20000 - +20000)
 
 impl Parameter {
@@ -86,6 +86,27 @@ impl Default for OneIndexedU16 {
 }
 
 #[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+pub struct OneIndexedU8(u8); // 0-254 (1-255)
+
+impl From<u8> for OneIndexedU8 {
+    fn from(value: u8) -> Self {
+        Self(value + 1)
+    }
+}
+
+impl Into<u8> for OneIndexedU8 {
+    fn into(self) -> u8 {
+        self.0 - 1
+    }
+}
+
+impl Default for OneIndexedU8 {
+    fn default() -> Self {
+        Self::from(0)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq)]
 pub struct Offset1Dp<const OFFSET: u16>(f64); // MIN(0)-MAX(65536) ((MIN-OFFSET)/10 - (MAX-OFFSET)/10)
 
 impl<const O: u16> Offset1Dp<O> {
@@ -94,13 +115,13 @@ impl<const O: u16> Offset1Dp<O> {
 
 impl<const O: u16> From<u16> for Offset1Dp<O> {
     fn from(value: u16) -> Self {
-        Self((value - Self::ZERO) as f64 / 10.0)
+        Self((value as f64 - Self::ZERO as f64) / 10.0)
     }
 }
 
 impl<const O: u16> Into<u16> for Offset1Dp<O> {
     fn into(self) -> u16 {
-        (self.0 * 10.0) as u16 + Self::ZERO
+        ((self.0 * 10.0) + Self::ZERO as f64) as u16
     }
 }
 

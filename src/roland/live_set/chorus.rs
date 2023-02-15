@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
-use crate::json::{Json, StructuredJson, StructuredJsonError};
+use crate::json::{Json, StructuredJson, StructuredJsonError, serialize_default_terminated_array};
 use crate::roland::types::enums::{OutputSelect, ChorusType};
 use crate::roland::types::numeric::Parameter;
 
@@ -12,8 +12,8 @@ pub struct Chorus {
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused1: Bits<2>,
     output_select: OutputSelect,
-    //TODO stop storing parameters once the rest are default
-    parameters: [Parameter; 20],
+    #[serde(with = "serialize_default_terminated_array")]
+    parameters: Box<[Parameter; 20]>,
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused: Bits<1>
 }
@@ -48,7 +48,7 @@ impl Bytes<42> for Chorus {
                 depth,
                 unused1,
                 output_select,
-                parameters,
+                parameters: Box::new(parameters),
                 unused: bs.get_bits()
             })
         })

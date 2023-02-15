@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
-use crate::json::{Json, StructuredJson, StructuredJsonError};
+use crate::json::{Json, StructuredJson, StructuredJsonError, serialize_default_terminated_array};
 use crate::roland::types::enums::MfxType;
 use crate::roland::types::numeric::Parameter;
 
@@ -21,8 +21,8 @@ pub struct Mfx {
     padding4: Bits<14>,
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused2: Bits<26>,
-    //TODO stop storing parameters once the rest are default
-    parameters: [Parameter; 32],
+    #[serde(with = "serialize_default_terminated_array")]
+    parameters: Box<[Parameter; 32]>,
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused3: Bits<3>
 }
@@ -69,7 +69,7 @@ impl Bytes<76> for Mfx {
                 padding3,
                 padding4,
                 unused2,
-                parameters,
+                parameters: Box::new(parameters),
                 unused3: bs.get_bits()
             })
         })

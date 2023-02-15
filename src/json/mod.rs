@@ -9,6 +9,8 @@ use std::fs;
 pub mod serialize_fromstr_display;
 pub mod serialize_chars_as_string;
 pub mod serialize_array_as_vec;
+pub mod serialize_default_terminated_array;
+pub mod serialize_map_keys_in_order;
 
 pub trait Json {
     fn to_json(&self) -> String;
@@ -46,6 +48,8 @@ pub enum StructuredJson {
 }
 
 impl StructuredJson {
+    const FILE_EXTENSION: &str = "json";
+
     pub fn save(&self, path: PathBuf) -> Result<FileCount, io::Error> {
         if path.exists() {
             return Err(io::Error::new(io::ErrorKind::AlreadyExists, format!("Cannot save structured json, '{}' already exists", path.display())));
@@ -54,7 +58,7 @@ impl StructuredJson {
         match self {
             Self::SingleJson(json) => {
                 count.files += 1;
-                fs::write(path, json)?;
+                fs::write(path.with_extension(Self::FILE_EXTENSION), json)?;
             },
             Self::NestedCollection(vec) => {
                 fs::create_dir(&path)?;
@@ -74,9 +78,10 @@ impl StructuredJson {
         let mut vec = Vec::new();
         let pad_length = digits(items.len());
         for (i, item) in items.iter().enumerate() {
+            let number = i + 1; // intentionally 1-indexed because user facing
             let name = match namer(item) {
-                Some(s) => format!("{}-{}", pad(i, pad_length, '0'), alphanumeric(s)),
-                None => pad(i, pad_length, '0')
+                Some(s) => format!("{}-{}", pad(number, pad_length, '0'), alphanumeric(s)),
+                None => pad(number, pad_length, '0')
             };
             vec.push((name, item.to_structured_json()))
         }
@@ -87,11 +92,16 @@ impl StructuredJson {
         if !path.exists() {
             return Err(io::Error::new(io::ErrorKind::NotFound, format!("Cannot load structured json, '{}' does not exist", path.display())));
         }
+        let file_ext_with_dot = format!(".{}", StructuredJson::FILE_EXTENSION);
         Ok(if path.is_dir() {
             let mut vec = Vec::new();
             for entry in path.read_dir()? {
                 let e = entry?;
-                vec.push((e.file_name().to_string_lossy().to_string(), Self::load(e.path())?));
+                let mut name = e.file_name().to_string_lossy().to_string();
+                if name.ends_with(&file_ext_with_dot) {
+                    name.truncate(name.len() - file_ext_with_dot.len());
+                }
+                vec.push((name, Self::load(e.path())?));
             }
             vec.sort_by(|(a, _), (b, _)| a.cmp(b));
             Self::NestedCollection(vec)

@@ -2,33 +2,34 @@ use std::fmt::Debug;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{StructuredJson, Json, StructuredJsonError};
-use crate::roland::types::enums::{Polarity, SettingMode, MidiChannel, PartMode};
+use crate::roland::types::enums::{Polarity, SettingMode, OptionalMidiChannel, PartMode, ButtonFunction, PedalFunction, Temperament};
+use crate::roland::types::notes::KeyNote;
 use crate::roland::types::numeric::Offset1Dp;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Common {
-    //TODO type for master_tune
     master_tune_percent: Offset1Dp<1024>, // 24-2024 (-100.0 - +100.0)
     master_level: u8, // max 127
-    live_set_control_channel: MidiChannel,
+    live_set_control_channel: OptionalMidiChannel,
     damper_polarity: Polarity,
     fc1_polarity: Polarity,
     fc2_polarity: Polarity,
     eq_mode: SettingMode,
     pedal_mode: SettingMode,
     s1_s2_mode: SettingMode,
-    //TODO type for fc1/fc2_assign
-    fc1_assign: u8, // max 146 (OFF, CC00 - CC127, BEND-UP, BEND-DOWN, AFTERTOUCH, OCT-UP, OCT-DOWN, START/STOP, TAP-TEMPO, RHY PLY/STP, SONG PLY/STP, SONG RESET, MFX1 SW, MFX2 SW, MFX1 CONTROL, MFX2 CONTROL, ROTARY SPEED, SOUND FOCUS VALUE, LIVE SET UP, LIVE SET DOWN)
-    fc2_assign: u8, // max 146 (OFF, CC00 - CC127, BEND-UP, BEND-DOWN, AFTERTOUCH, OCT-UP, OCT-DOWN, START/STOP, TAP-TEMPO, RHY PLY/STP, SONG PLY/STP, SONG RESET, MFX1 SW, MFX2 SW, MFX1 CONTROL, MFX2 CONTROL, ROTARY SPEED, SOUND FOCUS VALUE, LIVE SET UP, LIVE SET DOWN)
-    //TODO type for s1/s2_assign
-    s1_assign: u8, // max 20 (OFF, COUPLE+1OCT, COUPLE-1OCT, COUPLE+2OCT, COUPLE-2OCT, COUPLE+5TH, COUPLE-4TH, OCT-UP, OCT-DOWN, START/STOP, TAP-TEMPO, SONG PLY/STP, SONG RESET, SONG BWD, SONG FWD, MFX1 SW, MFX2 SW, ROTARY SPEED, LIVE SET UP, LIVE SET DOWN, PANEL LOCK)
-    s2_assign: u8, // max 20 (OFF, COUPLE+1OCT, COUPLE-1OCT, COUPLE+2OCT, COUPLE-2OCT, COUPLE+5TH, COUPLE-4TH, OCT-UP, OCT-DOWN, START/STOP, TAP-TEMPO, SONG PLY/STP, SONG RESET, SONG BWD, SONG FWD, MFX1 SW, MFX2 SW, ROTARY SPEED, LIVE SET UP, LIVE SET DOWN, PANEL LOCK)
+    fc1_assign: PedalFunction, // 0-146
+    fc2_assign: PedalFunction, // 0-146
+    s1_assign: ButtonFunction, // 0-20
+    s2_assign: ButtonFunction, // 0-20
     tone_remain: bool,
-    unsure1: Bits<2>, //TODO figure this out
+    receive_gm_gm2_system_on: bool,
+    receive_gs_reset: bool,
     part_mode: PartMode,
-    unsure2: Bits<1>, //TODO figure this out
+    unsure: Bits<2>,
+    temperament: Temperament,
+    temperament_key: KeyNote,
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
-    unused: Bits<15>
+    unused: Bits<7>
 }
 
 impl Bytes<10> for Common {
@@ -43,12 +44,17 @@ impl Bytes<10> for Common {
             bs.set_bool(self.eq_mode.into());
             bs.set_bool(self.pedal_mode.into());
             bs.set_bool(self.s1_s2_mode.into());
-            bs.set_u8::<8>(self.fc1_assign, 0, 146)?;
-            bs.set_u8::<8>(self.fc2_assign, 0, 146)?;
+            bs.set_u8::<8>(self.fc1_assign.into(), 0, 146)?;
+            bs.set_u8::<8>(self.fc2_assign.into(), 0, 146)?;
+            bs.set_u8::<5>(self.s1_assign.into(), 0, 20)?;
+            bs.set_u8::<5>(self.s2_assign.into(), 0, 20)?;
             bs.set_bool(self.tone_remain);
-            bs.set_bits(&self.unsure1);
+            bs.set_bool(self.receive_gm_gm2_system_on);
+            bs.set_bool(self.receive_gs_reset);
             bs.set_bool(self.part_mode.into());
-            bs.set_bits(&self.unsure2);
+            bs.set_bits(&self.unsure);
+            bs.set_u8::<3>(self.temperament.into(), 0, 7)?;
+            bs.set_u8::<4>(self.temperament_key.into(), 0, 11)?;
             bs.set_bits(&self.unused);
             Ok(())
         })
@@ -66,14 +72,17 @@ impl Bytes<10> for Common {
                 eq_mode: bs.get_bool().into(),
                 pedal_mode: bs.get_bool().into(),
                 s1_s2_mode: bs.get_bool().into(),
-                fc1_assign: bs.get_u8::<8>(0, 146)?,
-                fc2_assign: bs.get_u8::<8>(0, 146)?,
-                s1_assign: bs.get_u8::<5>(0, 20)?,
-                s2_assign: bs.get_u8::<5>(0, 20)?,
+                fc1_assign: bs.get_u8::<8>(0, 146)?.into(),
+                fc2_assign: bs.get_u8::<8>(0, 146)?.into(),
+                s1_assign: bs.get_u8::<5>(0, 20)?.into(),
+                s2_assign: bs.get_u8::<5>(0, 20)?.into(),
                 tone_remain: bs.get_bool(),
-                unsure1: bs.get_bits(),
+                receive_gm_gm2_system_on: bs.get_bool(),
+                receive_gs_reset: bs.get_bool(),
                 part_mode: bs.get_bool().into(),
-                unsure2: bs.get_bits(),
+                unsure: bs.get_bits(),
+                temperament: bs.get_u8::<3>(0, 7)?.into(),
+                temperament_key: bs.get_u8::<4>(0, 11)?.into(),
                 unused: bs.get_bits()
             })
         })

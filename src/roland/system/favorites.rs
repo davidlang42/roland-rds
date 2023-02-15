@@ -3,33 +3,41 @@ use std::fmt::Debug;
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{StructuredJson, Json, StructuredJsonError};
 use crate::roland::types::enums::PatchCategory;
-use crate::roland::types::numeric::OneIndexedU16;
+use crate::roland::types::numeric::{OneIndexedU16, OneIndexedU8};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Favorites {
-    //TODO numeric types for one_touch_piano/e_piano current number
-    one_touch_piano_current_number: [u8; 3], // each max 127
-    one_touch_e_piano_current_number: [u8; 3], // each max 127
-    //TODO fully enumerated map for bank by bank name (a,b,c,d)
-    banks: [Bank; Self::BANKS],
+    one_touch_piano_current_number: [OneIndexedU8; 3],
+    one_touch_e_piano_current_number: [OneIndexedU8; 3],
+    bank_a: Bank,
+    bank_b: Bank,
+    bank_c: Bank,
+    bank_d: Bank,
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
     unused: Bits<6>
 }
 
 impl Favorites {
-    const BANKS: usize = 4;
+    pub fn all_banks(&self) -> Vec<&Bank> {
+        vec![
+            &self.bank_a,
+            &self.bank_b,
+            &self.bank_c,
+            &self.bank_d
+        ]
+    }
 }
 
 impl Bytes<76> for Favorites {
     fn to_bytes(&self) -> Result<Box<[u8; Self::BYTE_SIZE]>, BytesError> {
         BitStream::write_fixed(|bits| {
             for value in self.one_touch_piano_current_number {
-                bits.set_u8::<7>(value, 0, 127)?;
+                bits.set_u8::<7>(value.into(), 0, 127)?;
             }
             for value in self.one_touch_e_piano_current_number {
-                bits.set_u8::<7>(value, 0, 127)?;
+                bits.set_u8::<7>(value.into(), 0, 127)?;
             }
-            for bank in &self.banks {
+            for bank in self.all_banks() {
                 bits.set_bits(&bank.to_bits()?);
             }
             Ok(bits.set_bits(&self.unused))
@@ -38,22 +46,25 @@ impl Bytes<76> for Favorites {
 
     fn from_bytes(bytes: Box<[u8; Self::BYTE_SIZE]>) -> Result<Self, BytesError> where Self: Sized {
         BitStream::read_fixed(bytes, |bs| {
-            let mut one_touch_piano_current_number = [0; 3];
+            let mut one_touch_piano_current_number = [OneIndexedU8::default(); 3];
             for i in 0..one_touch_piano_current_number.len() {
-                one_touch_piano_current_number[i] = bs.get_u8::<7>(0, 127)?;
+                one_touch_piano_current_number[i] = bs.get_u8::<7>(0, 127)?.into();
             }
-            let mut one_touch_e_piano_current_number = [0; 3];
+            let mut one_touch_e_piano_current_number = [OneIndexedU8::default(); 3];
             for i in 0..one_touch_e_piano_current_number.len() {
-                one_touch_e_piano_current_number[i] = bs.get_u8::<7>(0, 127)?;
+                one_touch_e_piano_current_number[i] = bs.get_u8::<7>(0, 127)?.into();
             }
-            let mut banks = Vec::new();
-            for _ in 0..Self::BANKS {
-                banks.push(Bank::from_bits(bs.get_bits())?);
-            }
+            let bank_a = Bank::from_bits(bs.get_bits())?;
+            let bank_b = Bank::from_bits(bs.get_bits())?;
+            let bank_c = Bank::from_bits(bs.get_bits())?;
+            let bank_d = Bank::from_bits(bs.get_bits())?;
             Ok(Self {
                 one_touch_piano_current_number,
                 one_touch_e_piano_current_number,
-                banks: banks.try_into().unwrap(),
+                bank_a,
+                bank_b,
+                bank_c,
+                bank_d,
                 unused: bs.get_bits()
             })
         })

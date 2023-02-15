@@ -112,7 +112,7 @@ impl Default for PianoKey {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, Hash, Eq, Ord, PartialOrd)]
 pub enum MidiNote { // 0-127
     CMinus1,
     DbMinus1,
@@ -257,6 +257,40 @@ impl Into<u8> for MidiNote {
 }
 
 impl Default for MidiNote {
+    fn default() -> Self {
+        Self::from(0)
+    }
+}
+    
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
+pub enum KeyNote { // 0-11
+    C,
+    Db,
+    D,
+    Eb,
+    E,
+    F,
+    Gb,
+    G,
+    Ab,
+    A,
+    Bb,
+    B
+}
+
+impl From<u8> for KeyNote {
+    fn from(value: u8) -> Self {
+        Self::iter().nth(value as usize).unwrap()
+    }
+}
+
+impl Into<u8> for KeyNote {
+    fn into(self) -> u8 {
+        Self::iter().position(|s| s == self).unwrap() as u8
+    }
+}
+
+impl Default for KeyNote {
     fn default() -> Self {
         Self::from(0)
     }

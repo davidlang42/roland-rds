@@ -229,7 +229,7 @@ impl Default for Polarity {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, Hash, Eq)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, Hash, Eq, Ord, PartialOrd)]
 pub enum Layer { // 0-3
     Upper1,
     Upper2,
@@ -454,6 +454,43 @@ impl Default for ReverbType {
 }
 
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
+pub enum SoundFocusType { // 0-31
+    PianoType1,
+    PianoType2,
+    EPianoType, // RD700NX only
+    SoundLift,
+    Enhancer,
+    MidBoost,
+    Other(u8)
+}
+
+impl From<u8> for SoundFocusType {
+    fn from(value: u8) -> Self {
+        if value <= 5 {
+            Self::iter().nth(value as usize).unwrap()
+        } else {
+            Self::Other(value)
+        }
+    }
+}
+
+impl Into<u8> for SoundFocusType {
+    fn into(self) -> u8 {
+        if let Self::Other(value) = self {
+            value
+        } else {
+            Self::iter().position(|s| s == self).unwrap() as u8
+        }
+    }
+}
+
+impl Default for SoundFocusType {
+    fn default() -> Self {
+        Self::from(0)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
 pub enum MfxType { // 0-255
     Thru,
     Equalizer,
@@ -570,28 +607,74 @@ impl Default for MfxType {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
-pub enum MidiChannel {  // 0-16 (OFF, 1-16)
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, EnumIter, PartialEq)]
+pub enum OptionalMidiChannel { // 0-16 (OFF, 1-16)
     Off,
-    Channel(u8)
+    Channel1,
+    Channel2,
+    Channel3,
+    Channel4,
+    Channel5,
+    Channel6,
+    Channel7,
+    Channel8,
+    Channel9,
+    Channel10,
+    Channel11,
+    Channel12,
+    Channel13,
+    Channel14,
+    Channel15,
+    Channel16
+}
+
+impl From<u8> for OptionalMidiChannel {
+    fn from(value: u8) -> Self {
+        Self::iter().nth(value as usize).unwrap()
+    }
+}
+
+impl Into<u8> for OptionalMidiChannel {
+    fn into(self) -> u8 {
+        Self::iter().position(|s| s == self).unwrap() as u8
+    }
+}
+
+impl Default for OptionalMidiChannel {
+    fn default() -> Self {
+        Self::from(0)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, EnumIter, PartialEq, Hash, Eq, Ord, PartialOrd)]
+pub enum MidiChannel { // 0-15 (1-16)
+    Channel1,
+    Channel2,
+    Channel3,
+    Channel4,
+    Channel5,
+    Channel6,
+    Channel7,
+    Channel8,
+    Channel9,
+    Channel10,
+    Channel11,
+    Channel12,
+    Channel13,
+    Channel14,
+    Channel15,
+    Channel16
 }
 
 impl From<u8> for MidiChannel {
     fn from(value: u8) -> Self {
-        if value == 0 {
-            Self::Off
-        } else {
-            Self::Channel(value)
-        }
+        Self::iter().nth(value as usize).unwrap()
     }
 }
 
 impl Into<u8> for MidiChannel {
     fn into(self) -> u8 {
-        match self {
-            Self::Off => 0,
-            Self::Channel(ch) => ch
-        }
+        Self::iter().position(|s| s == self).unwrap() as u8
     }
 }
 
@@ -601,7 +684,7 @@ impl Default for MidiChannel {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq)]
 pub enum VoiceReserve {  // 0-64 (0-63, full)
     Voices(u8),
     Full
@@ -690,5 +773,168 @@ impl Into<bool> for PartMode {
 impl Default for PartMode {
     fn default() -> Self {
         Self::from(false)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
+pub enum ButtonFunction { // 0-20
+    Off,
+    CouplePlusOctave,
+    CoupleMinusOctave,
+    CouplePlus2Octave,
+    CoupleMinus2Octave,
+    CouplePlus5th,
+    CoupleMinus4th,
+    OctaveUp,
+    OctaveDown,
+    StartStop,
+    TapTempo,
+    SongPlayStop,
+    SongReset,
+    SongBackward,
+    SongForward,
+    Mfx1Switch,
+    Mfx2Switch,
+    RotarySpeed,
+    LiveSetUp, // system only
+    LiveSetDown, // system only
+    PanelLock // system only
+}
+
+impl From<u8> for ButtonFunction {
+    fn from(value: u8) -> Self {
+        Self::iter().nth(value as usize).unwrap()
+    }
+}
+
+impl Into<u8> for ButtonFunction {
+    fn into(self) -> u8 {
+        Self::iter().position(|s| s == self).unwrap() as u8
+    }
+}
+
+impl Default for ButtonFunction {
+    fn default() -> Self {
+        Self::from(0)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
+pub enum PedalFunction { // 0-146 (OFF, CC00 - CC127, BEND-UP, BEND-DOWN, AFTERTOUCH, OCT-UP, OCT-DOWN, START/STOP, TAP-TEMPO, RHY PLY/STP, SONG PLY/STP, SONG RESET, MFX1 SW, MFX2 SW, MFX1 CONTROL, MFX2 CONTROL, ROTARY SPEED, SOUND FOCUS VALUE, LIVE SET UP, LIVE SET DOWN)
+    Off,
+    ControlChange(u8),
+    BendUp,
+    BendDown,
+    AfterTouch,
+    OctaveUp,
+    OctaveDown,
+    StartStop,
+    TapTempo,
+    RhythmPlayStop,
+    SongPlayStop,
+    SongReset,
+    Mfx1Switch,
+    Mfx2Switch,
+    RotarySpeed,
+    SoundFocusValue,
+    LiveSetUp, // system only
+    LiveSetDown // system only
+}
+
+impl From<u8> for PedalFunction {
+    fn from(value: u8) -> Self {
+        if value == 0 {
+            Self::Off
+        } else if value <= 128 {
+            Self::ControlChange(value - 1)
+        } else {
+            Self::iter().nth(value as usize - 127).unwrap()
+        }
+    }
+}
+
+impl Into<u8> for PedalFunction {
+    fn into(self) -> u8 {
+        match self {
+            Self::Off => 0,
+            Self::ControlChange(value) => value + 1,
+            _ => Self::iter().position(|s| s == self).unwrap() as u8 + 127
+        }
+    }
+}
+
+impl Default for PedalFunction {
+    fn default() -> Self {
+        Self::from(0)
+    }
+}
+
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
+pub enum SliderFunction { // 0-133 (OFF, CC00 - CC127, BEND-UP, BEND-DOWN, AFTERTOUCH, MFX1 CONTROL, MFX2 CONTROL)
+    Off,
+    ControlChange(u8),
+    BendUp,
+    BendDown,
+    AfterTouch,
+    Mfx1Control,
+    Mfx2Control
+}
+
+impl From<u8> for SliderFunction {
+    fn from(value: u8) -> Self {
+        if value == 0 {
+            Self::Off
+        } else if value <= 128 {
+            Self::ControlChange(value - 1)
+        } else {
+            Self::iter().nth(value as usize - 127).unwrap()
+        }
+    }
+}
+
+impl Into<u8> for SliderFunction {
+    fn into(self) -> u8 {
+        match self {
+            Self::Off => 0,
+            Self::ControlChange(value) => value + 1,
+            _ => Self::iter().position(|s| s == self).unwrap() as u8 + 127
+        }
+    }
+}
+
+impl Default for SliderFunction {
+    fn default() -> Self {
+        Self::from(0)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
+pub enum Temperament { // 0-7
+    Equal,
+    JustMajor,
+    JustMinor,
+    Pythagorean,
+    Kirnberger,
+    MeanTone,
+    Werckmeister,
+    Arabic
+}
+
+impl From<u8> for Temperament {
+    fn from(value: u8) -> Self {
+        Self::iter().nth(value as usize).unwrap()
+    }
+}
+
+impl Into<u8> for Temperament {
+    fn into(self) -> u8 {
+        Self::iter().position(|s| s == self).unwrap() as u8
+    }
+}
+
+impl Default for Temperament {
+    fn default() -> Self {
+        Self::from(0)
     }
 }

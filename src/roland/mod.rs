@@ -4,3 +4,6 @@ pub mod layers;
 pub mod tones;
 pub mod system;
 pub mod types;
+
+#[cfg(test)]
+mod tests;
