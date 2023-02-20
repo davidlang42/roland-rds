@@ -1,3 +1,4 @@
+use std::cmp::min;
 use std::env;
 use std::error::Error;
 use std::fs;
@@ -221,32 +222,85 @@ fn tone_test(base_path: String, output_folder: String) -> Result<(), Box<dyn Err
 }
 
 fn make_name(names: Vec<&str>) -> [char; 16] {
-    let str_names: Vec<String> = names.iter().map(|s| format!("{}", s)).collect();
-    let full_name = str_names.join("/");
-    let mut chars: Vec<char> = full_name.chars().collect();
-    const VOWELS: [char; 5] = ['a','e','i','o','u'];
-    println!("{}", chars.iter().collect::<String>());
-    // make it shorter in stages
-    if chars.len() > 16 {
-        chars = chars.into_iter().filter(|c| c.is_alphanumeric() || *c == '/').collect();
-        println!("{}", chars.iter().collect::<String>());
+    // list words
+    let mut words = Vec::new();
+    for name in names {
+        for word_with_dots in name.split(" ") {
+            for word in word_with_dots.split(".") {
+                words.push(word.to_owned());
+            }
+        }
+        words.push("/".to_owned());
     }
-    if chars.len() > 16 {
-        chars = chars.into_iter().filter(|c| VOWELS.iter().position(|v| c.eq_ignore_ascii_case(v)).is_none()).collect();
-        println!("{}", chars.iter().collect::<String>());
+    words.remove(words.len() - 1);
+    // remove non-capital vowels
+    while total_length(&words) > 16 {
+        if !remove_vowels(&mut words, 16) {
+            break;
+        }
     }
-    if chars.len() > 16 {
-        chars = chars.into_iter().filter(|c| !c.is_lowercase()).collect();
-        println!("{}", chars.iter().collect::<String>());
-    }
-    if chars.len() > 16 {
-        chars = chars.into_iter().take(16).collect();
-        println!("{}", chars.iter().collect::<String>());
+    // remove middle lower case from longer words
+    while total_length(&words) > 16 {
+        let length = max_length(&words) - 1;
+        if !remove_middle(&mut words, length, 16) {
+            break;
+        }
     }
     // pad with spaces
+    let mut chars: Vec<char> = words.into_iter().flat_map(|w| w.chars()).collect();
     while chars.len() < 16 {
         chars.push(' ');
     }
     println!("");
     chars.try_into().unwrap()
+}
+
+fn total_length(words: &Vec<String>) -> usize {
+    let mut sum = 0;
+    for word in words {
+        sum += word.len();
+    }
+    sum
+}
+
+fn max_length(words: &Vec<String>) -> usize {
+    let mut max = 0;
+    for word in words {
+        if word.len() > max {
+            max = word.len();
+        }
+    }
+    max
+}
+
+fn remove_vowels(words: &mut Vec<String>, goal_length: usize) -> bool {
+    const VOWELS: [char; 5] = ['a','e','i','o','u'];
+    let mut changed = false;
+    for i in 0..words.len() {
+        if total_length(words) <= goal_length {
+            break;
+        } else {
+            if let Some(pos) = words[i].chars().position(|c| VOWELS.iter().position(|v| *v == c).is_some()) {
+                words[i].remove(pos);
+                changed = true;
+            }
+        }
+    }
+    changed
+}
+
+fn remove_middle(words: &mut Vec<String>, min_length: usize, goal_length: usize) -> bool {
+    let mut changed = false;
+    for i in 0..words.len() {
+        while words[i].len() > min_length && total_length(&words) < goal_length {
+            if words[i].len() > 1 {
+                let pos = words[i].len() / 2;
+                words[i].remove(pos);
+                changed = true;
+            } else {
+                break;
+            }
+        }
+    }
+    changed
 }
