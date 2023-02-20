@@ -305,6 +305,12 @@ fn make_name(names: Vec<&str>) -> [char; 16] {
             break;
         }
     }
+    // remove symbols
+    while total_length(&words) > 16 {
+        if !remove_symbols(&mut words, 16) {
+            break;
+        }
+    }
     // remove middle lower case from longer words
     while total_length(&words) > 16 {
         let length = max_length(&words) - 1;
@@ -348,6 +354,21 @@ fn combine(words: &Vec<String>) -> String {
     s
 }
 
+fn remove_symbols(words: &mut Vec<String>, goal_length: usize) -> bool {
+    let mut changed = false;
+    for i in 0..words.len() {
+        if total_length(words) <= goal_length {
+            break;
+        } else {
+            if let Some(pos) = words[i].chars().position(|c| !c.is_alphanumeric() && c != '/') {
+                words[i].remove(pos);
+                changed = true;
+            }
+        }
+    }
+    changed
+}
+
 fn remove_vowels(words: &mut Vec<String>, goal_length: usize) -> bool {
     const VOWELS: [char; 5] = ['a','e','i','o','u'];
     let mut changed = false;
@@ -379,10 +400,11 @@ fn remove_lowercase(words: &mut Vec<String>, min_length: usize, goal_length: usi
                         pos += 1;
                     }
                 }
-                if pos != words[i].len() {
-                    words[i].remove(pos);
-                    changed = true;
+                if pos == words[i].len() {
+                    pos = words[i].len() / 2;
                 }
+                words[i].remove(pos);
+                changed = true;
             } else {
                 break;
             }
