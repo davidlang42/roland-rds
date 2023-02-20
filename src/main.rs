@@ -165,8 +165,8 @@ fn tone_test(base_path: String, output_folder: String) -> Result<(), Box<dyn Err
     if size != RD300NX::BYTE_SIZE {
         Err(format!("File should be {} bytes but found {}", RD300NX::BYTE_SIZE, size).into())
     } else {
-        let mut tone = 0;
-        let tone_len = TONE_LIST.len() as u16;
+        let mut tone = 1;
+        let tone_len = TONE_LIST.len() as u16 + 1;
         let mut file_num = 0;
         while tone < tone_len {
             let mut rds = RD300NX::from_bytes(bytes.clone().try_into().unwrap())?;
@@ -176,6 +176,7 @@ fn tone_test(base_path: String, output_folder: String) -> Result<(), Box<dyn Err
                 rds.user_sets[u].layers[0].internal.range_lower = PianoKey::A0;
                 rds.user_sets[u].layers[0].internal.range_upper = PianoKey::C3;
                 rds.user_sets[u].layers[0].internal.transpose = OffsetU8::<64>(-24);
+                println!("TONE: {}", tone);
                 rds.user_sets[u].layers[0].tone.tone_number = ToneNumber(tone);
                 names.push(rds.user_sets[u].layers[0].tone.tone_number.details().name);
                 tone += 1;
@@ -187,6 +188,7 @@ fn tone_test(base_path: String, output_folder: String) -> Result<(), Box<dyn Err
                 rds.user_sets[u].layers[1].internal.range_lower = PianoKey::A0;
                 rds.user_sets[u].layers[1].internal.range_upper = PianoKey::C3;
                 rds.user_sets[u].layers[1].internal.transpose = OffsetU8::<64>(-24);
+                println!("TONE: {}", tone);
                 rds.user_sets[u].layers[1].tone.tone_number = ToneNumber(tone);
                 names.push(rds.user_sets[u].layers[1].tone.tone_number.details().name);
                 tone += 1;
@@ -198,10 +200,14 @@ fn tone_test(base_path: String, output_folder: String) -> Result<(), Box<dyn Err
                 rds.user_sets[u].layers[2].internal.range_lower = PianoKey::A0;
                 rds.user_sets[u].layers[2].internal.range_upper = PianoKey::C3;
                 rds.user_sets[u].layers[2].internal.transpose = OffsetU8::<64>(-24);
+                println!("TONE: {}", tone);
                 rds.user_sets[u].layers[2].tone.tone_number = ToneNumber(tone);
                 names.push(rds.user_sets[u].layers[2].tone.tone_number.details().name);
                 tone += 1;
                 rds.user_sets[u].common.name = make_name(names);
+                if tone >= tone_len {
+                    break;
+                }
             }
             let output_json = format!("{}/tones{}.json", output_folder, file_num);
             write_json(&Some(output_json), rds.to_json())?;
@@ -219,22 +225,28 @@ fn make_name(names: Vec<&str>) -> [char; 16] {
     let full_name = str_names.join("/");
     let mut chars: Vec<char> = full_name.chars().collect();
     const VOWELS: [char; 5] = ['a','e','i','o','u'];
+    println!("{}", chars.iter().collect::<String>());
     // make it shorter in stages
     if chars.len() > 16 {
         chars = chars.into_iter().filter(|c| c.is_alphanumeric() || *c == '/').collect();
+        println!("{}", chars.iter().collect::<String>());
     }
     if chars.len() > 16 {
         chars = chars.into_iter().filter(|c| VOWELS.iter().position(|v| c.eq_ignore_ascii_case(v)).is_none()).collect();
+        println!("{}", chars.iter().collect::<String>());
     }
     if chars.len() > 16 {
         chars = chars.into_iter().filter(|c| !c.is_lowercase()).collect();
+        println!("{}", chars.iter().collect::<String>());
     }
     if chars.len() > 16 {
         chars = chars.into_iter().take(16).collect();
+        println!("{}", chars.iter().collect::<String>());
     }
     // pad with spaces
     while chars.len() < 16 {
         chars.push(' ');
     }
+    println!("");
     chars.try_into().unwrap()
 }
