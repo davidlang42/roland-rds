@@ -308,7 +308,7 @@ fn make_name(names: Vec<&str>) -> [char; 16] {
     // remove middle lower case from longer words
     while total_length(&words) > 16 {
         let length = max_length(&words) - 1;
-        if !remove_middle(&mut words, length, 16) {
+        if !remove_lowercase(&mut words, length, 16) {
             break;
         }
     }
@@ -364,15 +364,25 @@ fn remove_vowels(words: &mut Vec<String>, goal_length: usize) -> bool {
     changed
 }
 
-fn remove_middle(words: &mut Vec<String>, min_length: usize, goal_length: usize) -> bool {
+fn remove_lowercase(words: &mut Vec<String>, min_length: usize, goal_length: usize) -> bool {
     let mut changed = false;
     for i in 0..words.len() {
         while words[i].len() > min_length && total_length(&words) > goal_length {
             if words[i].len() > 1 {
-                let pos = words[i].len() / 2;
-                words[i].remove(pos);
-                //TODO avoid removing capitals
-                changed = true;
+                let mut pos = words[i].len() / 2;
+                while pos > 0 && !words[i].chars().nth(pos).unwrap().is_lowercase() {
+                    pos -= 1;
+                }
+                if pos == 0 {
+                    pos = words[i].len() / 2;
+                    while pos < words[i].len() && !words[i].chars().nth(pos).unwrap().is_lowercase() {
+                        pos += 1;
+                    }
+                }
+                if pos != words[i].len() {
+                    words[i].remove(pos);
+                    changed = true;
+                }
             } else {
                 break;
             }
