@@ -1,3 +1,4 @@
+use std::ascii::AsciiExt;
 use std::env;
 use std::error::Error;
 use std::fs;
@@ -219,11 +220,20 @@ fn make_name(names: Vec<&str>) -> [char; 16] {
     let str_names: Vec<String> = names.iter().map(|s| format!("{}", s)).collect();
     let full_name = str_names.join("/");
     let mut chars: Vec<char> = full_name.chars().collect();
-    // make it shorter
+    const VOWELS: [char; 5] = ['a','e','i','o','u'];
+    // make it shorter in stages
     if chars.len() > 16 {
-        chars = chars.into_iter().filter(|c| c.is_alphanumeric()).collect();
+        chars = chars.into_iter().filter(|c| c.is_alphanumeric() || *c == '/').collect();
     }
-    //TODO more shortening
+    if chars.len() > 16 {
+        chars = chars.into_iter().filter(|c| VOWELS.iter().position(|v| c.eq_ignore_ascii_case(v)).is_none()).collect();
+    }
+    if chars.len() > 16 {
+        chars = chars.into_iter().filter(|c| !c.is_lowercase()).collect();
+    }
+    if chars.len() > 16 {
+        chars = chars.into_iter().take(16).collect();
+    }
     // pad with spaces
     while chars.len() < 16 {
         chars.push(' ');
