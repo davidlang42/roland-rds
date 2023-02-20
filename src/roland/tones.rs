@@ -7,7 +7,7 @@ pub struct Tone {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct ToneNumber(u16);
+pub struct ToneNumber(pub u16);
 
 impl ToneNumber {
     pub fn details(&self) -> &Tone {
@@ -40,7 +40,7 @@ impl From<u16> for ToneNumber {
     }
 }
 
-static TONE_LIST: [Tone; 942] = [
+pub static TONE_LIST: [Tone; 942] = [
     Tone { _number: 1, name: "ConcertGrand", msb: 114, lsb: 0, pc: 0 },
     Tone { _number: 2, name: "Honky-tonk1", msb: 114, lsb: 0, pc: 1 },
     Tone { _number: 3, name: "Concert Mono", msb: 114, lsb: 0, pc: 2 },

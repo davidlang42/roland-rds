@@ -13,7 +13,7 @@ use crate::json::serialize_map_keys_in_order;
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Common {
     #[serde(with = "serialize_chars_as_string")]
-    name: [char; 16], // 32-127 (ascii)
+    pub name: [char; 16], // 32-127 (ascii)
     #[serde(with = "serialize_map_keys_in_order")]
     voice_reserve: HashMap<MidiChannel, VoiceReserve>,
     live_set_tempo: u16, // 10-500

@@ -15,14 +15,14 @@ pub struct InternalLayer {
     pan: Pan,
     chorus: u8, // max 127
     reverb: u8, // max 127
-    range_lower: PianoKey,
-    range_upper: PianoKey,
+    pub range_lower: PianoKey,
+    pub range_upper: PianoKey,
     velocity_range_lower: u8, // 1-127
     velocity_range_upper: u8, // 1-127
     velocity_sensitivity: OffsetU8<64>, // 1-127 (-63 - +63)
     velocity_max: u8, // 1-127
-    transpose: OffsetU8<64>, // 16-112 (-48 - +48)
-    enable: bool,
+    pub transpose: OffsetU8<64>, // 16-112 (-48 - +48)
+    pub enable: bool,
     damper: bool,
     fc1: bool,
     fc2: bool,

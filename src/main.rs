@@ -6,6 +6,12 @@ use std::io::Read;
 use std::io::Write;
 use std::path::PathBuf;
 
+use roland::tones::TONE_LIST;
+use roland::tones::ToneNumber;
+use roland::types::notes::MidiNote;
+use roland::types::notes::PianoKey;
+use roland::types::numeric::OffsetU8;
+
 use crate::bytes::Bytes;
 use crate::json::{Json, StructuredJson};
 use crate::roland::rd300nx::RD300NX;
@@ -39,6 +45,10 @@ fn main() -> Result<(), Box<dyn Error>> {
             "merge" => merge(
                 args.next().ok_or("The 2nd argument should be the FOLDER containing the JSON data to combine")?,
                 optional(args.next().ok_or("The 3rd argument should be the FILENAME for the output JSON file (or '-' for STDOUT)")?),
+            )?,
+            "tone_test" => tone_test(
+                args.next().ok_or("The 2nd argument should be the BASE FILE")?,
+                args.next().ok_or("The 3rd argument should be the FOLDER for the output RDS files")?,
             )?,
             "help" => help(&cmd),
             _ => {
@@ -149,4 +159,74 @@ fn write_data(path: &Option<String>, bytes: &[u8]) -> Result<(), io::Error> {
         stdout.flush()?;
     }
     Ok(())
+}
+
+fn tone_test(base_path: String, output_folder: String) -> Result<(), Box<dyn Error>> {
+    let (size, bytes) = read_data(&Some(base_path))?;
+    if size != RD300NX::BYTE_SIZE {
+        Err(format!("File should be {} bytes but found {}", RD300NX::BYTE_SIZE, size).into())
+    } else {
+        let mut tone = 0;
+        let tone_len = TONE_LIST.len() as u16;
+        let mut file_num = 0;
+        while tone < tone_len {
+            let mut rds = RD300NX::from_bytes(bytes.clone().try_into().unwrap())?;
+            for u in 0..rds.user_sets.len() {
+                let mut names = Vec::new();
+                rds.user_sets[u].layers[0].internal.enable = true;
+                rds.user_sets[u].layers[0].internal.range_lower = PianoKey::A0;
+                rds.user_sets[u].layers[0].internal.range_upper = PianoKey::C3;
+                rds.user_sets[u].layers[0].internal.transpose = OffsetU8::<64>(-24);
+                rds.user_sets[u].layers[0].tone.tone_number = ToneNumber(tone);
+                names.push(rds.user_sets[u].layers[0].tone.tone_number.details().name);
+                tone += 1;
+                if tone >= tone_len {
+                    rds.user_sets[u].common.name = make_name(names);
+                    break;
+                }
+                rds.user_sets[u].layers[1].internal.enable = true;
+                rds.user_sets[u].layers[1].internal.range_lower = PianoKey::A0;
+                rds.user_sets[u].layers[1].internal.range_upper = PianoKey::C3;
+                rds.user_sets[u].layers[1].internal.transpose = OffsetU8::<64>(-24);
+                rds.user_sets[u].layers[1].tone.tone_number = ToneNumber(tone);
+                names.push(rds.user_sets[u].layers[1].tone.tone_number.details().name);
+                tone += 1;
+                if tone >= tone_len {
+                    rds.user_sets[u].common.name = make_name(names);
+                    break;
+                }
+                rds.user_sets[u].layers[2].internal.enable = true;
+                rds.user_sets[u].layers[2].internal.range_lower = PianoKey::A0;
+                rds.user_sets[u].layers[2].internal.range_upper = PianoKey::C3;
+                rds.user_sets[u].layers[2].internal.transpose = OffsetU8::<64>(-24);
+                rds.user_sets[u].layers[2].tone.tone_number = ToneNumber(tone);
+                names.push(rds.user_sets[u].layers[2].tone.tone_number.details().name);
+                tone += 1;
+                rds.user_sets[u].common.name = make_name(names);
+            }
+            let output_json = format!("{}/tones{}.json", output_folder, file_num);
+            write_json(&Some(output_json), rds.to_json())?;
+            let output_rds = format!("{}/TONES{}.RDS", output_folder, file_num);
+            write_data(&Some(output_rds), &*rds.to_bytes()?)?;
+            file_num += 1;
+        }
+        println!("Saved all tones into {} files", file_num);
+        Ok(())
+    }
+}
+
+fn make_name(names: Vec<&str>) -> [char; 16] {
+    let str_names: Vec<String> = names.iter().map(|s| format!("{}", s)).collect();
+    let full_name = str_names.join("/");
+    let mut chars: Vec<char> = full_name.chars().collect();
+    // make it shorter
+    if chars.len() > 16 {
+        chars = chars.into_iter().filter(|c| c.is_alphanumeric()).collect();
+    }
+    //TODO more shortening
+    // pad with spaces
+    while chars.len() < 16 {
+        chars.push(' ');
+    }
+    chars.try_into().unwrap()
 }

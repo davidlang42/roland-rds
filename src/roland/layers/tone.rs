@@ -8,7 +8,7 @@ use super::super::tones::ToneNumber;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ToneLayer {
-    tone_number: ToneNumber,
+    pub tone_number: ToneNumber,
     course_tune_semitones: OffsetU8<64>, // 16-112 (-48 - +48)
     fine_tune_percent: OffsetU8<64>, // 14-114 (-50 - + 50)
     mono_poly: MonoPoly, // 0=Mono, 1=Poly, 2=Mono/Legato

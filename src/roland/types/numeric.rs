@@ -32,7 +32,7 @@ impl Default for Parameter {
 }
 
 #[derive(Serialize, Deserialize, Debug, Copy, Clone)]
-pub struct OffsetU8<const OFFSET: u8>(i8); // MIN(0)-MAX(255) (MIN-OFFSET - MAX-OFFSET)
+pub struct OffsetU8<const OFFSET: u8>(pub i8); // MIN(0)-MAX(255) (MIN-OFFSET - MAX-OFFSET)
 
 impl<const O: u8> OffsetU8<O> {
     const ZERO: u8 = O;

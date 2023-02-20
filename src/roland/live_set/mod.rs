@@ -20,14 +20,14 @@ mod resonance;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct LiveSet {
-    common: Common, // 56 bytes
+    pub common: Common, // 56 bytes
     song_rhythm: SongRhythm, // 6 bytes
     chorus: Chorus, // 42 bytes
     reverb: Reverb, // 42 bytes
     mfx: Mfx, // 76 bytes
     unused_mfx: Box<[Mfx; 7]>, // 532 bytes
     unused_resonance: Resonance, // 76 bytes
-    layers: Box<[LogicalLayer; 3]>, // 332*3=996 bytes
+    pub layers: Box<[LogicalLayer; 3]>, // 332*3=996 bytes
     unused_layer: LogicalLayer, // 332 bytes
     #[serde(skip_serializing_if="Bits::is_unit", default="Bits::unit")]
     padding: Bits<8>, // 1 byte
