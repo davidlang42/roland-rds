@@ -36,7 +36,7 @@ pub struct Common {
     slider_select: SliderSelect,
     #[serde(with = "serialize_map_keys_in_order")]
     slider_assign: HashMap<Layer, SliderFunction>,
-    split_switch_internal: bool,
+    pub split_switch_internal: bool,
     split_switch_external: bool,
     #[serde(with = "serialize_map_keys_in_order")]
     unused_harmonic_bar_assign: HashMap<Layer, StateMap<HarmonicBar>>, // index=(LOWER2:ON, LOWER2:OFF, LOWER1:ON, LOWER1:OFF, UPPER2:ON, UPPER2:OFF, UPPER1:ON, UPPER1:OFF)

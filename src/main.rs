@@ -6,6 +6,7 @@ use std::io::Read;
 use std::io::Write;
 use std::path::PathBuf;
 
+use roland::live_set::LiveSet;
 use roland::tones::TONE_LIST;
 use roland::tones::ToneNumber;
 use roland::types::notes::PianoKey;
@@ -172,37 +173,25 @@ fn tone_test(base_path: String, output_folder: String) -> Result<(), Box<dyn Err
             let mut rds = RD300NX::from_bytes(bytes.clone().try_into().unwrap())?;
             for p in 0..rds.piano.len() {
                 let mut names = Vec::new();
-                rds.piano[p].layers[0].internal.enable = true;
-                rds.piano[p].layers[0].internal.range_lower = PianoKey::A0;
-                rds.piano[p].layers[0].internal.range_upper = PianoKey::C3;
-                rds.piano[p].layers[0].internal.transpose = OffsetU8::<64>(-24);
-                println!("TONE: {}", tone);
-                rds.piano[p].layers[0].tone.tone_number = ToneNumber(tone);
-                names.push(rds.piano[p].layers[0].tone.tone_number.details().name);
+                let mut tn = ToneNumber(tone);
+                names.push(tn.details().name);
+                set_layer(&mut rds.piano[p], 0, tn);
                 tone += 1;
                 if tone >= tone_len {
                     rds.piano[p].common.name = make_name(names);
                     break;
                 }
-                rds.piano[p].layers[1].internal.enable = true;
-                rds.piano[p].layers[1].internal.range_lower = PianoKey::A0;
-                rds.piano[p].layers[1].internal.range_upper = PianoKey::C3;
-                rds.piano[p].layers[1].internal.transpose = OffsetU8::<64>(-24);
-                println!("TONE: {}", tone);
-                rds.piano[p].layers[1].tone.tone_number = ToneNumber(tone);
-                names.push(rds.piano[p].layers[1].tone.tone_number.details().name);
+                tn = ToneNumber(tone);
+                names.push(tn.details().name);
+                set_layer(&mut rds.piano[p], 1, tn);
                 tone += 1;
                 if tone >= tone_len {
                     rds.piano[p].common.name = make_name(names);
                     break;
                 }
-                rds.piano[p].layers[2].internal.enable = true;
-                rds.piano[p].layers[2].internal.range_lower = PianoKey::A0;
-                rds.piano[p].layers[2].internal.range_upper = PianoKey::C3;
-                rds.piano[p].layers[2].internal.transpose = OffsetU8::<64>(-24);
-                println!("TONE: {}", tone);
-                rds.piano[p].layers[2].tone.tone_number = ToneNumber(tone);
-                names.push(rds.piano[p].layers[2].tone.tone_number.details().name);
+                tn = ToneNumber(tone);
+                names.push(tn.details().name);
+                set_layer(&mut rds.piano[p], 2, tn);
                 tone += 1;
                 rds.piano[p].common.name = make_name(names);
                 if tone >= tone_len {
@@ -211,37 +200,25 @@ fn tone_test(base_path: String, output_folder: String) -> Result<(), Box<dyn Err
             }
             for e in 0..rds.e_piano.len() {
                 let mut names = Vec::new();
-                rds.e_piano[e].layers[0].internal.enable = true;
-                rds.e_piano[e].layers[0].internal.range_lower = PianoKey::A0;
-                rds.e_piano[e].layers[0].internal.range_upper = PianoKey::C3;
-                rds.e_piano[e].layers[0].internal.transpose = OffsetU8::<64>(-24);
-                println!("TONE: {}", tone);
-                rds.e_piano[e].layers[0].tone.tone_number = ToneNumber(tone);
-                names.push(rds.e_piano[e].layers[0].tone.tone_number.details().name);
+                let mut tn = ToneNumber(tone);
+                names.push(tn.details().name);
+                set_layer(&mut rds.e_piano[e], 0, tn);
                 tone += 1;
                 if tone >= tone_len {
                     rds.e_piano[e].common.name = make_name(names);
                     break;
                 }
-                rds.e_piano[e].layers[1].internal.enable = true;
-                rds.e_piano[e].layers[1].internal.range_lower = PianoKey::A0;
-                rds.e_piano[e].layers[1].internal.range_upper = PianoKey::C3;
-                rds.e_piano[e].layers[1].internal.transpose = OffsetU8::<64>(-24);
-                println!("TONE: {}", tone);
-                rds.e_piano[e].layers[1].tone.tone_number = ToneNumber(tone);
-                names.push(rds.e_piano[e].layers[1].tone.tone_number.details().name);
+                tn = ToneNumber(tone);
+                names.push(tn.details().name);
+                set_layer(&mut rds.e_piano[e], 1, tn);
                 tone += 1;
                 if tone >= tone_len {
                     rds.e_piano[e].common.name = make_name(names);
                     break;
                 }
-                rds.e_piano[e].layers[2].internal.enable = true;
-                rds.e_piano[e].layers[2].internal.range_lower = PianoKey::A0;
-                rds.e_piano[e].layers[2].internal.range_upper = PianoKey::C3;
-                rds.e_piano[e].layers[2].internal.transpose = OffsetU8::<64>(-24);
-                println!("TONE: {}", tone);
-                rds.e_piano[e].layers[2].tone.tone_number = ToneNumber(tone);
-                names.push(rds.e_piano[e].layers[2].tone.tone_number.details().name);
+                tn = ToneNumber(tone);
+                names.push(tn.details().name);
+                set_layer(&mut rds.e_piano[e], 2, tn);
                 tone += 1;
                 rds.e_piano[e].common.name = make_name(names);
                 if tone >= tone_len {
@@ -250,37 +227,25 @@ fn tone_test(base_path: String, output_folder: String) -> Result<(), Box<dyn Err
             }
             for u in 0..rds.user_sets.len() {
                 let mut names = Vec::new();
-                rds.user_sets[u].layers[0].internal.enable = true;
-                rds.user_sets[u].layers[0].internal.range_lower = PianoKey::A0;
-                rds.user_sets[u].layers[0].internal.range_upper = PianoKey::C3;
-                rds.user_sets[u].layers[0].internal.transpose = OffsetU8::<64>(-24);
-                println!("TONE: {}", tone);
-                rds.user_sets[u].layers[0].tone.tone_number = ToneNumber(tone);
-                names.push(rds.user_sets[u].layers[0].tone.tone_number.details().name);
+                let mut tn = ToneNumber(tone);
+                names.push(tn.details().name);
+                set_layer(&mut rds.user_sets[u], 0, tn);
                 tone += 1;
                 if tone >= tone_len {
                     rds.user_sets[u].common.name = make_name(names);
                     break;
                 }
-                rds.user_sets[u].layers[1].internal.enable = true;
-                rds.user_sets[u].layers[1].internal.range_lower = PianoKey::A0;
-                rds.user_sets[u].layers[1].internal.range_upper = PianoKey::C3;
-                rds.user_sets[u].layers[1].internal.transpose = OffsetU8::<64>(-24);
-                println!("TONE: {}", tone);
-                rds.user_sets[u].layers[1].tone.tone_number = ToneNumber(tone);
-                names.push(rds.user_sets[u].layers[1].tone.tone_number.details().name);
+                tn = ToneNumber(tone);
+                names.push(tn.details().name);
+                set_layer(&mut rds.user_sets[u], 1, tn);
                 tone += 1;
                 if tone >= tone_len {
                     rds.user_sets[u].common.name = make_name(names);
                     break;
                 }
-                rds.user_sets[u].layers[2].internal.enable = true;
-                rds.user_sets[u].layers[2].internal.range_lower = PianoKey::A0;
-                rds.user_sets[u].layers[2].internal.range_upper = PianoKey::C3;
-                rds.user_sets[u].layers[2].internal.transpose = OffsetU8::<64>(-24);
-                println!("TONE: {}", tone);
-                rds.user_sets[u].layers[2].tone.tone_number = ToneNumber(tone);
-                names.push(rds.user_sets[u].layers[2].tone.tone_number.details().name);
+                tn = ToneNumber(tone);
+                names.push(tn.details().name);
+                set_layer(&mut rds.user_sets[u], 2, tn);
                 tone += 1;
                 rds.user_sets[u].common.name = make_name(names);
                 if tone >= tone_len {
@@ -298,6 +263,30 @@ fn tone_test(base_path: String, output_folder: String) -> Result<(), Box<dyn Err
     }
 }
 
+fn set_layer(live_set: &mut LiveSet, l: usize, tone: ToneNumber) {
+    live_set.common.split_switch_internal = true;
+    live_set.layers[l].internal.enable = true;
+    live_set.layers[l].internal.range_lower = match l {
+        0 => PianoKey::A0,
+        1 => PianoKey::C3,
+        2 => PianoKey::C5,
+        _ => panic!("Invalid layer")
+    };
+    live_set.layers[l].internal.range_upper = match l {
+        0 => PianoKey::B2,
+        1 => PianoKey::B4,
+        2 => PianoKey::C8,
+        _ => panic!("Invalid layer")
+    };
+    live_set.layers[l].internal.transpose = OffsetU8::<64>(match l {
+        0 => 24,
+        1 => 0,
+        2 => -24,
+        _ => panic!("Invalid layer")
+    });
+    live_set.layers[l].tone.tone_number = tone;
+}
+
 fn make_name(names: Vec<&str>) -> [char; 16] {
     // list words
     let mut words = Vec::new();
@@ -310,26 +299,21 @@ fn make_name(names: Vec<&str>) -> [char; 16] {
         words.push("/".to_owned());
     }
     words.remove(words.len() - 1);
-    println!("- {}", combine(&words));
     // remove non-capital vowels
     while total_length(&words) > 16 {
         if !remove_vowels(&mut words, 16) {
             break;
         }
-        println!("  {}", combine(&words));
     }
-    println!("- {}", combine(&words));
     // remove middle lower case from longer words
     while total_length(&words) > 16 {
         let length = max_length(&words) - 1;
         if !remove_middle(&mut words, length, 16) {
             break;
         }
-        println!("  {}", combine(&words));
     }
     // pad with spaces
     let mut chars: Vec<char> = combine(&words).chars().collect();
-    println!("{}", chars.len());
     while chars.len() < 16 {
         chars.push(' ');
     }
