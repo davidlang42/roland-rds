@@ -170,6 +170,84 @@ fn tone_test(base_path: String, output_folder: String) -> Result<(), Box<dyn Err
         let mut file_num = 0;
         while tone < tone_len {
             let mut rds = RD300NX::from_bytes(bytes.clone().try_into().unwrap())?;
+            for p in 0..rds.piano.len() {
+                let mut names = Vec::new();
+                rds.piano[p].layers[0].internal.enable = true;
+                rds.piano[p].layers[0].internal.range_lower = PianoKey::A0;
+                rds.piano[p].layers[0].internal.range_upper = PianoKey::C3;
+                rds.piano[p].layers[0].internal.transpose = OffsetU8::<64>(-24);
+                println!("TONE: {}", tone);
+                rds.piano[p].layers[0].tone.tone_number = ToneNumber(tone);
+                names.push(rds.piano[p].layers[0].tone.tone_number.details().name);
+                tone += 1;
+                if tone >= tone_len {
+                    rds.piano[p].common.name = make_name(names);
+                    break;
+                }
+                rds.piano[p].layers[1].internal.enable = true;
+                rds.piano[p].layers[1].internal.range_lower = PianoKey::A0;
+                rds.piano[p].layers[1].internal.range_upper = PianoKey::C3;
+                rds.piano[p].layers[1].internal.transpose = OffsetU8::<64>(-24);
+                println!("TONE: {}", tone);
+                rds.piano[p].layers[1].tone.tone_number = ToneNumber(tone);
+                names.push(rds.piano[p].layers[1].tone.tone_number.details().name);
+                tone += 1;
+                if tone >= tone_len {
+                    rds.piano[p].common.name = make_name(names);
+                    break;
+                }
+                rds.piano[p].layers[2].internal.enable = true;
+                rds.piano[p].layers[2].internal.range_lower = PianoKey::A0;
+                rds.piano[p].layers[2].internal.range_upper = PianoKey::C3;
+                rds.piano[p].layers[2].internal.transpose = OffsetU8::<64>(-24);
+                println!("TONE: {}", tone);
+                rds.piano[p].layers[2].tone.tone_number = ToneNumber(tone);
+                names.push(rds.piano[p].layers[2].tone.tone_number.details().name);
+                tone += 1;
+                rds.piano[p].common.name = make_name(names);
+                if tone >= tone_len {
+                    break;
+                }
+            }
+            for e in 0..rds.e_piano.len() {
+                let mut names = Vec::new();
+                rds.e_piano[e].layers[0].internal.enable = true;
+                rds.e_piano[e].layers[0].internal.range_lower = PianoKey::A0;
+                rds.e_piano[e].layers[0].internal.range_upper = PianoKey::C3;
+                rds.e_piano[e].layers[0].internal.transpose = OffsetU8::<64>(-24);
+                println!("TONE: {}", tone);
+                rds.e_piano[e].layers[0].tone.tone_number = ToneNumber(tone);
+                names.push(rds.e_piano[e].layers[0].tone.tone_number.details().name);
+                tone += 1;
+                if tone >= tone_len {
+                    rds.e_piano[e].common.name = make_name(names);
+                    break;
+                }
+                rds.e_piano[e].layers[1].internal.enable = true;
+                rds.e_piano[e].layers[1].internal.range_lower = PianoKey::A0;
+                rds.e_piano[e].layers[1].internal.range_upper = PianoKey::C3;
+                rds.e_piano[e].layers[1].internal.transpose = OffsetU8::<64>(-24);
+                println!("TONE: {}", tone);
+                rds.e_piano[e].layers[1].tone.tone_number = ToneNumber(tone);
+                names.push(rds.e_piano[e].layers[1].tone.tone_number.details().name);
+                tone += 1;
+                if tone >= tone_len {
+                    rds.e_piano[e].common.name = make_name(names);
+                    break;
+                }
+                rds.e_piano[e].layers[2].internal.enable = true;
+                rds.e_piano[e].layers[2].internal.range_lower = PianoKey::A0;
+                rds.e_piano[e].layers[2].internal.range_upper = PianoKey::C3;
+                rds.e_piano[e].layers[2].internal.transpose = OffsetU8::<64>(-24);
+                println!("TONE: {}", tone);
+                rds.e_piano[e].layers[2].tone.tone_number = ToneNumber(tone);
+                names.push(rds.e_piano[e].layers[2].tone.tone_number.details().name);
+                tone += 1;
+                rds.e_piano[e].common.name = make_name(names);
+                if tone >= tone_len {
+                    break;
+                }
+            }
             for u in 0..rds.user_sets.len() {
                 let mut names = Vec::new();
                 rds.user_sets[u].layers[0].internal.enable = true;
