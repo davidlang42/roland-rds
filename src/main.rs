@@ -1,4 +1,3 @@
-use std::ascii::AsciiExt;
 use std::env;
 use std::error::Error;
 use std::fs;
@@ -9,7 +8,6 @@ use std::path::PathBuf;
 
 use roland::tones::TONE_LIST;
 use roland::tones::ToneNumber;
-use roland::types::notes::MidiNote;
 use roland::types::notes::PianoKey;
 use roland::types::numeric::OffsetU8;
 
