@@ -1,4 +1,3 @@
-use std::cmp::min;
 use std::env;
 use std::error::Error;
 use std::fs;
@@ -233,25 +232,29 @@ fn make_name(names: Vec<&str>) -> [char; 16] {
         words.push("/".to_owned());
     }
     words.remove(words.len() - 1);
+    println!("- {}", combine(&words));
     // remove non-capital vowels
     while total_length(&words) > 16 {
         if !remove_vowels(&mut words, 16) {
             break;
         }
+        println!("  {}", combine(&words));
     }
+    println!("- {}", combine(&words));
     // remove middle lower case from longer words
     while total_length(&words) > 16 {
         let length = max_length(&words) - 1;
         if !remove_middle(&mut words, length, 16) {
             break;
         }
+        println!("  {}", combine(&words));
     }
     // pad with spaces
-    let mut chars: Vec<char> = words.into_iter().flat_map(|w| w.chars()).collect();
+    let mut chars: Vec<char> = combine(&words).chars().collect();
+    println!("{}", chars.len());
     while chars.len() < 16 {
         chars.push(' ');
     }
-    println!("");
     chars.try_into().unwrap()
 }
 
@@ -273,6 +276,16 @@ fn max_length(words: &Vec<String>) -> usize {
     max
 }
 
+fn combine(words: &Vec<String>) -> String {
+    let mut s = String::new();
+    for word in words {
+        for c in word.chars() {
+            s.push(c);
+        }
+    }
+    s
+}
+
 fn remove_vowels(words: &mut Vec<String>, goal_length: usize) -> bool {
     const VOWELS: [char; 5] = ['a','e','i','o','u'];
     let mut changed = false;
@@ -292,10 +305,11 @@ fn remove_vowels(words: &mut Vec<String>, goal_length: usize) -> bool {
 fn remove_middle(words: &mut Vec<String>, min_length: usize, goal_length: usize) -> bool {
     let mut changed = false;
     for i in 0..words.len() {
-        while words[i].len() > min_length && total_length(&words) < goal_length {
+        while words[i].len() > min_length && total_length(&words) > goal_length {
             if words[i].len() > 1 {
                 let pos = words[i].len() / 2;
                 words[i].remove(pos);
+                //TODO avoid removing capitals
                 changed = true;
             } else {
                 break;
