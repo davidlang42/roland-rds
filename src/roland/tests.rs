@@ -4,6 +4,7 @@ use super::*;
 use test_case::test_case;
 
 #[test_case("examples/rd300nx/_DEFAULT.RDS")]
+#[test_case("examples/rd300nx/_DEFAULT_AGAIN.RDS")]
 #[test_case("examples/rd300nx/ASSIGN.RDS")]
 #[test_case("examples/rd300nx/CHO-REV.RDS")]
 #[test_case("examples/rd300nx/COMMON.RDS")]
@@ -58,6 +59,8 @@ use test_case::test_case;
 #[test_case("examples/rd300nx/SYS-FAV5.RDS")]
 #[test_case("examples/rd300nx/SYS-VLNK1.RDS")]
 #[test_case("examples/rd300nx/SYS-VLNK2.RDS")]
+#[test_case("examples/rd300nx/SYS_PEDAL_EXPRESSION.RDS")]
+#[test_case("examples/rd300nx/SYS_PEDAL_MODE.RDS")]
 #[test_case("examples/rd300nx/TMP-1.RDS")]
 #[test_case("examples/rd300nx/TMP-7.RDS")]
 #[test_case("examples/rd300nx/TMP-7B.RDS")]
