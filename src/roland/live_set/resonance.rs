@@ -1,9 +1,10 @@
 use std::fmt::Debug;
+use schemars::JsonSchema;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{Json, StructuredJson, StructuredJsonError};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema)]
 pub struct Resonance(Bits<608>);
 
 impl Bytes<76> for Resonance {

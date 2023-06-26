@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
-
+use schemars::JsonSchema;
 use strum::IntoEnumIterator;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
@@ -9,7 +9,7 @@ use crate::roland::types::notes::MidiNote;
 use crate::roland::types::numeric::{Offset1Dp, OneIndexedU8, OffsetU8};
 use crate::json::serialize_map_keys_in_order;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema)]
 pub struct PianoLayer {
     tone_number: OneIndexedU8, // max 8
     stereo_width: u8, // max 63
@@ -22,9 +22,10 @@ pub struct PianoLayer {
     sound_lift: u8, // max 127
     tone_character: OffsetU8<8>, // 3-13 (-5 - +5)
     stretch_tune_type: StretchTuneType,
-    #[serde(with = "serialize_map_keys_in_order")]
+    #[serde(deserialize_with = "serialize_map_keys_in_order::deserialize")]
+    #[serde(serialize_with = "serialize_map_keys_in_order::serialize")]
     micro_tune_percent: HashMap<MidiNote, Offset1Dp<512>>, // each 12-1012 (-50.0 - +50.0)
-    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
+    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<5>::zero")]
     unused: Bits<5>
 }
 

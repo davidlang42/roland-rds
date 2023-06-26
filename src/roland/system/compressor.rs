@@ -1,9 +1,10 @@
 use std::fmt::Debug;
+use schemars::JsonSchema;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{StructuredJson, Json, StructuredJsonError};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema)]
 pub struct Compressor(Bits<112>);
 
 impl Bytes<14> for Compressor {

@@ -5,6 +5,7 @@ use std::io;
 use std::io::Read;
 use std::io::Write;
 use std::path::PathBuf;
+use schemars::schema_for;
 
 use crate::bytes::Bytes;
 use crate::json::{Json, StructuredJson};
@@ -40,6 +41,9 @@ fn main() -> Result<(), Box<dyn Error>> {
                 args.next().ok_or("The 2nd argument should be the FOLDER containing the JSON data to combine")?,
                 optional(args.next().ok_or("The 3rd argument should be the FILENAME for the output JSON file (or '-' for STDOUT)")?),
             )?,
+            "schema" => schema(
+                optional(args.next().ok_or("The 2nd argument should be the FILENAME for the output JSON schema file (or '-' for STDOUT)")?)
+            )?,
             "help" => help(&cmd),
             _ => {
                 println!("The 1st argument did not contain a valid command: {}", verb);
@@ -67,6 +71,7 @@ fn help(cmd: &str) {
     println!("  {} encode INPUT.JSON OUTPUT.RDS     -- read JSON file and write to RDS file", cmd);
     println!("  {} split INPUT.JSON OUTPUT_FOLDER   -- split JSON file into a folder structure of nested JSON files", cmd);
     println!("  {} merge INPUT_FOLDER OUTPUT.JSON   -- merge folder structure of nested JSON files into a JSON file", cmd);
+    println!("  {} schema OUTPUT.JSON               -- write JSON schema to JSON file", cmd);
     println!("In all instances, '-' can be used as a file argument to indicate STDIN or STDOUT, however");
     println!("  - folders cannot be STDIN/STDOUT and must be specified");
     println!("  - STDIN/STDOUT does not support binary data on Windows");
@@ -109,6 +114,15 @@ fn merge(input_folder: String, output_json: Option<String>) -> Result<(), Box<dy
     write_json(&output_json, rds.to_json())?;
     if let Some(file) = &output_json {
         println!("Merged JSON into '{}'", file);
+    }
+    Ok(())
+}
+
+fn schema(output_json: Option<String>) -> Result<(), Box<dyn Error>> {
+    let schema = schema_for!(RD300NX);
+    write_json(&output_json, serde_json::to_string_pretty(&schema).unwrap())?;
+    if let Some(file) = &output_json {
+        println!("Generated JSON schema into '{}'", file);
     }
     Ok(())
 }

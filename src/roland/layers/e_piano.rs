@@ -1,8 +1,10 @@
 use std::fmt::Debug;
 
+use schemars::JsonSchema;
+
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema)]
 pub struct EPianoLayer(Bits<48>);
 
 impl Bytes<6> for EPianoLayer {

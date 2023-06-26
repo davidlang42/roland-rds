@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
 
+use schemars::JsonSchema;
 use strum::IntoEnumIterator;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
@@ -9,7 +10,7 @@ use crate::roland::types::enums::{Pan, Layer};
 use crate::roland::types::notes::PianoKey;
 use crate::roland::types::numeric::OffsetU8;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema)]
 pub struct InternalLayer {
     volume: u8, // max 127
     pan: Pan,
@@ -28,7 +29,8 @@ pub struct InternalLayer {
     fc2: bool,
     modulation: bool,
     bender: bool,
-    #[serde(with = "serialize_map_keys_in_order")]
+    #[serde(deserialize_with = "serialize_map_keys_in_order::deserialize")]
+    #[serde(serialize_with = "serialize_map_keys_in_order::serialize")]
     control_slider: HashMap<Layer, bool>,
     s1: bool,
     s2: bool,
@@ -41,7 +43,7 @@ pub struct InternalLayer {
     receive_pan: bool,
     receive_hold_1: bool,
     receive_expression: bool,
-    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
+    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<15>::zero")]
     unused: Bits<15>
 }
 

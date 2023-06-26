@@ -1,24 +1,25 @@
 use std::fmt::Debug;
+use schemars::JsonSchema;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{Json, StructuredJson, StructuredJsonError};
 use crate::roland::types::enums::{OutputPort, OptionalMidiChannel};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema)]
 pub struct SongRhythm {
-    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
+    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<1>::zero")]
     unused1: Bits<1>,
     audio_level: u8, // max 127
     song_level: u8, // max 127
     song_output_port: OutputPort,
-    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
+    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<1>::zero")]
     unused2: Bits<1>,
     rhythm_set: u8, // max 13
     rhythm_level: u8, // max 127
     rhythm_pattern: u8, // max 200
     rhythm_midi_out_channel: OptionalMidiChannel,
     rhythm_output_port: OutputPort,
-    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
+    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<2>::zero")]
     unused3: Bits<2>
 }
 

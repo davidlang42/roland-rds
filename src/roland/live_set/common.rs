@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
-
+use schemars::JsonSchema;
 use strum::IntoEnumIterator;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
@@ -10,11 +10,13 @@ use crate::roland::types::enums::{Layer, SliderSelect, KeyOffPosition, KeyTouchV
 use crate::roland::types::numeric::OffsetU8;
 use crate::json::serialize_map_keys_in_order;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema)]
 pub struct Common {
-    #[serde(with = "serialize_chars_as_string")]
+    #[serde(deserialize_with = "serialize_chars_as_string::deserialize")]
+    #[serde(serialize_with = "serialize_chars_as_string::serialize")]
     name: [char; 16], // 32-127 (ascii)
-    #[serde(with = "serialize_map_keys_in_order")]
+    #[serde(deserialize_with = "serialize_map_keys_in_order::deserialize")]
+    #[serde(serialize_with = "serialize_map_keys_in_order::serialize")]
     voice_reserve: HashMap<MidiChannel, VoiceReserve>,
     live_set_tempo: u16, // 10-500
     fc1_assign: PedalFunction, // 0-144
@@ -34,14 +36,16 @@ pub struct Common {
     key_touch_velocity_key_follow: OffsetU8<64>, // 1-127 (-63 - +63)
     key_off_position: KeyOffPosition,
     slider_select: SliderSelect,
-    #[serde(with = "serialize_map_keys_in_order")]
+    #[serde(deserialize_with = "serialize_map_keys_in_order::deserialize")]
+    #[serde(serialize_with = "serialize_map_keys_in_order::serialize")]
     slider_assign: HashMap<Layer, SliderFunction>,
     split_switch_internal: bool,
     split_switch_external: bool,
-    #[serde(with = "serialize_map_keys_in_order")]
+    #[serde(deserialize_with = "serialize_map_keys_in_order::deserialize")]
+    #[serde(serialize_with = "serialize_map_keys_in_order::serialize")]
     unused_harmonic_bar_assign: HashMap<Layer, StateMap<HarmonicBar>>, // index=(LOWER2:ON, LOWER2:OFF, LOWER1:ON, LOWER1:OFF, UPPER2:ON, UPPER2:OFF, UPPER1:ON, UPPER1:OFF)
     unused_mfx_control_destination: Layer,
-    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
+    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<7>::zero")]
     unused: Bits<7>
 }
 

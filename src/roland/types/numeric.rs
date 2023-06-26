@@ -1,4 +1,6 @@
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq)]
+use schemars::JsonSchema;
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, JsonSchema)]
 pub struct Parameter(i16); // 12768-52768 (-20000 - +20000)
 
 impl Parameter {
@@ -31,7 +33,7 @@ impl Default for Parameter {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, JsonSchema)]
 pub struct OffsetU8<const OFFSET: u8>(i8); // MIN(0)-MAX(255) (MIN-OFFSET - MAX-OFFSET)
 
 impl<const O: u8> OffsetU8<O> {
@@ -64,7 +66,7 @@ impl<const O: u8> Default for OffsetU8<O> {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, JsonSchema)]
 pub struct OneIndexedU16(u16); // 0-65534 (1-65535)
 
 impl From<u16> for OneIndexedU16 {
@@ -85,7 +87,7 @@ impl Default for OneIndexedU16 {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, JsonSchema)]
 pub struct OneIndexedU8(u8); // 0-254 (1-255)
 
 impl From<u8> for OneIndexedU8 {
@@ -106,7 +108,7 @@ impl Default for OneIndexedU8 {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, JsonSchema)]
 pub struct Offset1Dp<const OFFSET: u16>(f64); // MIN(0)-MAX(65536) ((MIN-OFFSET)/10 - (MAX-OFFSET)/10)
 
 impl<const O: u16> Offset1Dp<O> {

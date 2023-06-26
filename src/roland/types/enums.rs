@@ -1,7 +1,8 @@
+use schemars::JsonSchema;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
 pub enum OutputPort { // 0-5
     All,
     Int,
@@ -29,7 +30,7 @@ impl Default for OutputPort {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
 pub enum MonoPoly { // 0-2
     Mono,
     Poly,
@@ -54,7 +55,7 @@ impl Default for MonoPoly {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
 pub enum NuanceType { // 0-2
     Type1,
     Type2,
@@ -79,7 +80,7 @@ impl Default for NuanceType {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
 pub enum StretchTuneType { // 0-2
     Off,
     Preset,
@@ -104,7 +105,7 @@ impl Default for StretchTuneType {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, JsonSchema)]
 pub enum Pan { // 0-127 (L64 - 63R)
     Left(u8),
     Centre,
@@ -143,7 +144,7 @@ impl Default for Pan {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
 pub enum PatchCategory { // 0-3
     OneTouchPiano,
     OneTouchEPiano,
@@ -169,7 +170,7 @@ impl Default for PatchCategory {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, JsonSchema)]
 pub enum SettingMode {
     LiveSet,
     System
@@ -199,7 +200,7 @@ impl Default for SettingMode {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, JsonSchema)]
 pub enum Polarity {
     Standard,
     Reverse
@@ -229,7 +230,7 @@ impl Default for Polarity {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, Hash, Eq, Ord, PartialOrd)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, Hash, Eq, Ord, PartialOrd, JsonSchema)]
 pub enum Layer { // 0-3
     Upper1,
     Upper2,
@@ -255,7 +256,7 @@ impl Default for Layer {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, JsonSchema)]
 pub enum KeyOffPosition {
     Standard,
     Deep
@@ -285,7 +286,7 @@ impl Default for KeyOffPosition {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, JsonSchema)]
 pub enum SliderSelect {
     LayerLevel,
     Control
@@ -315,7 +316,7 @@ impl Default for SliderSelect {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, JsonSchema)]
 pub enum KeyTouchVelocity { // 0-127 (REAL, 1-127)
     Real,
     Fixed(u8)
@@ -346,7 +347,7 @@ impl Default for KeyTouchVelocity {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
 pub enum KeyTouchCurveType { // 1-5
     SuperLight,
     Light,
@@ -373,7 +374,7 @@ impl Default for KeyTouchCurveType {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
 pub enum OutputSelect { // 0-2
     Main,
     Rev,
@@ -398,7 +399,7 @@ impl Default for OutputSelect {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
 pub enum ChorusType { // 0-3
     Off,
     Chorus,
@@ -424,7 +425,7 @@ impl Default for ChorusType {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
 pub enum ReverbType { // 0-6
     Off,
     Reverb,
@@ -453,7 +454,7 @@ impl Default for ReverbType {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
 pub enum SoundFocusType { // 0-31
     PianoType1,
     PianoType2,
@@ -490,7 +491,7 @@ impl Default for SoundFocusType {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
 pub enum MfxType { // 0-255
     Thru,
     Equalizer,
@@ -607,7 +608,7 @@ impl Default for MfxType {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, EnumIter, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, EnumIter, PartialEq, JsonSchema)]
 pub enum OptionalMidiChannel { // 0-16 (OFF, 1-16)
     Off,
     Channel1,
@@ -646,7 +647,7 @@ impl Default for OptionalMidiChannel {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, EnumIter, PartialEq, Hash, Eq, Ord, PartialOrd)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, EnumIter, PartialEq, Hash, Eq, Ord, PartialOrd, JsonSchema)]
 pub enum MidiChannel { // 0-15 (1-16)
     Channel1,
     Channel2,
@@ -684,7 +685,7 @@ impl Default for MidiChannel {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, JsonSchema)]
 pub enum VoiceReserve {  // 0-64 (0-63, full)
     Voices(u8),
     Full
@@ -715,7 +716,7 @@ impl Default for VoiceReserve {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
 pub enum HarmonicBar { // 1-9 (16',5-1/3',8',4',2-2/3',1-3/5',2',1-1/3',1')
     F16,
     F5_1_3,
@@ -746,7 +747,7 @@ impl Default for HarmonicBar {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, JsonSchema)]
 pub enum PartMode {
     Parts16,
     Parts16PlusPerformance
@@ -776,7 +777,7 @@ impl Default for PartMode {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
 pub enum ButtonFunction { // 0-20
     Off,
     CouplePlusOctave,
@@ -819,7 +820,7 @@ impl Default for ButtonFunction {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
 pub enum PedalFunction { // 0-146 (OFF, CC00 - CC127, BEND-UP, BEND-DOWN, AFTERTOUCH, OCT-UP, OCT-DOWN, START/STOP, TAP-TEMPO, RHY PLY/STP, SONG PLY/STP, SONG RESET, MFX1 SW, MFX2 SW, MFX1 CONTROL, MFX2 CONTROL, ROTARY SPEED, SOUND FOCUS VALUE, LIVE SET UP, LIVE SET DOWN)
     Off,
     ControlChange(u8),
@@ -870,7 +871,7 @@ impl Default for PedalFunction {
 }
 
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
 pub enum SliderFunction { // 0-133 (OFF, CC00 - CC127, BEND-UP, BEND-DOWN, AFTERTOUCH, MFX1 CONTROL, MFX2 CONTROL)
     Off,
     ControlChange(u8),
@@ -909,7 +910,7 @@ impl Default for SliderFunction {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
 pub enum Temperament { // 0-7
     Equal,
     JustMajor,

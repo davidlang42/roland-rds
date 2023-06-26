@@ -1,9 +1,10 @@
 use std::fmt::Debug;
+use schemars::JsonSchema;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{Json, StructuredJson, StructuredJsonError};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema)]
 pub struct SwitchAssign(Bits<160>);
 
 impl Bytes<20> for SwitchAssign {

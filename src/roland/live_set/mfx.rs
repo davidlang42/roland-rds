@@ -1,29 +1,32 @@
 use std::fmt::Debug;
 
+use schemars::JsonSchema;
+
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{Json, StructuredJson, StructuredJsonError, serialize_default_terminated_array};
 use crate::roland::types::enums::MfxType;
 use crate::roland::types::numeric::Parameter;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema)]
 pub struct Mfx {
     enable: bool,
-    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
+    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<8>::zero")]
     unused1: Bits<8>,
     mfx_type: MfxType,
-    #[serde(skip_serializing_if="Bits::is_unit", default="Bits::unit")]
+    #[serde(skip_serializing_if="Bits::is_unit", default="Bits::<8>::unit")]
     padding1: Bits<8>,
-    #[serde(skip_serializing_if="Bits::is_unit", default="Bits::unit")]
+    #[serde(skip_serializing_if="Bits::is_unit", default="Bits::<14>::unit")]
     padding2: Bits<14>,
-    #[serde(skip_serializing_if="Bits::is_unit", default="Bits::unit")]
+    #[serde(skip_serializing_if="Bits::is_unit", default="Bits::<14>::unit")]
     padding3: Bits<14>,
-    #[serde(skip_serializing_if="Bits::is_unit", default="Bits::unit")]
+    #[serde(skip_serializing_if="Bits::is_unit", default="Bits::<14>::unit")]
     padding4: Bits<14>,
-    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
+    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<26>::zero")]
     unused2: Bits<26>,
-    #[serde(with = "serialize_default_terminated_array")]
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
     parameters: Box<[Parameter; 32]>,
-    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
+    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<3>::zero")]
     unused3: Bits<3>
 }
 

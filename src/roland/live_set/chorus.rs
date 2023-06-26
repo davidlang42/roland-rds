@@ -1,20 +1,22 @@
 use std::fmt::Debug;
+use schemars::JsonSchema;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{Json, StructuredJson, StructuredJsonError, serialize_default_terminated_array};
 use crate::roland::types::enums::{OutputSelect, ChorusType};
 use crate::roland::types::numeric::Parameter;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema)]
 pub struct Chorus {
     chorus_type: ChorusType,
     depth: u8, // max 127
-    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
+    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<2>::zero")]
     unused1: Bits<2>,
     output_select: OutputSelect,
-    #[serde(with = "serialize_default_terminated_array")]
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
     parameters: Box<[Parameter; 20]>,
-    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
+    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<1>::zero")]
     unused: Bits<1>
 }
 

@@ -1,9 +1,10 @@
 use std::{fmt::Display, str::FromStr};
+use schemars::{JsonSchema, schema::{SchemaObject, InstanceType, ArrayValidation}};
 use serde::{Serialize, Deserialize};
 
 use crate::json::serialize_fromstr_display;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, JsonSchema)]
 pub struct Bit(bool);
 
 impl Display for Bit {
@@ -31,6 +32,28 @@ impl Bit {
 
 #[derive(Debug)]
 pub struct Bits<const N: usize>(pub [Bit; N]);
+
+impl<const N: usize> JsonSchema for Bits<N> {
+    fn schema_name() -> String {
+        format!("Bits_size_{}", N)
+    }
+
+    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        let items = vec![gen.subschema_for::<Bit>()];
+        let required_size = N.try_into().unwrap();
+        SchemaObject {
+            instance_type: Some(InstanceType::Array.into()),
+            array: Some(Box::new(ArrayValidation {
+                items: Some(items.into()),
+                max_items: Some(required_size),
+                min_items: Some(required_size),
+                ..Default::default()
+            })),
+            ..Default::default()
+        }
+        .into()
+    }
+}
 
 impl<'de, const N: usize> Deserialize<'de> for Bits<N> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: serde::Deserializer<'de> {

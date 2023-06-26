@@ -1,4 +1,5 @@
 use std::fmt::Debug;
+use schemars::JsonSchema;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{StructuredJson, Json, StructuredJsonError};
@@ -6,7 +7,7 @@ use crate::roland::types::enums::{Polarity, SettingMode, OptionalMidiChannel, Pa
 use crate::roland::types::notes::KeyNote;
 use crate::roland::types::numeric::Offset1Dp;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema)]
 pub struct Common {
     master_tune_percent: Offset1Dp<1024>, // 24-2024 (-100.0 - +100.0)
     master_level: u8, // max 127
@@ -28,7 +29,7 @@ pub struct Common {
     unsure: Bits<2>,
     temperament: Temperament,
     temperament_key: KeyNote,
-    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
+    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<7>::zero")]
     unused: Bits<7>
 }
 

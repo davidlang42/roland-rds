@@ -1,3 +1,5 @@
+use schemars::JsonSchema;
+
 mod internal;
 mod external;
 mod tone;
@@ -14,7 +16,7 @@ pub use tone_wheel::ToneWheelLayer;
 
 use crate::json::{Json, StructuredJson, StructuredJsonError};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema)]
 pub struct LogicalLayer {
     pub internal: InternalLayer,
     pub external: ExternalLayer,

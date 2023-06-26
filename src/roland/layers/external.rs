@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
 
+use schemars::JsonSchema;
 use strum::IntoEnumIterator;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
@@ -9,7 +10,7 @@ use crate::roland::types::numeric::OffsetU8;
 use crate::roland::types::notes::PianoKey;
 use crate::roland::types::enums::Layer;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema)]
 pub struct ExternalLayer {
     range_lower: PianoKey, // max 87 (A0-C8)
     range_upper: PianoKey, // max 87 (A0-C8), must be >= lower
@@ -25,12 +26,13 @@ pub struct ExternalLayer {
     modulation: bool,
     bender: bool,
     control_mfx_switch: bool,
-    #[serde(with = "serialize_map_keys_in_order")]
+    #[serde(deserialize_with = "serialize_map_keys_in_order::deserialize")]
+    #[serde(serialize_with = "serialize_map_keys_in_order::serialize")]
     control_slider: HashMap<Layer, bool>,
     transmit_midi_messages: Bits<177>,
     s1: bool,
     s2: bool,
-    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
+    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<1>::zero")]
     unused: Bits<1>
 }
 

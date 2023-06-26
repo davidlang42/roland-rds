@@ -1,3 +1,5 @@
+use schemars::JsonSchema;
+
 pub struct Tone {
     _number: u16,
     pub name: &'static str,
@@ -6,7 +8,7 @@ pub struct Tone {
     pub pc: u8
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema)]
 pub struct ToneNumber(u16);
 
 impl ToneNumber {

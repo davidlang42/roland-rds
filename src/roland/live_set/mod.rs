@@ -1,4 +1,5 @@
 use std::fmt::Debug;
+use schemars::JsonSchema;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{Json, StructuredJson, StructuredJsonError};
@@ -18,7 +19,7 @@ mod song_rhythm;
 mod mfx;
 mod resonance;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema)]
 pub struct LiveSet {
     common: Common, // 56 bytes
     song_rhythm: SongRhythm, // 6 bytes
@@ -29,7 +30,7 @@ pub struct LiveSet {
     unused_resonance: Resonance, // 76 bytes
     layers: Box<[LogicalLayer; 3]>, // 332*3=996 bytes
     unused_layer: LogicalLayer, // 332 bytes
-    #[serde(skip_serializing_if="Bits::is_unit", default="Bits::unit")]
+    #[serde(skip_serializing_if="Bits::is_unit", default="Bits::<8>::unit")]
     padding: Bits<8>, // 1 byte
     // checksum: 1 byte
 }

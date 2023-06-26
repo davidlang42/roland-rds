@@ -1,4 +1,5 @@
 use std::fmt::Debug;
+use schemars::JsonSchema;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::roland::types::enums::MonoPoly;
@@ -6,7 +7,7 @@ use crate::roland::types::numeric::OffsetU8;
 
 use super::super::tones::ToneNumber;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema)]
 pub struct ToneLayer {
     tone_number: ToneNumber,
     course_tune_semitones: OffsetU8<64>, // 16-112 (-48 - +48)
@@ -20,7 +21,7 @@ pub struct ToneLayer {
     attack_time: OffsetU8<64>, // max 127 (-63 - +63)
     decay_time: OffsetU8<64>, // max 127 (-63 - +63)
     release_time: OffsetU8<64>, // max 127 (-63 - +63)
-    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::zero")]
+    #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<10>::zero")]
     unused: Bits<10>
 }
 

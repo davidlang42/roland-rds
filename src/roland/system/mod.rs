@@ -1,3 +1,5 @@
+use schemars::JsonSchema;
+
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{Json, StructuredJson, StructuredJsonError};
 use crate::json::serialize_chars_as_string;
@@ -13,29 +15,30 @@ mod v_link;
 mod switch_assign;
 mod compressor;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, JsonSchema)]
 pub struct System {
-    #[serde(skip_serializing_if="Bits::is_unit", default="Bits::unit")]
+    #[serde(skip_serializing_if="Bits::is_unit", default="Bits::<16>::unit")]
     padding1: Bits<16>, // 2 bytes padding
     common: Common, // 10 bytes
     unsure2: Bits<16>, // 2 bytes Common checksum?
-    #[serde(skip_serializing_if="Bits::is_unit", default="Bits::unit")]
+    #[serde(skip_serializing_if="Bits::is_unit", default="Bits::<16>::unit")]
     padding2: Bits<16>, // 2 bytes padding
     compressor: Compressor, // 14 bytes
     unsure3: Bits<16>, // 2 bytes Compressor checksum?
-    #[serde(skip_serializing_if="Bits::is_unit", default="Bits::unit")]
+    #[serde(skip_serializing_if="Bits::is_unit", default="Bits::<16>::unit")]
     padding3: Bits<16>, // 2 bytes padding
     v_link: VLink, // 4 bytes
     unsure4: Bits<16>, // 2 bytes VLink checksum?
-    #[serde(skip_serializing_if="Bits::is_unit", default="Bits::unit")]
+    #[serde(skip_serializing_if="Bits::is_unit", default="Bits::<16>::unit")]
     padding4: Bits<16>, // 2 bytes padding
     favorites: Favorites, // 76 bytes
     unsure5: Bits<16>, // 2 bytes Favorites checksum?
-    #[serde(skip_serializing_if="Bits::is_unit", default="Bits::unit")]
+    #[serde(skip_serializing_if="Bits::is_unit", default="Bits::<16>::unit")]
     padding5: Bits<16>, // 2 bytes padding
     switch_assign: SwitchAssign, // 20 bytes
     unsure6: Bits<16>, // 2 bytes SwitchAssign checksum?
-    #[serde(with = "serialize_chars_as_string")]
+    #[serde(deserialize_with = "serialize_chars_as_string::deserialize")]
+    #[serde(serialize_with = "serialize_chars_as_string::serialize")]
     hardware_version: [char; 16] // 16 bytes
 }
 

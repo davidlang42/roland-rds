@@ -3,10 +3,13 @@ use crate::json::{StructuredJson, Json, StructuredJsonError};
 use crate::json::serialize_array_as_vec;
 use super::live_set::LiveSet;
 use super::system::System;
+use schemars::JsonSchema;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, JsonSchema)]
 pub struct RD300NX {
-    #[serde(with = "serialize_array_as_vec")]
+    #[serde(deserialize_with = "serialize_array_as_vec::deserialize")]
+    #[serde(serialize_with = "serialize_array_as_vec::serialize")]
+    #[schemars(with = "serialize_array_as_vec::ArraySchema::<LiveSet, {Self::USER_SETS}>")]
     pub user_sets: Box<[LiveSet; Self::USER_SETS]>,
     pub piano: Box<[LiveSet; Self::PIANO_SETS]>,
     pub e_piano: Box<[LiveSet; Self::E_PIANO_SETS]>,
