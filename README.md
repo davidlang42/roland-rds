@@ -33,6 +33,10 @@ To re-combine a folder structure of JSON files into a single JSON file:
 
 `roland-rds merge INPUT_FOLDER OUTPUT.JSON`
 
+To generate the JSON schema and save to a JSON file:
+
+`roland-rds schema OUTPUT.JSON`
+
 In all instances, a file argument can be replaced with '-' to mean read from STDIN or write to STDOUT, however folder arguments must always be supplied.
 
 If you run `roland-rds help` or without args, you will see usage instructions.
