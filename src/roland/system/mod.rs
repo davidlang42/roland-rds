@@ -39,6 +39,7 @@ pub struct System {
     unsure6: Bits<16>, // 2 bytes SwitchAssign checksum?
     #[serde(deserialize_with = "serialize_chars_as_string::deserialize")]
     #[serde(serialize_with = "serialize_chars_as_string::serialize")]
+    #[schemars(with = "serialize_chars_as_string::StringSchema::<16>")]
     hardware_version: [char; 16] // 16 bytes
 }
 

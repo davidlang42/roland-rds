@@ -1,6 +1,6 @@
 use schemars::JsonSchema;
 use strum::IntoEnumIterator;
-use strum_macros::EnumIter;
+use strum_macros::{EnumIter, Display};
 
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
 pub enum OutputPort { // 0-5
@@ -230,7 +230,7 @@ impl Default for Polarity {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, Hash, Eq, Ord, PartialOrd, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, Hash, Eq, Ord, PartialOrd, JsonSchema, Display)]
 pub enum Layer { // 0-3
     Upper1,
     Upper2,
@@ -647,7 +647,7 @@ impl Default for OptionalMidiChannel {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, EnumIter, PartialEq, Hash, Eq, Ord, PartialOrd, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, EnumIter, PartialEq, Hash, Eq, Ord, PartialOrd, JsonSchema, Display)]
 pub enum MidiChannel { // 0-15 (1-16)
     Channel1,
     Channel2,

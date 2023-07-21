@@ -28,6 +28,7 @@ pub struct ExternalLayer {
     control_mfx_switch: bool,
     #[serde(deserialize_with = "serialize_map_keys_in_order::deserialize")]
     #[serde(serialize_with = "serialize_map_keys_in_order::serialize")]
+    #[schemars(with = "serialize_map_keys_in_order::RequiredMapSchema::<Layer, bool>")]
     control_slider: HashMap<Layer, bool>,
     transmit_midi_messages: Bits<177>,
     s1: bool,

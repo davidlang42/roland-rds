@@ -23,6 +23,10 @@ where S: serde::Serializer
 pub struct ArraySchema<T: JsonSchema, const N: usize>(PhantomData<T>);
 
 impl<T: JsonSchema, const N: usize> JsonSchema for ArraySchema<T, N> {
+    fn is_referenceable() -> bool {
+        false
+    }
+    
     fn schema_name() -> String {
         format!("Array_size_{}_of_{}", N, T::schema_name())
     }

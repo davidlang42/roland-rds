@@ -1,5 +1,7 @@
-use std::{collections::HashMap, hash::Hash};
+use std::{collections::HashMap, hash::Hash, marker::PhantomData, fmt::Display};
+use schemars::{JsonSchema, schema::{SchemaObject, InstanceType, ObjectValidation, Schema}, Map, Set};
 use serde::{Serialize, Deserialize, ser::SerializeMap};
+use strum::IntoEnumIterator;
 
 pub fn deserialize<'de, D, K: Deserialize<'de> + Eq + Hash, V: Deserialize<'de>>(deserializer: D) -> Result<HashMap<K, V>, D::Error> 
 where D: serde::Deserializer<'de>
@@ -17,4 +19,56 @@ where S: serde::Serializer
         map.serialize_entry(k, v)?;
     }
     map.end()
+}
+
+pub struct OptionalMapSchema<K: IntoEnumIterator + Display, V: JsonSchema>(PhantomData<K>, PhantomData<V>);
+
+impl<K: IntoEnumIterator + Display, V: JsonSchema> JsonSchema for OptionalMapSchema<K, V> {
+    fn schema_name() -> String {
+        format!("Optional_map_of_{}_to_{}", type_name_pretty::<K>(), V::schema_name())
+    }
+
+    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        map_schema::<K, V>(gen, false)
+    }
+}
+
+pub struct RequiredMapSchema<K: IntoEnumIterator + Display, V: JsonSchema>(PhantomData<K>, PhantomData<V>);
+
+impl<K: IntoEnumIterator + Display, V: JsonSchema> JsonSchema for RequiredMapSchema<K, V> {
+    fn schema_name() -> String {
+        format!("Required_map_of_{}_to_{}", type_name_pretty::<K>(), V::schema_name())
+    }
+
+    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        map_schema::<K, V>(gen, true)
+    }
+}
+
+fn type_name_pretty<T>() -> &'static str {
+    let full_name = std::any::type_name::<T>();
+    let segments = full_name.split("::");
+    segments.last().unwrap_or("")
+}
+
+fn map_schema<K: IntoEnumIterator + Display, V: JsonSchema>(gen: &mut schemars::gen::SchemaGenerator, include_required: bool) -> schemars::schema::Schema {
+    let mut properties = Map::<String, Schema>::new();
+    let mut required = Set::<String>::new();
+    for key in K::iter() {
+        properties.insert(key.to_string(), gen.subschema_for::<V>());
+        if include_required {
+            required.insert(key.to_string());
+        }
+    }
+    SchemaObject {
+        instance_type: Some(InstanceType::Object.into()),
+        object: Some(Box::new(ObjectValidation {
+            properties,
+            required,
+            additional_properties: Some(Box::new(Schema::Bool(false))),
+            ..Default::default()
+        })),
+        ..Default::default()
+    }
+    .into()
 }

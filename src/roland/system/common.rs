@@ -8,6 +8,7 @@ use crate::roland::types::notes::KeyNote;
 use crate::roland::types::numeric::Offset1Dp;
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[schemars(rename = "SystemCommon")]
 pub struct Common {
     master_tune_percent: Offset1Dp<1024>, // 24-2024 (-100.0 - +100.0)
     master_level: u8, // max 127

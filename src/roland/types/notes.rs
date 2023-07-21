@@ -1,7 +1,7 @@
 
 use schemars::JsonSchema;
 use strum::IntoEnumIterator;
-use strum_macros::EnumIter;
+use strum_macros::{EnumIter, Display};
 
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
 pub enum PianoKey { // 0-87
@@ -113,7 +113,7 @@ impl Default for PianoKey {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, Hash, Eq, Ord, PartialOrd)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, Hash, Eq, Ord, PartialOrd, Display)]
 pub enum MidiNote { // 0-127
     CMinus1,
     DbMinus1,

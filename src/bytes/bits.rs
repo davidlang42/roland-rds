@@ -1,10 +1,10 @@
 use std::{fmt::Display, str::FromStr};
-use schemars::{JsonSchema, schema::{SchemaObject, InstanceType, ArrayValidation}};
+use schemars::JsonSchema;
 use serde::{Serialize, Deserialize};
 
 use crate::json::serialize_fromstr_display;
 
-#[derive(Debug, Copy, Clone, JsonSchema)]
+#[derive(Debug, Copy, Clone)]
 pub struct Bit(bool);
 
 impl Display for Bit {
@@ -38,20 +38,11 @@ impl<const N: usize> JsonSchema for Bits<N> {
         format!("Bits_size_{}", N)
     }
 
-    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-        let items = vec![gen.subschema_for::<Bit>()];
-        let required_size = N.try_into().unwrap();
-        SchemaObject {
-            instance_type: Some(InstanceType::Array.into()),
-            array: Some(Box::new(ArrayValidation {
-                items: Some(items.into()),
-                max_items: Some(required_size),
-                min_items: Some(required_size),
-                ..Default::default()
-            })),
-            ..Default::default()
-        }
-        .into()
+    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        let bits_in_last_byte = (N - 1) % 8 + 1;
+        let whole_bytes_before_last = (N - bits_in_last_byte) / 8;
+        let pattern = format!("^(?:[01]{{8}} ){{{}}}[01]{{{}}}$", whole_bytes_before_last, bits_in_last_byte);
+        serialize_fromstr_display::json_schema(Some(pattern))
     }
 }
 

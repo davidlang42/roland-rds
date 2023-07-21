@@ -31,6 +31,7 @@ pub struct InternalLayer {
     bender: bool,
     #[serde(deserialize_with = "serialize_map_keys_in_order::deserialize")]
     #[serde(serialize_with = "serialize_map_keys_in_order::serialize")]
+    #[schemars(with = "serialize_map_keys_in_order::RequiredMapSchema::<Layer, bool>")]
     control_slider: HashMap<Layer, bool>,
     s1: bool,
     s2: bool,

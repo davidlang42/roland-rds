@@ -11,12 +11,15 @@ use crate::roland::types::numeric::OffsetU8;
 use crate::json::serialize_map_keys_in_order;
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[schemars(rename = "LiveSetCommon")]
 pub struct Common {
     #[serde(deserialize_with = "serialize_chars_as_string::deserialize")]
     #[serde(serialize_with = "serialize_chars_as_string::serialize")]
+    #[schemars(with = "serialize_chars_as_string::StringSchema::<16>")]
     name: [char; 16], // 32-127 (ascii)
     #[serde(deserialize_with = "serialize_map_keys_in_order::deserialize")]
     #[serde(serialize_with = "serialize_map_keys_in_order::serialize")]
+    #[schemars(with = "serialize_map_keys_in_order::OptionalMapSchema::<MidiChannel, VoiceReserve>")]
     voice_reserve: HashMap<MidiChannel, VoiceReserve>,
     live_set_tempo: u16, // 10-500
     fc1_assign: PedalFunction, // 0-144
@@ -38,11 +41,13 @@ pub struct Common {
     slider_select: SliderSelect,
     #[serde(deserialize_with = "serialize_map_keys_in_order::deserialize")]
     #[serde(serialize_with = "serialize_map_keys_in_order::serialize")]
+    #[schemars(with = "serialize_map_keys_in_order::RequiredMapSchema::<Layer, SliderFunction>")]
     slider_assign: HashMap<Layer, SliderFunction>,
     split_switch_internal: bool,
     split_switch_external: bool,
     #[serde(deserialize_with = "serialize_map_keys_in_order::deserialize")]
     #[serde(serialize_with = "serialize_map_keys_in_order::serialize")]
+    #[schemars(with = "serialize_map_keys_in_order::RequiredMapSchema::<Layer, StateMap<HarmonicBar>>")]
     unused_harmonic_bar_assign: HashMap<Layer, StateMap<HarmonicBar>>, // index=(LOWER2:ON, LOWER2:OFF, LOWER1:ON, LOWER1:OFF, UPPER2:ON, UPPER2:OFF, UPPER1:ON, UPPER1:OFF)
     unused_mfx_control_destination: Layer,
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<7>::zero")]

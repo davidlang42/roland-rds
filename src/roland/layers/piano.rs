@@ -24,6 +24,7 @@ pub struct PianoLayer {
     stretch_tune_type: StretchTuneType,
     #[serde(deserialize_with = "serialize_map_keys_in_order::deserialize")]
     #[serde(serialize_with = "serialize_map_keys_in_order::serialize")]
+    #[schemars(with = "serialize_map_keys_in_order::OptionalMapSchema::<MidiNote, Offset1Dp<512>>")]
     micro_tune_percent: HashMap<MidiNote, Offset1Dp<512>>, // each 12-1012 (-50.0 - +50.0)
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<5>::zero")]
     unused: Bits<5>
