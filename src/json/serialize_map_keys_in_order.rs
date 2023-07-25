@@ -3,6 +3,8 @@ use schemars::{JsonSchema, schema::{SchemaObject, InstanceType, ObjectValidation
 use serde::{Serialize, Deserialize, ser::SerializeMap};
 use strum::IntoEnumIterator;
 
+use super::type_name_pretty;
+
 pub fn deserialize<'de, D, K: Deserialize<'de> + Eq + Hash, V: Deserialize<'de>>(deserializer: D) -> Result<HashMap<K, V>, D::Error> 
 where D: serde::Deserializer<'de>
 {
@@ -43,12 +45,6 @@ impl<K: IntoEnumIterator + Display, V: JsonSchema> JsonSchema for RequiredMapSch
     fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
         map_schema::<K, V>(gen, true)
     }
-}
-
-fn type_name_pretty<T>() -> &'static str {
-    let full_name = std::any::type_name::<T>();
-    let segments = full_name.split("::");
-    segments.last().unwrap_or("")
 }
 
 fn map_schema<K: IntoEnumIterator + Display, V: JsonSchema>(gen: &mut schemars::gen::SchemaGenerator, include_required: bool) -> schemars::schema::Schema {

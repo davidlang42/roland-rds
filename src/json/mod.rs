@@ -12,6 +12,12 @@ pub mod serialize_array_as_vec;
 pub mod serialize_default_terminated_array;
 pub mod serialize_map_keys_in_order;
 
+pub fn type_name_pretty<T>() -> &'static str {
+    let full_name = std::any::type_name::<T>();
+    let segments = full_name.split("::");
+    segments.last().unwrap_or("")
+}
+
 pub trait Json {
     fn to_json(&self) -> String;
     fn from_json(json: String) -> Result<Self, serde_json::Error> where Self: Sized;

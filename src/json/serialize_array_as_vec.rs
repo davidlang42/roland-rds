@@ -2,12 +2,14 @@ use std::{fmt::Debug, marker::PhantomData};
 use schemars::{JsonSchema, schema::{SchemaObject, InstanceType, ArrayValidation}};
 use serde::{de, Serialize, Deserialize};
 
+use super::type_name_pretty;
+
 pub fn deserialize<'de, D, T: Deserialize<'de> + Debug, const N: usize>(deserializer: D) -> Result<Box<[T; N]>, D::Error> 
 where D: serde::Deserializer<'de>
 {
     let vec = Vec::<T>::deserialize(deserializer)?;
     if vec.len() != N {
-        Err(de::Error::custom(format!("Expected {} {}, but got {}", N, std::any::type_name::<T>(), vec.len())))
+        Err(de::Error::custom(format!("Expected {} {}, but got {}", N, type_name_pretty::<T>(), vec.len())))
     } else {
         Ok(Box::new(vec.try_into().unwrap()))
     }

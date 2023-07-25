@@ -1,5 +1,7 @@
 use schemars::{JsonSchema, schema::{NumberValidation, SchemaObject, InstanceType}};
 
+use crate::json::type_name_pretty;
+
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, JsonSchema)]
 pub struct Parameter(i16); // 12768-52768 (-20000 - +20000)
 
@@ -135,7 +137,7 @@ impl<const O: u16> Default for Offset1Dp<O> {
 
 impl<const O: u16> JsonSchema for Offset1Dp<O> {
     fn schema_name() -> String {
-        "Offset1Dp".into()
+        type_name_pretty::<Offset1Dp<O>>().into()
     }
 
     fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {

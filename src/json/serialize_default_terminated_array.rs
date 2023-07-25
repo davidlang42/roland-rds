@@ -2,12 +2,14 @@ use std::{fmt::Debug, marker::PhantomData};
 use schemars::{JsonSchema, schema::{InstanceType, SchemaObject, ArrayValidation}};
 use serde::{de, Serialize, Deserialize};
 
+use super::type_name_pretty;
+
 pub fn deserialize<'de, D, T: Deserialize<'de> + Debug + Default, const N: usize>(deserializer: D) -> Result<Box<[T; N]>, D::Error> 
 where D: serde::Deserializer<'de>
 {
     let mut vec = Vec::<T>::deserialize(deserializer)?;
     if vec.len() > N {
-        Err(de::Error::custom(format!("Expected a max of {} {}, but got {}", N, std::any::type_name::<T>(), vec.len())))
+        Err(de::Error::custom(format!("Expected a max of {} {}, but got {}", N, type_name_pretty::<T>(), vec.len())))
     } else {
         while vec.len() < N {
             vec.push(T::default());

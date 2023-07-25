@@ -2,6 +2,8 @@ use schemars::{JsonSchema, schema::{SchemaObject, InstanceType, SubschemaValidat
 use serde_json::Value;
 use serde::{de, Serialize, Deserialize};
 
+use crate::json::type_name_pretty;
+
 pub struct Tone {
     _number: u16,
     pub name: &'static str,
@@ -89,7 +91,7 @@ impl<'de> Deserialize<'de> for ToneNumber {
 
 impl JsonSchema for ToneNumber {
     fn schema_name() -> String {
-        "ToneNumber".into()
+        type_name_pretty::<ToneNumber>().into()
     }
 
     fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
@@ -97,6 +99,7 @@ impl JsonSchema for ToneNumber {
         for tone in &TONE_LIST {
             names.push(Value::String(tone.numbered_string()));
         }
+        let max = names.len();
         let enum_schema = Schema::Object(SchemaObject {
             instance_type: Some(InstanceType::String.into()),
             enum_values: Some(names),
@@ -106,7 +109,7 @@ impl JsonSchema for ToneNumber {
             instance_type: Some(InstanceType::Integer.into()),
             number: Some(Box::new(NumberValidation {
                 minimum: Some(1.0),
-                maximum: Some(TONE_LIST.len() as f64),
+                maximum: Some(max as f64),
                 ..Default::default()
             })),
             format: Some("uint16".into()),
@@ -127,8 +130,35 @@ impl JsonSchema for ToneNumber {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, JsonSchema)]
+#[derive(Debug, Copy, Clone)]
 pub struct PianoToneNumber(u8); // 0-8 (1-9)
+
+impl PianoToneNumber {
+    const PIANO_TONE_MSB: u8 = 114; // the dedicated piano tones appear at the start of the tones list and use this MSB specifically
+
+    pub fn details(&self) -> &Tone {
+        let number = self.0 as usize;
+        if number == 0 || number > TONE_LIST.len() {
+            panic!("Invalid tone number")
+        }
+        let tone = &TONE_LIST[number - 1];
+        if tone.msb != Self::PIANO_TONE_MSB {
+            panic!("Tone number is not a piano tone")
+        }
+        tone
+    }
+
+    fn piano_tones_list() -> Vec<&'static Tone> {
+        let mut tones = Vec::new();
+        for tone in &TONE_LIST {
+            if tone.msb != Self::PIANO_TONE_MSB {
+                break;
+            }
+            tones.push(tone);
+        }
+        tones
+    }
+}
 
 impl From<u8> for PianoToneNumber {
     fn from(value: u8) -> Self {
@@ -145,6 +175,85 @@ impl Into<u8> for PianoToneNumber {
 impl Default for PianoToneNumber {
     fn default() -> Self {
         Self::from(0)
+    }
+}
+
+impl Serialize for PianoToneNumber {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where S: serde::Serializer {
+        let s: String = self.details().numbered_string();
+        s.serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for PianoToneNumber {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where D: serde::Deserializer<'de> {
+        let value: Value = Deserialize::deserialize(deserializer)?;
+        match value {
+            Value::String(s) => {
+                for (i, tone) in Self::piano_tones_list().into_iter().enumerate() {
+                    if s == tone.numbered_string() {
+                        return Ok(Self(i as u8 + 1));
+                    }
+                }
+                Err(de::Error::custom(format!("String is not a valid Piano Tone: {}", s)))
+            },
+            Value::Number(number) => {
+                if let Some(n) = number.as_u64() {
+                    let piano_tones_list = Self::piano_tones_list();
+                    if n < 1 || n > piano_tones_list.len() as u64 {
+                        Err(de::Error::custom(format!("Number is a out of valid range (1-{}): {}", piano_tones_list.len(), number)))
+                    } else {
+                        Ok(Self(n as u8))
+                    }
+                } else {
+                    Err(de::Error::custom(format!("Number is a not a positive integer: {}", number)))
+                }
+            },
+            _ => Err(de::Error::custom(format!("Expected string or number")))
+        }
+    }
+}
+
+impl JsonSchema for PianoToneNumber {
+    fn schema_name() -> String {
+        type_name_pretty::<PianoToneNumber>().into()
+    }
+
+    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        let mut names = Vec::new();
+        for tone in Self::piano_tones_list() {
+            names.push(Value::String(tone.numbered_string()));
+        }
+        let max = names.len();
+        let enum_schema = Schema::Object(SchemaObject {
+            instance_type: Some(InstanceType::String.into()),
+            enum_values: Some(names),
+            ..Default::default()
+        });
+        let numeric_schema = Schema::Object(SchemaObject {
+            instance_type: Some(InstanceType::Integer.into()),
+            number: Some(Box::new(NumberValidation {
+                minimum: Some(1.0),
+                maximum: Some(max as f64),
+                ..Default::default()
+            })),
+            format: Some("uint8".into()),
+            ..Default::default()
+        });
+        SchemaObject {
+            instance_type: Some(InstanceType::Null.into()),
+            subschemas: Some(Box::new(SubschemaValidation {
+                one_of: Some(vec![
+                    enum_schema,
+                    numeric_schema
+                ]),
+                ..Default::default()
+            })),
+            ..Default::default()
+        }
+        .into()
     }
 }
 
