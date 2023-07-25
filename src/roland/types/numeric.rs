@@ -1,4 +1,4 @@
-use schemars::JsonSchema;
+use schemars::{JsonSchema, schema::{NumberValidation, SchemaObject, InstanceType}};
 
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, JsonSchema)]
 pub struct Parameter(i16); // 12768-52768 (-20000 - +20000)
@@ -108,7 +108,7 @@ impl Default for OneIndexedU8 {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq)]
 pub struct Offset1Dp<const OFFSET: u16>(f64); // MIN(0)-MAX(65536) ((MIN-OFFSET)/10 - (MAX-OFFSET)/10)
 
 impl<const O: u16> Offset1Dp<O> {
@@ -130,5 +130,24 @@ impl<const O: u16> Into<u16> for Offset1Dp<O> {
 impl<const O: u16> Default for Offset1Dp<O> {
     fn default() -> Self {
         Self::from(Self::ZERO)
+    }
+}
+
+impl<const O: u16> JsonSchema for Offset1Dp<O> {
+    fn schema_name() -> String {
+        "Offset1Dp".into()
+    }
+
+    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        SchemaObject {
+            instance_type: Some(InstanceType::Number.into()),
+            number: Some(Box::new(NumberValidation {
+                multiple_of: Some(0.1),
+                ..Default::default()
+            })),
+            format: Some("double".into()),
+            ..Default::default()
+        }
+        .into()
     }
 }
