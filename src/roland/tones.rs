@@ -1,4 +1,6 @@
-use schemars::JsonSchema;
+use schemars::{JsonSchema, schema::{SchemaObject, InstanceType, SubschemaValidation, NumberValidation, Schema}};
+use serde_json::Value;
+use serde::{de, Serialize, Deserialize};
 
 pub struct Tone {
     _number: u16,
@@ -8,7 +10,13 @@ pub struct Tone {
     pub pc: u8
 }
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+impl Tone {
+    fn numbered_string(&self) -> String {
+        format!("{}_{}", self._number, self.name)
+    }
+}
+
+#[derive(Debug)]
 pub struct ToneNumber(u16);
 
 impl ToneNumber {
@@ -39,6 +47,83 @@ impl From<u16> for ToneNumber {
             panic!("Value ({}) exceeds maximum tone number ({})", value, TONE_LIST.len());
         }
         Self(value)
+    }
+}
+
+impl Serialize for ToneNumber {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where S: serde::Serializer {
+        let s: String = self.details().numbered_string();
+        s.serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for ToneNumber {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where D: serde::Deserializer<'de> {
+        let value: Value = Deserialize::deserialize(deserializer)?;
+        match value {
+            Value::String(s) => {
+                for (i, tone) in TONE_LIST.iter().enumerate() {
+                    if s == tone.numbered_string() {
+                        return Ok(Self(i as u16 + 1));
+                    }
+                }
+                Err(de::Error::custom(format!("String is not a valid Tone: {}", s)))
+            },
+            Value::Number(number) => {
+                if let Some(n) = number.as_u64() {
+                    if n < 1 || n > TONE_LIST.len() as u64 {
+                        Err(de::Error::custom(format!("Number is a out of valid range (1-{}): {}", TONE_LIST.len(), number)))
+                    } else {
+                        Ok(Self(n as u16))
+                    }
+                } else {
+                    Err(de::Error::custom(format!("Number is a not a positive integer: {}", number)))
+                }
+            },
+            _ => Err(de::Error::custom(format!("Expected string or number")))
+        }
+    }
+}
+
+impl JsonSchema for ToneNumber {
+    fn schema_name() -> String {
+        "ToneNumber".into()
+    }
+
+    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        let mut names = Vec::new();
+        for tone in &TONE_LIST {
+            names.push(Value::String(tone.numbered_string()));
+        }
+        let enum_schema = Schema::Object(SchemaObject {
+            instance_type: Some(InstanceType::String.into()),
+            enum_values: Some(names),
+            ..Default::default()
+        });
+        let numeric_schema = Schema::Object(SchemaObject {
+            instance_type: Some(InstanceType::Integer.into()),
+            number: Some(Box::new(NumberValidation {
+                minimum: Some(1.0),
+                maximum: Some(TONE_LIST.len() as f64),
+                ..Default::default()
+            })),
+            format: Some("uint16".into()),
+            ..Default::default()
+        });
+        SchemaObject {
+            instance_type: Some(InstanceType::Null.into()),
+            subschemas: Some(Box::new(SubschemaValidation {
+                one_of: Some(vec![
+                    enum_schema,
+                    numeric_schema
+                ]),
+                ..Default::default()
+            })),
+            ..Default::default()
+        }
+        .into()
     }
 }
 
