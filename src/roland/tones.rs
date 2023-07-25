@@ -127,6 +127,27 @@ impl JsonSchema for ToneNumber {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, JsonSchema)]
+pub struct PianoToneNumber(u8); // 0-8 (1-9)
+
+impl From<u8> for PianoToneNumber {
+    fn from(value: u8) -> Self {
+        Self(value + 1)
+    }
+}
+
+impl Into<u8> for PianoToneNumber {
+    fn into(self) -> u8 {
+        self.0 - 1
+    }
+}
+
+impl Default for PianoToneNumber {
+    fn default() -> Self {
+        Self::from(0)
+    }
+}
+
 static TONE_LIST: [Tone; 942] = [
     Tone { _number: 1, name: "ConcertGrand", msb: 114, lsb: 0, pc: 0 },
     Tone { _number: 2, name: "Honky-tonk1", msb: 114, lsb: 0, pc: 1 },

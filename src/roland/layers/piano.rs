@@ -4,14 +4,15 @@ use schemars::JsonSchema;
 use strum::IntoEnumIterator;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
+use crate::roland::tones::PianoToneNumber;
 use crate::roland::types::enums::{StretchTuneType, NuanceType};
 use crate::roland::types::notes::MidiNote;
-use crate::roland::types::numeric::{Offset1Dp, OneIndexedU8, OffsetU8};
+use crate::roland::types::numeric::{Offset1Dp, OffsetU8};
 use crate::json::serialize_map_keys_in_order;
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
 pub struct PianoLayer {
-    tone_number: OneIndexedU8, // max 8
+    tone_number: PianoToneNumber,
     stereo_width: u8, // max 63
     nuance: NuanceType,
     duplex_scale_level: u8, // max 127
