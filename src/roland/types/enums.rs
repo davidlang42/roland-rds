@@ -31,6 +31,33 @@ impl Default for OutputPort {
 }
 
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
+pub enum TransmitPort { // 0-4
+    All,
+    Out1,
+    Out2,
+    Out3,
+    Usb
+}
+
+impl From<u8> for TransmitPort {
+    fn from(value: u8) -> Self {
+        Self::iter().nth(value as usize).unwrap()
+    }
+}
+
+impl Into<u8> for TransmitPort {
+    fn into(self) -> u8 {
+        Self::iter().position(|s| s == self).unwrap() as u8
+    }
+}
+
+impl Default for TransmitPort {
+    fn default() -> Self {
+        Self::from(0)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
 pub enum MonoPoly { // 0-2
     Mono,
     Poly,
@@ -50,6 +77,30 @@ impl Into<u8> for MonoPoly {
 }
 
 impl Default for MonoPoly {
+    fn default() -> Self {
+        Self::from(0)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
+pub enum MonoPolyOnly { // 0-1
+    Mono,
+    Poly
+}
+
+impl From<u8> for MonoPolyOnly {
+    fn from(value: u8) -> Self {
+        Self::iter().nth(value as usize).unwrap()
+    }
+}
+
+impl Into<u8> for MonoPolyOnly {
+    fn into(self) -> u8 {
+        Self::iter().position(|s| s == self).unwrap() as u8
+    }
+}
+
+impl Default for MonoPolyOnly {
     fn default() -> Self {
         Self::from(0)
     }

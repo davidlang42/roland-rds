@@ -8,7 +8,7 @@ use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::serialize_map_keys_in_order;
 use crate::roland::types::numeric::OffsetU8;
 use crate::roland::types::notes::PianoKey;
-use crate::roland::types::enums::Layer;
+use crate::roland::types::enums::{Layer, TransmitPort, MonoPolyOnly, Pan, MidiChannel};
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
 pub struct ExternalLayer {
@@ -30,7 +30,52 @@ pub struct ExternalLayer {
     #[serde(serialize_with = "serialize_map_keys_in_order::serialize")]
     #[schemars(with = "serialize_map_keys_in_order::RequiredMapSchema::<Layer, bool>")]
     control_slider: HashMap<Layer, bool>,
-    transmit_midi_messages: Bits<177>,
+    transmit_port: TransmitPort,
+    transmit_channel: MidiChannel,
+    transmit_bank_select_msb: bool,
+    bank_select_msb: u8, // max 127
+    transmit_bank_select_lsb: bool,
+    bank_select_lsb: u8, // max 127
+    transmit_program_change: bool,
+    program_change: u8, // max 127
+    transmit_level: bool,
+    level: u8, // max 127
+    transmit_pan: bool,
+    pan: Pan,
+    transmit_course_tune: bool,
+    course_tune_semitones: OffsetU8<64>, // 16-112 (-48 - +48)
+    transmit_fine_tine: bool,
+    fine_tune_percent: OffsetU8<64>, // 14-114 (-50 - + 50)
+    transmit_mono_poly: bool,
+    mono_poly: MonoPolyOnly,
+    transmit_portamento: bool,
+    portamento_switch: bool,
+    transmit_portamento_time: bool,
+    portamento_time: u8, // max 127
+    transmit_cutoff: bool,
+    cutoff: OffsetU8<64>, // max 127 (-63 - +63)
+    transmit_resonance: bool,
+    resonance: OffsetU8<64>, // max 127 (-63 - +63)
+    transmit_attack_time: bool,
+    attack_time: OffsetU8<64>, // max 127 (-63 - +63)
+    transmit_decay_time: bool,
+    decay_time: OffsetU8<64>, // max 127 (-63 - +63)
+    transmit_release_time: bool,
+    release_time: OffsetU8<64>, // max 127 (-63 - +63)
+    transmit_pitch_bend_range: bool,
+    pitch_bend_range_semitones: u8, // max 48
+    transmit_modulation_depth: bool,
+    modulation_depth: u8, // max 127
+    transmit_chorus_level: bool,
+    chorus_level: u8, // max 127
+    transmit_reverb_level: bool,
+    reverb_level: u8, // max 127
+    transmit_control_change_1: bool,
+    control_change_1_number: u8, // max 127
+    control_change_1_value: u8, // max 127
+    transmit_control_change_2: bool,
+    control_change_2_number: u8, // max 127
+    control_change_2_value: u8, // max 127
     s1: bool,
     s2: bool,
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<1>::zero")]
@@ -57,7 +102,52 @@ impl Bytes<30> for ExternalLayer {
             for key in Layer::iter() {
                 bits.set_bool(*self.control_slider.get(&key).unwrap());
             }
-            bits.set_bits(&self.transmit_midi_messages);
+            bits.set_u8::<3>(self.transmit_port.into(), 0, 4)?;
+            bits.set_u8::<4>(self.transmit_channel.into(), 0, 15)?;
+            bits.set_bool(self.transmit_bank_select_msb);
+            bits.set_u8::<7>(self.bank_select_msb, 0, 127)?;
+            bits.set_bool(self.transmit_bank_select_lsb);
+            bits.set_u8::<7>(self.bank_select_lsb, 0, 127)?;
+            bits.set_bool(self.transmit_program_change);
+            bits.set_u8::<7>(self.program_change, 0, 127)?;
+            bits.set_bool(self.transmit_level);
+            bits.set_u8::<7>(self.level, 0, 127)?;
+            bits.set_bool(self.transmit_pan);
+            bits.set_u8::<7>(self.pan.into(), 0, 127)?;
+            bits.set_bool(self.transmit_course_tune);
+            bits.set_u8::<7>(self.course_tune_semitones.into(), 16, 112)?;
+            bits.set_bool(self.transmit_fine_tine);
+            bits.set_u8::<7>(self.fine_tune_percent.into(), 14, 114)?;
+            bits.set_bool(self.transmit_mono_poly);
+            bits.set_u8::<2>(self.mono_poly.into(), 0, 1)?;
+            bits.set_bool(self.transmit_portamento);
+            bits.set_bool(self.portamento_switch);
+            bits.set_bool(self.transmit_portamento_time);
+            bits.set_u8::<7>(self.portamento_time, 0, 127)?;
+            bits.set_bool(self.transmit_cutoff);
+            bits.set_u8::<7>(self.cutoff.into(), 0, 127)?;
+            bits.set_bool(self.transmit_resonance);
+            bits.set_u8::<7>(self.resonance.into(), 0, 127)?;
+            bits.set_bool(self.transmit_attack_time);
+            bits.set_u8::<7>(self.attack_time.into(), 0, 127)?;
+            bits.set_bool(self.transmit_decay_time);
+            bits.set_u8::<7>(self.decay_time.into(), 0, 127)?;
+            bits.set_bool(self.transmit_release_time);
+            bits.set_u8::<7>(self.release_time.into(), 0, 127)?;
+            bits.set_bool(self.transmit_pitch_bend_range);
+            bits.set_u8::<6>(self.pitch_bend_range_semitones, 0, 48)?;
+            bits.set_bool(self.transmit_modulation_depth);
+            bits.set_u8::<7>(self.modulation_depth, 0, 127)?;
+            bits.set_bool(self.transmit_chorus_level);
+            bits.set_u8::<7>(self.chorus_level, 0, 127)?;
+            bits.set_bool(self.transmit_reverb_level);
+            bits.set_u8::<7>(self.reverb_level, 0, 127)?;
+            bits.set_bool(self.transmit_control_change_1);
+            bits.set_u8::<7>(self.control_change_1_number, 0, 127)?;
+            bits.set_u8::<7>(self.control_change_1_value, 0, 127)?;
+            bits.set_bool(self.transmit_control_change_2);
+            bits.set_u8::<7>(self.control_change_2_number, 0, 127)?;
+            bits.set_u8::<7>(self.control_change_2_value, 0, 127)?;
             bits.set_bool(self.s1);
             bits.set_bool(self.s2);
             bits.set_bits(&self.unused);
@@ -101,7 +191,52 @@ impl Bytes<30> for ExternalLayer {
                 bender,
                 control_mfx_switch,
                 control_slider,
-                transmit_midi_messages: data.get_bits(),
+                transmit_port: data.get_u8::<3>(0, 4)?.into(),
+                transmit_channel: data.get_u8::<4>(0, 15)?.into(),
+                transmit_bank_select_msb: data.get_bool(),
+                bank_select_msb: data.get_u8::<7>(0, 127)?,
+                transmit_bank_select_lsb: data.get_bool(),
+                bank_select_lsb: data.get_u8::<7>(0, 127)?,
+                transmit_program_change: data.get_bool(),
+                program_change: data.get_u8::<7>(0, 127)?,
+                transmit_level: data.get_bool(),
+                level: data.get_u8::<7>(0, 127)?.into(),
+                transmit_pan: data.get_bool(),
+                pan: data.get_u8::<7>(0, 127)?.into(),
+                transmit_course_tune: data.get_bool(),
+                course_tune_semitones: data.get_u8::<7>(16, 112)?.into(),
+                transmit_fine_tine: data.get_bool(),
+                fine_tune_percent: data.get_u8::<7>(14, 114)?.into(),
+                transmit_mono_poly: data.get_bool(),
+                mono_poly: data.get_u8::<2>(0, 1)?.into(),
+                transmit_portamento: data.get_bool(),
+                portamento_switch: data.get_bool(),
+                transmit_portamento_time: data.get_bool(),
+                portamento_time: data.get_u8::<7>(0, 127)?,
+                transmit_cutoff: data.get_bool(),
+                cutoff: data.get_u8::<7>(0, 127)?.into(),
+                transmit_resonance: data.get_bool(),
+                resonance: data.get_u8::<7>(0, 127)?.into(),
+                transmit_attack_time: data.get_bool(),
+                attack_time: data.get_u8::<7>(0, 127)?.into(),
+                transmit_decay_time: data.get_bool(),
+                decay_time: data.get_u8::<7>(0, 127)?.into(),
+                transmit_release_time: data.get_bool(),
+                release_time: data.get_u8::<7>( 0, 127)?.into(),
+                transmit_pitch_bend_range: data.get_bool(),
+                pitch_bend_range_semitones: data.get_u8::<6>(0, 48)?,
+                transmit_modulation_depth: data.get_bool(),
+                modulation_depth: data.get_u8::<7>(0, 127)?,
+                transmit_chorus_level: data.get_bool(),
+                chorus_level: data.get_u8::<7>(0, 127)?,
+                transmit_reverb_level: data.get_bool(),
+                reverb_level: data.get_u8::<7>(0, 127)?,
+                transmit_control_change_1: data.get_bool(),
+                control_change_1_number: data.get_u8::<7>(0, 127)?,
+                control_change_1_value: data.get_u8::<7>(0, 127)?,
+                transmit_control_change_2: data.get_bool(),
+                control_change_2_number: data.get_u8::<7>(0, 127)?,
+                control_change_2_value: data.get_u8::<7>(0, 127)?,
                 s1: data.get_bool(),
                 s2: data.get_bool(),
                 unused: data.get_bits()
