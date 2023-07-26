@@ -533,6 +533,7 @@ impl Default for ReverbType {
 pub enum SoundFocusType { // 0-31
     PianoType1,
     PianoType2,
+    //TODO validate that the RD700NX only value is not used
     UnusedEPianoType, // RD700NX only
     SoundLift,
     Enhancer,
@@ -659,6 +660,7 @@ pub enum MfxType { // 0-255
     ChorusDelay,
     FlangerDelay,
     ChorusFlanger,
+    //TODO validate that the RD700NX only values are not used
     UnusedVrChorus, //RD700NX only
     UnusedVrTremolo, //RD700NX only
     UnusedVrAutoWah, //RD700NX only
