@@ -2,52 +2,72 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use schemars::JsonSchema;
 use strum::IntoEnumIterator;
+use validator::Validate;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{Json, StructuredJson, serialize_chars_as_string, StructuredJsonError};
+use crate::json::validation::{valid_chars, contains_all_keys};
 use crate::roland::types::StateMap;
 use crate::roland::types::enums::{Layer, SliderSelect, KeyOffPosition, KeyTouchVelocity, KeyTouchCurveType, VoiceReserve, HarmonicBar, MidiChannel, ButtonFunction, PedalFunction, SliderFunction, SoundFocusType};
 use crate::roland::types::numeric::OffsetU8;
 use crate::json::serialize_map_keys_in_order;
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 #[schemars(rename = "LiveSetCommon")]
 pub struct Common {
     #[serde(deserialize_with = "serialize_chars_as_string::deserialize")]
     #[serde(serialize_with = "serialize_chars_as_string::serialize")]
     #[schemars(with = "serialize_chars_as_string::StringSchema::<16>")]
+    #[validate(custom = "valid_chars")]//TODO export this validation to the json schema (if possible)
     name: [char; 16], // 32-127 (ascii)
     #[serde(deserialize_with = "serialize_map_keys_in_order::deserialize")]
     #[serde(serialize_with = "serialize_map_keys_in_order::serialize")]
     #[schemars(with = "serialize_map_keys_in_order::OptionalMapSchema::<MidiChannel, VoiceReserve>")]
+    #[validate]
     voice_reserve: HashMap<MidiChannel, VoiceReserve>,
+    #[validate(range(min = 10, max = 500))]
     live_set_tempo: u16, // 10-500
+    //TODO validate that this doesn't use the 2 "system only" pedal functions, or make a separate enum
+    #[validate]
     fc1_assign: PedalFunction, // 0-144
+    //TODO validate that this doesn't use the 2 "system only" pedal functions, or make a separate enum
+    #[validate]
     fc2_assign: PedalFunction, // 0-144
     sound_focus_switch: bool,
+    #[validate]
     sound_focus_type: SoundFocusType, // 0-31
-    sound_focus_value: u8, // max 127
+    #[validate(range(max = 127))]
+    sound_focus_value: u8,
+    //TODO validate that this doesn't use the 3 "system only" button functions, or make a separate enum
     s1_assign: ButtonFunction, // 0-17
+    //TODO validate that this doesn't use the 3 "system only" button functions, or make a separate enum
     s2_assign: ButtonFunction, // 0-17
     s1_state: bool,
     s2_state: bool,
     unused_eq_settings: Bits<68>,
+    #[validate]
     key_touch_velocity: KeyTouchVelocity,
     key_touch_curve_type: KeyTouchCurveType,
+    #[validate]
     key_touch_curve_offset: OffsetU8<10>, // 0-19 (-10 - +9)
+    #[validate]
     key_touch_velocity_delay_sense: OffsetU8<64>, // 1-127 (-63 - +63)
+    #[validate]
     key_touch_velocity_key_follow: OffsetU8<64>, // 1-127 (-63 - +63)
     key_off_position: KeyOffPosition,
     slider_select: SliderSelect,
     #[serde(deserialize_with = "serialize_map_keys_in_order::deserialize")]
     #[serde(serialize_with = "serialize_map_keys_in_order::serialize")]
     #[schemars(with = "serialize_map_keys_in_order::RequiredMapSchema::<Layer, SliderFunction>")]
+    #[validate] //TODO confirm this still validates the Values even with the custom one set below
+    #[validate(custom = "contains_all_keys")]
     slider_assign: HashMap<Layer, SliderFunction>,
     split_switch_internal: bool,
     split_switch_external: bool,
     #[serde(deserialize_with = "serialize_map_keys_in_order::deserialize")]
     #[serde(serialize_with = "serialize_map_keys_in_order::serialize")]
     #[schemars(with = "serialize_map_keys_in_order::RequiredMapSchema::<Layer, StateMap<HarmonicBar>>")]
+    #[validate(custom = "contains_all_keys")]
     unused_harmonic_bar_assign: HashMap<Layer, StateMap<HarmonicBar>>, // index=(LOWER2:ON, LOWER2:OFF, LOWER1:ON, LOWER1:OFF, UPPER2:ON, UPPER2:OFF, UPPER1:ON, UPPER1:OFF)
     unused_mfx_control_destination: Layer,
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<7>::zero")]

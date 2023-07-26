@@ -1,6 +1,9 @@
 use schemars::JsonSchema;
 use strum::IntoEnumIterator;
 use strum_macros::{EnumIter, Display};
+use validator::Validate;
+
+use crate::json::validation::{validate_control_change, out_of_range_err};
 
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
 pub enum OutputPort { // 0-5
@@ -165,6 +168,8 @@ pub enum Pan { // 0-127 (L64 - 63R)
 
 impl Pan {
     const CENTRE: u8 = 64;
+    const MAX_L: u8 = 64;
+    const MAX_R: u8 = 63;
 }
 
 impl From<u8> for Pan {
@@ -192,6 +197,16 @@ impl Into<u8> for Pan {
 impl Default for Pan {
     fn default() -> Self {
         Self::from(0)
+    }
+}
+
+impl Validate for Pan {//TODO export this validation to the json schema
+    fn validate(&self) -> Result<(), validator::ValidationErrors> {
+        match self {
+            Self::Left(l) if *l > Self::MAX_L => Err(out_of_range_err("Left", &0, &Self::MAX_L)),
+            Self::Right(r) if *r > Self::MAX_R => Err(out_of_range_err("Right", &0, &Self::MAX_R)),
+            _ => Ok(())
+        }
     }
 }
 
@@ -398,6 +413,15 @@ impl Default for KeyTouchVelocity {
     }
 }
 
+impl Validate for KeyTouchVelocity {//TODO export this validation to the json schema
+    fn validate(&self) -> Result<(), validator::ValidationErrors> {
+        match self {
+            Self::Fixed(f) if *f < 1 || *f > 127 => Err(out_of_range_err("Fixed", &1, &127)),
+            _ => Ok(())
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
 pub enum KeyTouchCurveType { // 1-5
     SuperLight,
@@ -516,6 +540,10 @@ pub enum SoundFocusType { // 0-31
     Other(u8)
 }
 
+impl SoundFocusType {
+    const MAX_OTHER: u8 = 31;
+}
+
 impl From<u8> for SoundFocusType {
     fn from(value: u8) -> Self {
         if value <= 5 {
@@ -539,6 +567,15 @@ impl Into<u8> for SoundFocusType {
 impl Default for SoundFocusType {
     fn default() -> Self {
         Self::from(0)
+    }
+}
+
+impl Validate for SoundFocusType {//TODO export this validation to the json schema
+    fn validate(&self) -> Result<(), validator::ValidationErrors> {
+        match self {
+            Self::Other(o) if *o > Self::MAX_OTHER => Err(out_of_range_err("Other", &0, &Self::MAX_OTHER)),
+            _ => Ok(())
+        }
     }
 }
 
@@ -742,6 +779,10 @@ pub enum VoiceReserve {  // 0-64 (0-63, full)
     Full
 }
 
+impl VoiceReserve {
+    const MAX_VOICES: u8 = 63;
+}
+
 impl From<u8> for VoiceReserve {
     fn from(value: u8) -> Self {
         if value == 64 {
@@ -764,6 +805,15 @@ impl Into<u8> for VoiceReserve {
 impl Default for VoiceReserve {
     fn default() -> Self {
         Self::from(0)
+    }
+}
+
+impl Validate for VoiceReserve {//TODO export this validation to the json schema
+    fn validate(&self) -> Result<(), validator::ValidationErrors> {
+        match self {
+            Self::Voices(v) if *v > Self::MAX_VOICES => Err(out_of_range_err("Voices", &0, &Self::MAX_VOICES)),
+            _ => Ok(())
+        }
     }
 }
 
@@ -893,6 +943,16 @@ pub enum PedalFunction { // 0-146 (OFF, CC00 - CC127, BEND-UP, BEND-DOWN, AFTERT
     LiveSetDown // system only
 }
 
+impl Validate for PedalFunction {//TODO export this validation to the json schema
+    fn validate(&self) -> Result<(), validator::ValidationErrors> {
+        if let Self::ControlChange(cc) = self {
+            validate_control_change(cc)
+        } else {
+            Ok(())
+        }
+    }
+}
+
 impl From<u8> for PedalFunction {
     fn from(value: u8) -> Self {
         if value == 0 {
@@ -958,6 +1018,16 @@ impl Into<u8> for SliderFunction {
 impl Default for SliderFunction {
     fn default() -> Self {
         Self::from(0)
+    }
+}
+
+impl Validate for SliderFunction {//TODO export this validation to the json schema
+    fn validate(&self) -> Result<(), validator::ValidationErrors> {
+        if let Self::ControlChange(cc) = self {
+            validate_control_change(cc)
+        } else {
+            Ok(())
+        }
     }
 }
 

@@ -1,8 +1,9 @@
 use schemars::JsonSchema;
+use validator::Validate;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
-use crate::json::{Json, StructuredJson, StructuredJsonError};
-use crate::json::serialize_chars_as_string;
+use crate::json::{Json, StructuredJson, StructuredJsonError, serialize_chars_as_string};
+use crate::json::validation::valid_chars;
 use self::common::Common;
 use self::compressor::Compressor;
 use self::favorites::Favorites;
@@ -15,31 +16,37 @@ mod v_link;
 mod switch_assign;
 mod compressor;
 
-#[derive(Serialize, Deserialize, JsonSchema)]
+#[derive(Serialize, Deserialize, JsonSchema, Validate)]
 pub struct System {
     #[serde(skip_serializing_if="Bits::is_unit", default="Bits::<16>::unit")]
     padding1: Bits<16>, // 2 bytes padding
+    #[validate]
     common: Common, // 10 bytes
     unsure2: Bits<16>, // 2 bytes Common checksum?
     #[serde(skip_serializing_if="Bits::is_unit", default="Bits::<16>::unit")]
     padding2: Bits<16>, // 2 bytes padding
+    //#[validate]
     compressor: Compressor, // 14 bytes
     unsure3: Bits<16>, // 2 bytes Compressor checksum?
     #[serde(skip_serializing_if="Bits::is_unit", default="Bits::<16>::unit")]
     padding3: Bits<16>, // 2 bytes padding
+    //#[validate]
     v_link: VLink, // 4 bytes
     unsure4: Bits<16>, // 2 bytes VLink checksum?
     #[serde(skip_serializing_if="Bits::is_unit", default="Bits::<16>::unit")]
     padding4: Bits<16>, // 2 bytes padding
+    #[validate]
     favorites: Favorites, // 76 bytes
     unsure5: Bits<16>, // 2 bytes Favorites checksum?
     #[serde(skip_serializing_if="Bits::is_unit", default="Bits::<16>::unit")]
     padding5: Bits<16>, // 2 bytes padding
+    //#[validate]
     switch_assign: SwitchAssign, // 20 bytes
     unsure6: Bits<16>, // 2 bytes SwitchAssign checksum?
     #[serde(deserialize_with = "serialize_chars_as_string::deserialize")]
     #[serde(serialize_with = "serialize_chars_as_string::serialize")]
     #[schemars(with = "serialize_chars_as_string::StringSchema::<16>")]
+    #[validate(custom = "valid_chars")]//TODO export this validation to the json schema (if possible)
     hardware_version: [char; 16] // 16 bytes
 }
 

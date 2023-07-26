@@ -3,21 +3,28 @@ use std::fmt::Debug;
 
 use schemars::JsonSchema;
 use strum::IntoEnumIterator;
+use validator::Validate;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::serialize_map_keys_in_order;
+use crate::json::validation::contains_all_keys;
 use crate::roland::types::numeric::OffsetU8;
 use crate::roland::types::notes::PianoKey;
 use crate::roland::types::enums::{Layer, TransmitPort, MonoPolyOnly, Pan, MidiChannel};
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct ExternalLayer {
     range_lower: PianoKey, // max 87 (A0-C8)
     range_upper: PianoKey, // max 87 (A0-C8), must be >= lower
-    velocity_range_lower: u8, // 1-127
-    velocity_range_upper: u8, // 1-127
+    #[validate(range(min = 1, max = 127))]
+    velocity_range_lower: u8,
+    #[validate(range(min = 1, max = 127))]
+    velocity_range_upper: u8,
+    #[validate]
     velocity_sensitivity: OffsetU8<64>, // 1-127 (-63 - +63)
-    velocity_max: u8, // 1-127
+    #[validate(range(min = 1, max = 127))]
+    velocity_max: u8,
+    #[validate]
     transpose: OffsetU8<64>, // 16-112 (-48 - +48)
     enable: bool,
     damper: bool,
@@ -29,53 +36,75 @@ pub struct ExternalLayer {
     #[serde(deserialize_with = "serialize_map_keys_in_order::deserialize")]
     #[serde(serialize_with = "serialize_map_keys_in_order::serialize")]
     #[schemars(with = "serialize_map_keys_in_order::RequiredMapSchema::<Layer, bool>")]
+    #[validate(custom = "contains_all_keys")]
     control_slider: HashMap<Layer, bool>,
     transmit_port: TransmitPort,
     transmit_channel: MidiChannel,
     transmit_bank_select_msb: bool,
-    bank_select_msb: u8, // max 127
+    #[validate(range(max = 127))]
+    bank_select_msb: u8,
     transmit_bank_select_lsb: bool,
-    bank_select_lsb: u8, // max 127
+    #[validate(range(max = 127))]
+    bank_select_lsb: u8,
     transmit_program_change: bool,
-    program_change: u8, // max 127
+    #[validate(range(max = 127))]
+    program_change: u8,
     transmit_level: bool,
-    level: u8, // max 127
+    #[validate(range(max = 127))]
+    level: u8,
     transmit_pan: bool,
+    #[validate]
     pan: Pan,
     transmit_course_tune: bool,
+    #[validate]
     course_tune_semitones: OffsetU8<64>, // 16-112 (-48 - +48)
     transmit_fine_tine: bool,
+    #[validate]
     fine_tune_percent: OffsetU8<64>, // 14-114 (-50 - + 50)
     transmit_mono_poly: bool,
     mono_poly: MonoPolyOnly,
     transmit_portamento: bool,
     portamento_switch: bool,
     transmit_portamento_time: bool,
-    portamento_time: u8, // max 127
+    #[validate(range(max = 127))]
+    portamento_time: u8,
     transmit_cutoff: bool,
+    #[validate]
     cutoff: OffsetU8<64>, // max 127 (-63 - +63)
     transmit_resonance: bool,
+    #[validate]
     resonance: OffsetU8<64>, // max 127 (-63 - +63)
     transmit_attack_time: bool,
+    #[validate]
     attack_time: OffsetU8<64>, // max 127 (-63 - +63)
     transmit_decay_time: bool,
+    #[validate]
     decay_time: OffsetU8<64>, // max 127 (-63 - +63)
     transmit_release_time: bool,
+    #[validate]
     release_time: OffsetU8<64>, // max 127 (-63 - +63)
     transmit_pitch_bend_range: bool,
-    pitch_bend_range_semitones: u8, // max 48
+    #[validate(range(max = 48))]
+    pitch_bend_range_semitones: u8,
     transmit_modulation_depth: bool,
-    modulation_depth: u8, // max 127
+    #[validate(range(max = 127))]
+    modulation_depth: u8,
     transmit_chorus_level: bool,
-    chorus_level: u8, // max 127
+    #[validate(range(max = 127))]
+    chorus_level: u8,
     transmit_reverb_level: bool,
-    reverb_level: u8, // max 127
+    #[validate(range(max = 127))]
+    reverb_level: u8,
     transmit_control_change_1: bool,
-    control_change_1_number: u8, // max 127
-    control_change_1_value: u8, // max 127
+    #[validate(range(max = 127))]
+    control_change_1_number: u8,
+    #[validate(range(max = 127))]
+    control_change_1_value: u8,
     transmit_control_change_2: bool,
-    control_change_2_number: u8, // max 127
-    control_change_2_value: u8, // max 127
+    #[validate(range(max = 127))]
+    control_change_2_number: u8,
+    #[validate(range(max = 127))]
+    control_change_2_value: u8,
     s1: bool,
     s2: bool,
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<1>::zero")]

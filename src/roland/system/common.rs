@@ -1,5 +1,6 @@
 use std::fmt::Debug;
 use schemars::JsonSchema;
+use validator::Validate;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{StructuredJson, Json, StructuredJsonError};
@@ -7,10 +8,12 @@ use crate::roland::types::enums::{Polarity, SettingMode, OptionalMidiChannel, Pa
 use crate::roland::types::notes::KeyNote;
 use crate::roland::types::numeric::Offset1Dp;
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 #[schemars(rename = "SystemCommon")]
 pub struct Common {
-    master_tune_percent: Offset1Dp<1024>, // 24-2024 (-100.0 - +100.0)
+    #[validate]
+    master_tune_percent: Offset1Dp<1024, 24, 2024>, // 24-2024 (-100.0 - +100.0)
+    #[validate(range(max = 127))]
     master_level: u8, // max 127
     live_set_control_channel: OptionalMidiChannel,
     damper_polarity: Polarity,
@@ -19,7 +22,9 @@ pub struct Common {
     eq_mode: SettingMode,
     pedal_mode: SettingMode,
     s1_s2_mode: SettingMode,
+    #[validate]
     fc1_assign: PedalFunction, // 0-146
+    #[validate]
     fc2_assign: PedalFunction, // 0-146
     s1_assign: ButtonFunction, // 0-20
     s2_assign: ButtonFunction, // 0-20

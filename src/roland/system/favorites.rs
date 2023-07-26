@@ -1,20 +1,29 @@
 use std::fmt::Debug;
 use schemars::JsonSchema;
+use validator::Validate;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{StructuredJson, Json, StructuredJsonError};
 use crate::roland::types::enums::PatchCategory;
 use crate::roland::types::numeric::{OneIndexedU16, OneIndexedU8};
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct Favorites {
+    #[validate]
     one_touch_piano_current_number: OneIndexedU8,
+    #[validate]
     unused_one_touch_piano_current_number: [OneIndexedU8; 2],
+    #[validate]
     one_touch_e_piano_current_number: OneIndexedU8,
+    #[validate]
     unused_one_touch_e_piano_current_number: [OneIndexedU8; 2],
+    #[validate]
     bank_a: Bank,
+    #[validate]
     bank_b: Bank,
+    #[validate]
     bank_c: Bank,
+    #[validate]
     bank_d: Bank,
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<6>::zero")]
     unused: Bits<6>
@@ -98,9 +107,11 @@ impl Json for Favorites {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct Bank {
+    #[validate]
     favorites: [Favorite; Self::USED_FAVORITES],
+    #[validate]
     unused_favorites: [Favorite; Self::FAVORITES_PER_BANK - Self::USED_FAVORITES]
 }
 
@@ -139,10 +150,11 @@ impl Bank {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct Favorite {
     category: PatchCategory,
-    live_set_number: OneIndexedU16 // 0-299 (1-300)
+    #[validate]
+    live_set_number: OneIndexedU16
 }
 
 impl Favorite {

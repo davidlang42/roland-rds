@@ -3,25 +3,36 @@ use std::fmt::Debug;
 
 use schemars::JsonSchema;
 use strum::IntoEnumIterator;
+use validator::Validate;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::serialize_map_keys_in_order;
+use crate::json::validation::contains_all_keys;
 use crate::roland::types::enums::{Pan, Layer};
 use crate::roland::types::notes::PianoKey;
 use crate::roland::types::numeric::OffsetU8;
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct InternalLayer {
-    volume: u8, // max 127
+    #[validate(range(max = 127))]
+    volume: u8,
+    #[validate]
     pan: Pan,
-    chorus: u8, // max 127
-    reverb: u8, // max 127
+    #[validate(range(max = 127))]
+    chorus: u8,
+    #[validate(range(max = 127))]
+    reverb: u8,
     range_lower: PianoKey,
     range_upper: PianoKey,
-    velocity_range_lower: u8, // 1-127
-    velocity_range_upper: u8, // 1-127
+    #[validate(range(min = 1, max = 127))]
+    velocity_range_lower: u8,
+    #[validate(range(min = 1, max = 127))]
+    velocity_range_upper: u8,
+    #[validate]
     velocity_sensitivity: OffsetU8<64>, // 1-127 (-63 - +63)
-    velocity_max: u8, // 1-127
+    #[validate(range(min = 1, max = 127))]
+    velocity_max: u8,
+    #[validate]
     transpose: OffsetU8<64>, // 16-112 (-48 - +48)
     enable: bool,
     damper: bool,
@@ -32,6 +43,7 @@ pub struct InternalLayer {
     #[serde(deserialize_with = "serialize_map_keys_in_order::deserialize")]
     #[serde(serialize_with = "serialize_map_keys_in_order::serialize")]
     #[schemars(with = "serialize_map_keys_in_order::RequiredMapSchema::<Layer, bool>")]
+    #[validate(custom = "contains_all_keys")]
     control_slider: HashMap<Layer, bool>,
     s1: bool,
     s2: bool,

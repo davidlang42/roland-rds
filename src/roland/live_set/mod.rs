@@ -1,8 +1,10 @@
 use std::fmt::Debug;
 use schemars::JsonSchema;
+use validator::Validate;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{Json, StructuredJson, StructuredJsonError};
+use crate::json::validation::valid_boxed_elements;
 use self::chorus::Chorus;
 use self::common::Common;
 use self::mfx::Mfx;
@@ -19,16 +21,25 @@ mod song_rhythm;
 mod mfx;
 mod resonance;
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct LiveSet {
+    #[validate]
     common: Common, // 56 bytes
+    #[validate]
     song_rhythm: SongRhythm, // 6 bytes
+    #[validate]
     chorus: Chorus, // 42 bytes
+    #[validate]
     reverb: Reverb, // 42 bytes
+    #[validate]
     mfx: Mfx, // 76 bytes
+    #[validate(custom = "valid_boxed_elements")]
     unused_mfx: Box<[Mfx; 7]>, // 532 bytes
+    //#[validate]
     unused_resonance: Resonance, // 76 bytes
+    #[validate(custom = "valid_boxed_elements")]
     layers: Box<[LogicalLayer; 3]>, // 332*3=996 bytes
+    #[validate]
     unused_layer: LogicalLayer, // 332 bytes
     #[serde(skip_serializing_if="Bits::is_unit", default="Bits::<8>::unit")]
     padding: Bits<8>, // 1 byte

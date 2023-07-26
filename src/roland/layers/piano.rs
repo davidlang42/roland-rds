@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use schemars::JsonSchema;
 use strum::IntoEnumIterator;
+use validator::Validate;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::roland::tones::PianoToneNumber;
@@ -10,23 +11,33 @@ use crate::roland::types::notes::MidiNote;
 use crate::roland::types::numeric::{Offset1Dp, OffsetU8};
 use crate::json::serialize_map_keys_in_order;
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct PianoLayer {
+    #[validate]
     tone_number: PianoToneNumber,
-    stereo_width: u8, // max 63
+    #[validate(range(max = 63))]
+    stereo_width: u8,
     nuance: NuanceType,
-    duplex_scale_level: u8, // max 127
+    #[validate(range(max = 127))]
+    duplex_scale_level: u8,
+    #[validate]
     hammer_noise_level: OffsetU8<4>, // 2-6 (-2 - +2)
-    damper_noise_level: u8, // max 127
-    string_resonance_level: u8, // max 127
-    key_off_resonance_level: u8, // max 127
-    sound_lift: u8, // max 127
+    #[validate(range(max = 127))]
+    damper_noise_level: u8,
+    #[validate(range(max = 127))]
+    string_resonance_level: u8,
+    #[validate(range(max = 127))]
+    key_off_resonance_level: u8,
+    #[validate(range(max = 127))]
+    sound_lift: u8,
+    #[validate]
     tone_character: OffsetU8<8>, // 3-13 (-5 - +5)
     stretch_tune_type: StretchTuneType,
     #[serde(deserialize_with = "serialize_map_keys_in_order::deserialize")]
     #[serde(serialize_with = "serialize_map_keys_in_order::serialize")]
-    #[schemars(with = "serialize_map_keys_in_order::OptionalMapSchema::<MidiNote, Offset1Dp<512>>")]
-    micro_tune_percent: HashMap<MidiNote, Offset1Dp<512>>, // each 12-1012 (-50.0 - +50.0)
+    #[schemars(with = "serialize_map_keys_in_order::OptionalMapSchema::<MidiNote, Offset1Dp<512, 12, 1012>>")]
+    #[validate]
+    micro_tune_percent: HashMap<MidiNote, Offset1Dp<512, 12, 1012>>, // each 12-1012 (-50.0 - +50.0)
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<5>::zero")]
     unused: Bits<5>
 }

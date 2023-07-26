@@ -1,9 +1,10 @@
 use crate::bytes::{Bytes, BytesError, BitStream};
-use crate::json::{StructuredJson, Json, StructuredJsonError};
-use crate::json::serialize_array_as_vec;
+use crate::json::validation::validate_boxed_array;
+use crate::json::{StructuredJson, Json, StructuredJsonError, serialize_array_as_vec};
 use super::live_set::LiveSet;
 use super::system::System;
 use schemars::JsonSchema;
+use validator::{Validate, ValidationErrors};
 
 #[derive(Serialize, Deserialize, JsonSchema)]
 pub struct RD300NX {
@@ -15,6 +16,27 @@ pub struct RD300NX {
     pub e_piano: Box<[LiveSet; Self::E_PIANO_SETS]>,
     system: System
     // checksum: 2 bytes
+}
+
+impl Validate for RD300NX {
+    fn validate(&self) -> Result<(), ValidationErrors> {
+        let mut r = Ok(());
+        r = ValidationErrors::merge_all(r, "user_sets", validate_boxed_array(&self.user_sets));
+        r = ValidationErrors::merge_all(r, "piano", validate_boxed_array(&self.piano));
+        r = ValidationErrors::merge_all(r, "e_piano", validate_boxed_array(&self.e_piano));
+        r = ValidationErrors::merge(r, "system", self.system.validate());
+        r
+    }
+}
+
+impl RD300NX {
+    const USER_SETS: usize = 60;
+    const PIANO_SETS: usize = 10;
+    const E_PIANO_SETS: usize = 15;
+
+    pub fn all_live_sets(&self) -> Vec<&LiveSet> {
+        self.user_sets.iter().chain(self.piano.iter()).chain(self.e_piano.iter()).collect()
+    }
 }
 
 impl Bytes<183762> for RD300NX {
@@ -84,15 +106,5 @@ impl Json for RD300NX {
 
     fn from_json(json: String) -> Result<Self, serde_json::Error> {
         serde_json::from_str(&json)
-    }
-}
-
-impl RD300NX {
-    const USER_SETS: usize = 60;
-    const PIANO_SETS: usize = 10;
-    const E_PIANO_SETS: usize = 15;
-
-    pub fn all_live_sets(&self) -> Vec<&LiveSet> {
-        self.user_sets.iter().chain(self.piano.iter()).chain(self.e_piano.iter()).collect()
     }
 }

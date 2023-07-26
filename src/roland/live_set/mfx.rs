@@ -1,13 +1,15 @@
 use std::fmt::Debug;
 
 use schemars::JsonSchema;
+use validator::Validate;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{Json, StructuredJson, StructuredJsonError, serialize_default_terminated_array};
+use crate::json::validation::valid_boxed_elements;
 use crate::roland::types::enums::MfxType;
 use crate::roland::types::numeric::Parameter;
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct Mfx {
     enable: bool,
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<8>::zero")]
@@ -26,6 +28,7 @@ pub struct Mfx {
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
     #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 32>")]
+    #[validate(custom = "valid_boxed_elements")]
     parameters: Box<[Parameter; 32]>,
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<3>::zero")]
     unused3: Bits<3>

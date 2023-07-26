@@ -1,21 +1,25 @@
 use std::fmt::Debug;
 use schemars::JsonSchema;
+use validator::Validate;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{Json, StructuredJson, StructuredJsonError, serialize_default_terminated_array};
+use crate::json::validation::valid_boxed_elements;
 use crate::roland::types::enums::{OutputSelect, ChorusType};
 use crate::roland::types::numeric::Parameter;
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct Chorus {
     chorus_type: ChorusType,
-    depth: u8, // max 127
+    #[validate(range(max = 127))]
+    depth: u8,
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<2>::zero")]
     unused1: Bits<2>,
     output_select: OutputSelect,
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
     #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 20>")]
+    #[validate(custom = "valid_boxed_elements")]
     parameters: Box<[Parameter; 20]>,
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<1>::zero")]
     unused: Bits<1>

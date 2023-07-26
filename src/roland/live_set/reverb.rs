@@ -1,21 +1,25 @@
 use std::fmt::Debug;
 
 use schemars::JsonSchema;
+use validator::Validate;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{Json, StructuredJson, StructuredJsonError, serialize_default_terminated_array};
+use crate::json::validation::valid_boxed_elements;
 use crate::roland::types::numeric::Parameter;
 use crate::roland::types::enums::ReverbType;
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct Reverb {
     reverb_type: ReverbType,
-    depth: u8, // max 127
+    #[validate(range(max = 127))]
+    depth: u8,
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<2>::zero")]
     unused1: Bits<2>,
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
     #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 20>")]
+    #[validate(custom = "valid_boxed_elements")]
     parameters: Box<[Parameter; 20]>,
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<3>::zero")]
     unused2: Bits<3>

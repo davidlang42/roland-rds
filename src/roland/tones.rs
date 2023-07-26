@@ -1,6 +1,7 @@
 use schemars::{JsonSchema, schema::{SchemaObject, InstanceType, SubschemaValidation, NumberValidation, Schema}};
 use serde_json::Value;
 use serde::{de, Serialize, Deserialize};
+use validator::Validate;
 
 use crate::json::type_name_pretty;
 
@@ -130,6 +131,13 @@ impl JsonSchema for ToneNumber {
     }
 }
 
+impl Validate for ToneNumber {//TODO will this need to be exported to the json schema?
+    fn validate(&self) -> Result<(), validator::ValidationErrors> {
+        //TODO implement
+        todo!()
+    }
+}
+
 #[derive(Debug, Copy, Clone)]
 pub struct PianoToneNumber(u8); // 0-8 (1-9)
 
@@ -254,6 +262,13 @@ impl JsonSchema for PianoToneNumber {
             ..Default::default()
         }
         .into()
+    }
+}
+
+impl Validate for PianoToneNumber {//TODO will this need to be exported to the json schema?
+    fn validate(&self) -> Result<(), validator::ValidationErrors> {
+        //TODO implement
+        todo!()
     }
 }
 

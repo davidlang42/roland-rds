@@ -13,16 +13,23 @@ pub use tone::ToneLayer;
 pub use piano::PianoLayer;
 pub use e_piano::EPianoLayer;
 pub use tone_wheel::ToneWheelLayer;
+use validator::Validate;
 
 use crate::json::{Json, StructuredJson, StructuredJsonError};
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct LogicalLayer {
+    #[validate]
     pub internal: InternalLayer,
+    #[validate]
     pub external: ExternalLayer,
+    #[validate]
     pub tone: ToneLayer,
+    #[validate]
     pub piano: PianoLayer,
+    //#[validate]
     pub unused_e_piano: EPianoLayer,
+    //#[validate]
     pub unused_tone_wheel: ToneWheelLayer
 }
 

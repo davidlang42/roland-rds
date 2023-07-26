@@ -1,5 +1,6 @@
 use std::fmt::Debug;
 use schemars::JsonSchema;
+use validator::Validate;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::roland::types::enums::MonoPoly;
@@ -7,19 +8,29 @@ use crate::roland::types::numeric::OffsetU8;
 
 use super::super::tones::ToneNumber;
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct ToneLayer {
+    #[validate]
     tone_number: ToneNumber,
+    #[validate]
     course_tune_semitones: OffsetU8<64>, // 16-112 (-48 - +48)
+    #[validate]
     fine_tune_percent: OffsetU8<64>, // 14-114 (-50 - + 50)
     mono_poly: MonoPoly, // 0=Mono, 1=Poly, 2=Mono/Legato
-    pitch_bend_range_semitones: u8, // max 24
+    #[validate(range(max = 24))]
+    pitch_bend_range_semitones: u8,
     portamento_switch: bool,
-    portamento_time: u8, // max 127
+    #[validate(range(max = 127))]
+    portamento_time: u8,
+    #[validate]
     cutoff: OffsetU8<64>, // max 127 (-63 - +63)
+    #[validate]
     resonance: OffsetU8<64>, // max 127 (-63 - +63)
+    #[validate]
     attack_time: OffsetU8<64>, // max 127 (-63 - +63)
+    #[validate]
     decay_time: OffsetU8<64>, // max 127 (-63 - +63)
+    #[validate]
     release_time: OffsetU8<64>, // max 127 (-63 - +63)
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<10>::zero")]
     unused: Bits<10>

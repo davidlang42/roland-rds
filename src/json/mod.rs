@@ -11,6 +11,7 @@ pub mod serialize_chars_as_string;
 pub mod serialize_array_as_vec;
 pub mod serialize_default_terminated_array;
 pub mod serialize_map_keys_in_order;
+pub mod validation;
 
 pub fn type_name_pretty<T>() -> &'static str {
     let full_name = std::any::type_name::<T>();
