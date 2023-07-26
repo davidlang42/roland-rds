@@ -18,7 +18,7 @@ pub struct Common {
     #[serde(deserialize_with = "serialize_chars_as_string::deserialize")]
     #[serde(serialize_with = "serialize_chars_as_string::serialize")]
     #[schemars(with = "serialize_chars_as_string::StringSchema::<16>")]
-    #[validate(custom = "valid_chars")]//TODO export this validation to the json schema (if possible)
+    #[validate(custom = "valid_chars")]
     name: [char; 16], // 32-127 (ascii)
     #[serde(deserialize_with = "serialize_map_keys_in_order::deserialize")]
     #[serde(serialize_with = "serialize_map_keys_in_order::serialize")]

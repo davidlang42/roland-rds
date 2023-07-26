@@ -4,14 +4,20 @@ use serde::Serialize;
 use strum::IntoEnumIterator;
 use validator::{ValidationError, Validate, ValidationErrors};
 
-pub fn valid_chars<const N: usize>(_chars: &[char; N]) -> Result<(), ValidationError> {
-    // if username == "xXxShad0wxXx" {
-    //     // the value of the username will automatically be added later
-    //     return Err(ValidationError::new("terrible_username"));
-    // }
-    //Ok(())
-    //TODO implement
-    todo!()
+pub fn valid_chars<const N: usize>(chars: &[char; N]) -> Result<(), ValidationError> {
+    const MIN: u8 = 32;
+    const MAX: u8 = 127;
+    for (i, c) in chars.iter().enumerate() {
+        let ascii = *c as u8;
+        if ascii < MIN || ascii > MAX {
+            let mut e = ValidationError::new("Chracter out of range");
+            e.add_param(Cow::from("Min"), &MIN);
+            e.add_param(Cow::from("Max"), &MAX);
+            e.add_param(Cow::from("CharIndex"), &i);
+            return Err(e);
+        }
+    }
+    Ok(())
 }
 
 pub fn validate_boxed_array<T: Validate, const N: usize>(boxed_array: &Box<[T; N]>) -> Vec<Result<(), ValidationErrors>> {
