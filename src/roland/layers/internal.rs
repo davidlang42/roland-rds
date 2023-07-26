@@ -29,11 +29,11 @@ pub struct InternalLayer {
     #[validate(range(min = 1, max = 127))]
     velocity_range_upper: u8,
     #[validate]
-    velocity_sensitivity: OffsetU8<64>, // 1-127 (-63 - +63)
+    velocity_sensitivity: OffsetU8<64, 1, 127>, // 1-127 (-63 - +63)
     #[validate(range(min = 1, max = 127))]
     velocity_max: u8,
     #[validate]
-    transpose: OffsetU8<64>, // 16-112 (-48 - +48)
+    transpose: OffsetU8<64, 16, 112>, // 16-112 (-48 - +48)
     enable: bool,
     damper: bool,
     fc1: bool,

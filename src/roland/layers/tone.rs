@@ -13,9 +13,9 @@ pub struct ToneLayer {
     #[validate]
     tone_number: ToneNumber,
     #[validate]
-    course_tune_semitones: OffsetU8<64>, // 16-112 (-48 - +48)
+    course_tune_semitones: OffsetU8<64, 16, 112>, // 16-112 (-48 - +48)
     #[validate]
-    fine_tune_percent: OffsetU8<64>, // 14-114 (-50 - + 50)
+    fine_tune_percent: OffsetU8<64, 14, 114>, // 14-114 (-50 - + 50)
     mono_poly: MonoPoly, // 0=Mono, 1=Poly, 2=Mono/Legato
     #[validate(range(max = 24))]
     pitch_bend_range_semitones: u8,
@@ -23,15 +23,15 @@ pub struct ToneLayer {
     #[validate(range(max = 127))]
     portamento_time: u8,
     #[validate]
-    cutoff: OffsetU8<64>, // max 127 (-63 - +63)
+    cutoff: OffsetU8<64, 0, 127>, // max 127 (-64 - +63)
     #[validate]
-    resonance: OffsetU8<64>, // max 127 (-63 - +63)
+    resonance: OffsetU8<64, 0, 127>, // max 127 (-64 - +63)
     #[validate]
-    attack_time: OffsetU8<64>, // max 127 (-63 - +63)
+    attack_time: OffsetU8<64, 0, 127>, // max 127 (-64 - +63)
     #[validate]
-    decay_time: OffsetU8<64>, // max 127 (-63 - +63)
+    decay_time: OffsetU8<64, 0, 127>, // max 127 (-64 - +63)
     #[validate]
-    release_time: OffsetU8<64>, // max 127 (-63 - +63)
+    release_time: OffsetU8<64, 0, 127>, // max 127 (-64 - +63)
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<10>::zero")]
     unused: Bits<10>
 }

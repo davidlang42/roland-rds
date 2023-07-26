@@ -21,11 +21,11 @@ pub struct ExternalLayer {
     #[validate(range(min = 1, max = 127))]
     velocity_range_upper: u8,
     #[validate]
-    velocity_sensitivity: OffsetU8<64>, // 1-127 (-63 - +63)
+    velocity_sensitivity: OffsetU8<64, 1, 127>, // 1-127 (-63 - +63)
     #[validate(range(min = 1, max = 127))]
     velocity_max: u8,
     #[validate]
-    transpose: OffsetU8<64>, // 16-112 (-48 - +48)
+    transpose: OffsetU8<64, 16, 112>, // 16-112 (-48 - +48)
     enable: bool,
     damper: bool,
     fc1: bool,
@@ -57,10 +57,10 @@ pub struct ExternalLayer {
     pan: Pan,
     transmit_course_tune: bool,
     #[validate]
-    course_tune_semitones: OffsetU8<64>, // 16-112 (-48 - +48)
+    course_tune_semitones: OffsetU8<64, 16, 112>, // 16-112 (-48 - +48)
     transmit_fine_tine: bool,
     #[validate]
-    fine_tune_percent: OffsetU8<64>, // 14-114 (-50 - + 50)
+    fine_tune_percent: OffsetU8<64, 14, 114>, // 14-114 (-50 - + 50)
     transmit_mono_poly: bool,
     mono_poly: MonoPolyOnly,
     transmit_portamento: bool,
@@ -70,19 +70,19 @@ pub struct ExternalLayer {
     portamento_time: u8,
     transmit_cutoff: bool,
     #[validate]
-    cutoff: OffsetU8<64>, // max 127 (-63 - +63)
+    cutoff: OffsetU8<64, 0, 127>, // max 127 (-64 - +63)
     transmit_resonance: bool,
     #[validate]
-    resonance: OffsetU8<64>, // max 127 (-63 - +63)
+    resonance: OffsetU8<64, 0, 127>, // max 127 (-64 - +63)
     transmit_attack_time: bool,
     #[validate]
-    attack_time: OffsetU8<64>, // max 127 (-63 - +63)
+    attack_time: OffsetU8<64, 0, 127>, // max 127 (-64 - +63)
     transmit_decay_time: bool,
     #[validate]
-    decay_time: OffsetU8<64>, // max 127 (-63 - +63)
+    decay_time: OffsetU8<64, 0, 127>, // max 127 (-64 - +63)
     transmit_release_time: bool,
     #[validate]
-    release_time: OffsetU8<64>, // max 127 (-63 - +63)
+    release_time: OffsetU8<64, 0, 127>, // max 127 (-64 - +63)
     transmit_pitch_bend_range: bool,
     #[validate(range(max = 48))]
     pitch_bend_range_semitones: u8,

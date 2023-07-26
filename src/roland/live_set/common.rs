@@ -49,11 +49,11 @@ pub struct Common {
     key_touch_velocity: KeyTouchVelocity,
     key_touch_curve_type: KeyTouchCurveType,
     #[validate]
-    key_touch_curve_offset: OffsetU8<10>, // 0-19 (-10 - +9)
+    key_touch_curve_offset: OffsetU8<10, 0, 19>, // 0-19 (-10 - +9)
     #[validate]
-    key_touch_velocity_delay_sense: OffsetU8<64>, // 1-127 (-63 - +63)
+    key_touch_velocity_delay_sense: OffsetU8<64, 1, 127>, // 1-127 (-63 - +63)
     #[validate]
-    key_touch_velocity_key_follow: OffsetU8<64>, // 1-127 (-63 - +63)
+    key_touch_velocity_key_follow: OffsetU8<64, 1, 127>, // 1-127 (-63 - +63)
     key_off_position: KeyOffPosition,
     slider_select: SliderSelect,
     #[serde(deserialize_with = "serialize_map_keys_in_order::deserialize")]

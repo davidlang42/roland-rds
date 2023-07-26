@@ -21,7 +21,7 @@ pub struct PianoLayer {
     #[validate(range(max = 127))]
     duplex_scale_level: u8,
     #[validate]
-    hammer_noise_level: OffsetU8<4>, // 2-6 (-2 - +2)
+    hammer_noise_level: OffsetU8<4, 2, 6>, // 2-6 (-2 - +2)
     #[validate(range(max = 127))]
     damper_noise_level: u8,
     #[validate(range(max = 127))]
@@ -31,7 +31,7 @@ pub struct PianoLayer {
     #[validate(range(max = 127))]
     sound_lift: u8,
     #[validate]
-    tone_character: OffsetU8<8>, // 3-13 (-5 - +5)
+    tone_character: OffsetU8<8, 3, 13>, // 3-13 (-5 - +5)
     stretch_tune_type: StretchTuneType,
     #[serde(deserialize_with = "serialize_map_keys_in_order::deserialize")]
     #[serde(serialize_with = "serialize_map_keys_in_order::serialize")]

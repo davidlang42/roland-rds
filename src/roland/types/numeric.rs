@@ -4,11 +4,13 @@ use validator::Validate;
 use crate::json::type_name_pretty;
 use crate::json::validation::out_of_range_err;
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq)]
 pub struct Parameter(i16); // 12768-52768 (-20000 - +20000)
 
 impl Parameter {
     const ZERO: u16 = 32768;
+    const MIN: i16 = -20000;
+    const MAX: i16 = 20000;
 }
 
 impl From<u16> for Parameter {
@@ -37,21 +39,44 @@ impl Default for Parameter {
     }
 }
 
-impl Validate for Parameter {//TODO export this validation to the json schema
-    fn validate(&self) -> Result<(), validator::ValidationErrors> {
-        //TODO implement
-        todo!()
+impl JsonSchema for Parameter {
+    fn schema_name() -> String {
+        type_name_pretty::<Parameter>().into()
+    }
+
+    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        SchemaObject {
+            instance_type: Some(InstanceType::Integer.into()),
+            number: Some(Box::new(NumberValidation {
+                minimum: Some(Self::MIN as f64),
+                maximum: Some(Self::MAX as f64),
+                ..Default::default()
+            })),
+            format: Some("uint8".into()),
+            ..Default::default()
+        }
+        .into()
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, JsonSchema)]
-pub struct OffsetU8<const OFFSET: u8>(i8); // MIN(0)-MAX(255) (MIN-OFFSET - MAX-OFFSET)
+impl Validate for Parameter {
+    fn validate(&self) -> Result<(), validator::ValidationErrors> {
+        if self.0 < Self::MIN || self.0 > Self::MAX {
+            Err(out_of_range_err("0", &Self::MIN, &Self::MAX))
+        } else {
+            Ok(())
+        }
+    }
+}
 
-impl<const O: u8> OffsetU8<O> {
+#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+pub struct OffsetU8<const OFFSET: u8, const MIN: u8, const MAX: u8>(i8); // MIN(0)-MAX(255) (MIN-OFFSET - MAX-OFFSET)
+
+impl<const O: u8, const L: u8, const H: u8> OffsetU8<O, L, H> {
     const ZERO: u8 = O;
 }
 
-impl<const O: u8> From<u8> for OffsetU8<O> {
+impl<const O: u8, const L: u8, const H: u8> From<u8> for OffsetU8<O, L, H> {
     fn from(value: u8) -> Self {
         if value >= Self::ZERO {
             Self((value - Self::ZERO) as i8)
@@ -61,7 +86,7 @@ impl<const O: u8> From<u8> for OffsetU8<O> {
     }
 }
 
-impl<const O: u8> Into<u8> for OffsetU8<O> {
+impl<const O: u8, const L: u8, const H: u8> Into<u8> for OffsetU8<O, L, H> {
     fn into(self) -> u8 {
         if self.0 >= 0 {
             self.0 as u8 + Self::ZERO
@@ -71,16 +96,41 @@ impl<const O: u8> Into<u8> for OffsetU8<O> {
     }
 }
 
-impl<const O: u8> Default for OffsetU8<O> {
+impl<const O: u8, const L: u8, const H: u8> Default for OffsetU8<O, L, H> {
     fn default() -> Self {
         Self::from(Self::ZERO)
     }
 }
 
-impl<const O: u8> Validate for OffsetU8<O> {//TODO export this validation to the json schema
+impl<const O: u8, const L: u8, const H: u8> JsonSchema for OffsetU8<O, L, H> {
+    fn schema_name() -> String {
+        type_name_pretty::<OffsetU8<O, L, H>>().into()
+    }
+
+    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        SchemaObject {
+            instance_type: Some(InstanceType::Integer.into()),
+            number: Some(Box::new(NumberValidation {
+                minimum: Some(Self::from(L).0 as f64),
+                maximum: Some(Self::from(H).0 as f64),
+                ..Default::default()
+            })),
+            format: Some("int8".into()),
+            ..Default::default()
+        }
+        .into()
+    }
+}
+
+impl<const O: u8, const L: u8, const H: u8> Validate for OffsetU8<O, L, H> {
     fn validate(&self) -> Result<(), validator::ValidationErrors> {
-        //TODO implement
-        todo!()
+        let min = Self::from(L);
+        let max = Self::from(H);
+        if self.0 < min.0 || self.0 > max.0 {
+            Err(out_of_range_err("0", &min.0, &max.0))
+        } else {
+            Ok(())
+        }
     }
 }
 
@@ -129,7 +179,7 @@ impl JsonSchema for OneIndexedU16 {
     }
 }
 
-impl Validate for OneIndexedU16 {//TODO export this validation to the json schema
+impl Validate for OneIndexedU16 {
     fn validate(&self) -> Result<(), validator::ValidationErrors> {
         if self.0 < 1 || self.0 > Self::MAX {
             Err(out_of_range_err("0", &1, &Self::MAX))
@@ -184,7 +234,7 @@ impl JsonSchema for OneIndexedU8 {
     }
 }
 
-impl Validate for OneIndexedU8 {//TODO export this validation to the json schema
+impl Validate for OneIndexedU8 {
     fn validate(&self) -> Result<(), validator::ValidationErrors> {
         if self.0 < 1 || self.0 > Self::MAX {
             Err(out_of_range_err("0", &1, &Self::MAX))
@@ -240,7 +290,7 @@ impl<const O: u16, const L: u16, const H: u16> JsonSchema for Offset1Dp<O, L, H>
     }
 }
 
-impl<const O: u16, const L: u16, const H: u16> Validate for Offset1Dp<O, L, H> {//TODO export this validation to the json schema
+impl<const O: u16, const L: u16, const H: u16> Validate for Offset1Dp<O, L, H> {
     fn validate(&self) -> Result<(), validator::ValidationErrors> {
         let min = Self::from(L);
         let max = Self::from(H);
