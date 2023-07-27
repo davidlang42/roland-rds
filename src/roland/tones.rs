@@ -1,9 +1,9 @@
-use schemars::{JsonSchema, schema::{SchemaObject, InstanceType, SubschemaValidation, NumberValidation, Schema}};
+use schemars::{JsonSchema, schema::Schema};
 use serde_json::Value;
 use serde::{de, Serialize, Deserialize};
 use validator::Validate;
 
-use crate::json::type_name_pretty;
+use crate::json::{type_name_pretty, schema::{u16_schema, one_of_schema, enum_schema}};
 
 pub struct Tone {
     _number: u16,
@@ -96,39 +96,20 @@ impl JsonSchema for ToneNumber {
     }
 
     fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-        let mut names = Vec::new();
-        for tone in &TONE_LIST {
-            names.push(Value::String(tone.numbered_string()));
-        }
-        let max = names.len();
-        let enum_schema = Schema::Object(SchemaObject {
-            instance_type: Some(InstanceType::String.into()),
-            enum_values: Some(names),
-            ..Default::default()
-        });
-        let numeric_schema = Schema::Object(SchemaObject {
-            instance_type: Some(InstanceType::Integer.into()),
-            number: Some(Box::new(NumberValidation {
-                minimum: Some(1.0),
-                maximum: Some(max as f64),
-                ..Default::default()
-            })),
-            format: Some("uint16".into()),
-            ..Default::default()
-        });
-        SchemaObject {
-            instance_type: Some(InstanceType::Null.into()),
-            subschemas: Some(Box::new(SubschemaValidation {
-                one_of: Some(vec![
-                    enum_schema,
-                    numeric_schema
-                ]),
-                ..Default::default()
-            })),
-            ..Default::default()
-        }
-        .into()
+        tone_schema(TONE_LIST.iter())
     }
+}
+
+fn tone_schema<'a, I: Iterator<Item = &'a Tone>>(allowed_tones: I) -> Schema {
+    let mut names = Vec::new();
+    for tone in allowed_tones {
+        names.push(tone.numbered_string());
+    }
+    let max = names.len() as u16;
+    one_of_schema(vec![
+        enum_schema(names),
+        u16_schema(1, max)
+    ])
 }
 
 impl Validate for ToneNumber {//TODO will this need to be exported to the json schema?
@@ -230,38 +211,7 @@ impl JsonSchema for PianoToneNumber {
     }
 
     fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-        let mut names = Vec::new();
-        for tone in Self::piano_tones_list() {
-            names.push(Value::String(tone.numbered_string()));
-        }
-        let max = names.len();
-        let enum_schema = Schema::Object(SchemaObject {
-            instance_type: Some(InstanceType::String.into()),
-            enum_values: Some(names),
-            ..Default::default()
-        });
-        let numeric_schema = Schema::Object(SchemaObject {
-            instance_type: Some(InstanceType::Integer.into()),
-            number: Some(Box::new(NumberValidation {
-                minimum: Some(1.0),
-                maximum: Some(max as f64),
-                ..Default::default()
-            })),
-            format: Some("uint8".into()),
-            ..Default::default()
-        });
-        SchemaObject {
-            instance_type: Some(InstanceType::Null.into()),
-            subschemas: Some(Box::new(SubschemaValidation {
-                one_of: Some(vec![
-                    enum_schema,
-                    numeric_schema
-                ]),
-                ..Default::default()
-            })),
-            ..Default::default()
-        }
-        .into()
+        tone_schema(Self::piano_tones_list().into_iter())
     }
 }
 

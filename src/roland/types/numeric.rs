@@ -1,7 +1,7 @@
-use schemars::{JsonSchema, schema::{NumberValidation, SchemaObject, InstanceType}};
+use schemars::JsonSchema;
 use validator::Validate;
 
-use crate::json::type_name_pretty;
+use crate::json::{type_name_pretty, schema::{u8_schema, i16_schema, i8_schema, u16_schema, double_schema}};
 use crate::json::validation::out_of_range_err;
 
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq)]
@@ -45,17 +45,7 @@ impl JsonSchema for Parameter {
     }
 
     fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-        SchemaObject {
-            instance_type: Some(InstanceType::Integer.into()),
-            number: Some(Box::new(NumberValidation {
-                minimum: Some(Self::MIN as f64),
-                maximum: Some(Self::MAX as f64),
-                ..Default::default()
-            })),
-            format: Some("uint8".into()),
-            ..Default::default()
-        }
-        .into()
+        i16_schema(Self::MIN, Self::MAX)
     }
 }
 
@@ -108,17 +98,7 @@ impl<const O: u8, const L: u8, const H: u8> JsonSchema for OffsetU8<O, L, H> {
     }
 
     fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-        SchemaObject {
-            instance_type: Some(InstanceType::Integer.into()),
-            number: Some(Box::new(NumberValidation {
-                minimum: Some(Self::from(L).0 as f64),
-                maximum: Some(Self::from(H).0 as f64),
-                ..Default::default()
-            })),
-            format: Some("int8".into()),
-            ..Default::default()
-        }
-        .into()
+        i8_schema(Self::from(L).0, Self::from(H).0)
     }
 }
 
@@ -165,17 +145,7 @@ impl JsonSchema for OneIndexedU16 {
     }
 
     fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-        SchemaObject {
-            instance_type: Some(InstanceType::Integer.into()),
-            number: Some(Box::new(NumberValidation {
-                minimum: Some(1.0),
-                maximum: Some(Self::MAX as f64),
-                ..Default::default()
-            })),
-            format: Some("uint16".into()),
-            ..Default::default()
-        }
-        .into()
+        u16_schema(1, Self::MAX)
     }
 }
 
@@ -220,17 +190,7 @@ impl JsonSchema for OneIndexedU8 {
     }
 
     fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-        SchemaObject {
-            instance_type: Some(InstanceType::Integer.into()),
-            number: Some(Box::new(NumberValidation {
-                minimum: Some(1.0),
-                maximum: Some(Self::MAX as f64),
-                ..Default::default()
-            })),
-            format: Some("uint8".into()),
-            ..Default::default()
-        }
-        .into()
+        u8_schema(1, Self::MAX)
     }
 }
 
@@ -275,18 +235,7 @@ impl<const O: u16, const L: u16, const H: u16> JsonSchema for Offset1Dp<O, L, H>
     }
 
     fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-        SchemaObject {
-            instance_type: Some(InstanceType::Number.into()),
-            number: Some(Box::new(NumberValidation {
-                multiple_of: Some(0.1),
-                minimum: Some(Self::from(L).0),
-                maximum: Some(Self::from(H).0),
-                ..Default::default()
-            })),
-            format: Some("double".into()),
-            ..Default::default()
-        }
-        .into()
+        double_schema(Self::from(L).0, Self::from(H).0, 0.1)
     }
 }
 
