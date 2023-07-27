@@ -4,7 +4,7 @@ use validator::Validate;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{StructuredJson, Json, StructuredJsonError};
-use crate::roland::types::enums::{Polarity, SettingMode, OptionalMidiChannel, PartMode, Temperament, SystemButtonFunction, SystemPedalFunction};
+use crate::roland::types::enums::{Polarity, SettingMode, OptionalMidiChannel, PartMode, ButtonFunction, PedalFunction, Temperament};
 use crate::roland::types::notes::KeyNote;
 use crate::roland::types::numeric::Offset1Dp;
 
@@ -23,11 +23,11 @@ pub struct Common {
     pedal_mode: SettingMode,
     s1_s2_mode: SettingMode,
     #[validate]
-    fc1_assign: SystemPedalFunction,
+    fc1_assign: PedalFunction, // 0-146
     #[validate]
-    fc2_assign: SystemPedalFunction,
-    s1_assign: SystemButtonFunction,
-    s2_assign: SystemButtonFunction,
+    fc2_assign: PedalFunction, // 0-146
+    s1_assign: ButtonFunction, // 0-20
+    s2_assign: ButtonFunction, // 0-20
     tone_remain: bool,
     receive_gm_gm2_system_on: bool,
     receive_gs_reset: bool,

@@ -30,16 +30,16 @@ pub struct Common {
     #[validate(range(min = 10, max = 500))]
     live_set_tempo: u16,
     #[validate]
-    fc1_assign: PedalFunction,
+    fc1_assign: PedalFunction, // 0-144
     #[validate]
-    fc2_assign: PedalFunction,
+    fc2_assign: PedalFunction, // 0-144
     sound_focus_switch: bool,
     #[validate]
     sound_focus_type: SoundFocusType,
     #[validate(range(max = 127))]
     sound_focus_value: u8,
-    s1_assign: ButtonFunction,
-    s2_assign: ButtonFunction,
+    s1_assign: ButtonFunction, // 0-17
+    s2_assign: ButtonFunction, // 0-17
     s1_state: bool,
     s2_state: bool,
     unused_eq_settings: Bits<68>,
