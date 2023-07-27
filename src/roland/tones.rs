@@ -3,7 +3,7 @@ use serde_json::Value;
 use serde::{de, Serialize, Deserialize};
 use validator::Validate;
 
-use crate::json::{type_name_pretty, schema::{u16_schema, one_of_schema, enum_schema}};
+use crate::json::{type_name_pretty, schema::{u16_schema, one_of_schema, enum_schema}, validation::out_of_range_err};
 
 pub struct Tone {
     _number: u16,
@@ -90,6 +90,17 @@ impl<'de> Deserialize<'de> for ToneNumber {
     }
 }
 
+impl Validate for ToneNumber {
+    fn validate(&self) -> Result<(), validator::ValidationErrors> {
+        let max = TONE_LIST.len() as u16;
+        if self.0 < 1 || self.0 > max {
+            Err(out_of_range_err("0", &1, &max))
+        } else {
+            Ok(())
+        }
+    }
+}
+
 impl JsonSchema for ToneNumber {
     fn schema_name() -> String {
         type_name_pretty::<ToneNumber>().into()
@@ -110,13 +121,6 @@ fn tone_schema<'a, I: Iterator<Item = &'a Tone>>(allowed_tones: I) -> Schema {
         enum_schema(names),
         u16_schema(1, max)
     ])
-}
-
-impl Validate for ToneNumber {//TODO will this need to be exported to the json schema?
-    fn validate(&self) -> Result<(), validator::ValidationErrors> {
-        //TODO implement
-        todo!()
-    }
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -215,10 +219,14 @@ impl JsonSchema for PianoToneNumber {
     }
 }
 
-impl Validate for PianoToneNumber {//TODO will this need to be exported to the json schema?
+impl Validate for PianoToneNumber {
     fn validate(&self) -> Result<(), validator::ValidationErrors> {
-        //TODO implement
-        todo!()
+        let max = Self::piano_tones_list().len() as u8;
+        if self.0 < 1 || self.0 > max {
+            Err(out_of_range_err("0", &1, &max))
+        } else {
+            Ok(())
+        }
     }
 }
 
