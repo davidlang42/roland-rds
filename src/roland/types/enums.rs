@@ -941,7 +941,47 @@ impl Default for PartMode {
 }
 
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
-pub enum ButtonFunction { // 0-20
+pub enum ButtonFunction { // 0-17
+    Off,
+    CouplePlusOctave,
+    CoupleMinusOctave,
+    CouplePlus2Octave,
+    CoupleMinus2Octave,
+    CouplePlus5th,
+    CoupleMinus4th,
+    OctaveUp,
+    OctaveDown,
+    StartStop,
+    TapTempo,
+    SongPlayStop,
+    SongReset,
+    SongBackward,
+    SongForward,
+    Mfx1Switch,
+    UnusedMfx2Switch,
+    RotarySpeed
+}
+
+impl From<u8> for ButtonFunction {
+    fn from(value: u8) -> Self {
+        Self::iter().nth(value as usize).unwrap()
+    }
+}
+
+impl Into<u8> for ButtonFunction {
+    fn into(self) -> u8 {
+        Self::iter().position(|s| s == self).unwrap() as u8
+    }
+}
+
+impl Default for ButtonFunction {
+    fn default() -> Self {
+        Self::from(0)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
+pub enum SystemButtonFunction { // 0-20
     Off,
     CouplePlusOctave,
     CoupleMinusOctave,
@@ -965,26 +1005,26 @@ pub enum ButtonFunction { // 0-20
     PanelLock // system only
 }
 
-impl From<u8> for ButtonFunction {
+impl From<u8> for SystemButtonFunction {
     fn from(value: u8) -> Self {
         Self::iter().nth(value as usize).unwrap()
     }
 }
 
-impl Into<u8> for ButtonFunction {
+impl Into<u8> for SystemButtonFunction {
     fn into(self) -> u8 {
         Self::iter().position(|s| s == self).unwrap() as u8
     }
 }
 
-impl Default for ButtonFunction {
+impl Default for SystemButtonFunction {
     fn default() -> Self {
         Self::from(0)
     }
 }
 
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
-pub enum PedalFunction { // 0-146 (OFF, CC00 - CC127, BEND-UP, BEND-DOWN, AFTERTOUCH, OCT-UP, OCT-DOWN, START/STOP, TAP-TEMPO, RHY PLY/STP, SONG PLY/STP, SONG RESET, MFX1 SW, MFX2 SW, MFX1 CONTROL, MFX2 CONTROL, ROTARY SPEED, SOUND FOCUS VALUE, LIVE SET UP, LIVE SET DOWN)
+pub enum PedalFunction { // 0-144 (OFF, CC00 - CC127, BEND-UP, BEND-DOWN, AFTERTOUCH, OCT-UP, OCT-DOWN, START/STOP, TAP-TEMPO, RHY PLY/STP, SONG PLY/STP, SONG RESET, MFX1 SW, MFX2 SW, MFX1 CONTROL, MFX2 CONTROL, ROTARY SPEED, SOUND FOCUS VALUE)
     Off,
     ControlChange(u8),
     BendUp,
@@ -1000,9 +1040,7 @@ pub enum PedalFunction { // 0-146 (OFF, CC00 - CC127, BEND-UP, BEND-DOWN, AFTERT
     Mfx1Switch,
     UnusedMfx2Switch,
     RotarySpeed,
-    SoundFocusValue,
-    LiveSetUp, // system only
-    LiveSetDown // system only
+    SoundFocusValue
 }
 
 impl Validate for PedalFunction {
@@ -1051,6 +1089,79 @@ impl JsonSchema for PedalFunction {
     fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
         one_of_schema(vec![
             enum_except_one_schema::<PedalFunction>("ControlChange"),
+            single_property_schema("ControlChange", u8_schema(0, 127))
+        ])
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
+pub enum SystemPedalFunction { // 0-146 (OFF, CC00 - CC127, BEND-UP, BEND-DOWN, AFTERTOUCH, OCT-UP, OCT-DOWN, START/STOP, TAP-TEMPO, RHY PLY/STP, SONG PLY/STP, SONG RESET, MFX1 SW, MFX2 SW, MFX1 CONTROL, MFX2 CONTROL, ROTARY SPEED, SOUND FOCUS VALUE, LIVE SET UP, LIVE SET DOWN)
+    Off,
+    ControlChange(u8),
+    BendUp,
+    BendDown,
+    AfterTouch,
+    OctaveUp,
+    OctaveDown,
+    StartStop,
+    TapTempo,
+    RhythmPlayStop,
+    SongPlayStop,
+    SongReset,
+    Mfx1Switch,
+    UnusedMfx2Switch,
+    RotarySpeed,
+    SoundFocusValue,
+    LiveSetUp, // system only
+    LiveSetDown // system only
+}
+
+impl Validate for SystemPedalFunction {
+    fn validate(&self) -> Result<(), validator::ValidationErrors> {
+        if let Self::ControlChange(cc) = self {
+            validate_control_change(cc)
+        } else {
+            Ok(())
+        }
+    }
+}
+
+impl From<u8> for SystemPedalFunction {
+    fn from(value: u8) -> Self {
+        if value == 0 {
+            Self::Off
+        } else if value <= 128 {
+            Self::ControlChange(value - 1)
+        } else {
+            Self::iter().nth(value as usize - 127).unwrap()
+        }
+    }
+}
+
+impl Into<u8> for SystemPedalFunction {
+    fn into(self) -> u8 {
+        match self {
+            Self::Off => 0,
+            Self::ControlChange(value) => value + 1,
+            _ => Self::iter().position(|s| s == self).unwrap() as u8 + 127
+        }
+    }
+}
+
+impl Default for SystemPedalFunction {
+    fn default() -> Self {
+        Self::from(0)
+    }
+}
+
+impl JsonSchema for SystemPedalFunction {
+    fn schema_name() -> String {
+        type_name_pretty::<SystemPedalFunction>().into()
+    }
+
+    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        one_of_schema(vec![
+            enum_except_one_schema::<SystemPedalFunction>("ControlChange"),
             single_property_schema("ControlChange", u8_schema(0, 127))
         ])
     }

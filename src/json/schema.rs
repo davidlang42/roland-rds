@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use schemars::{schema::{Schema, SchemaObject, InstanceType, NumberValidation, SubschemaValidation, self, ObjectValidation}, Set, Map};
+use schemars::{schema::{Schema, SchemaObject, InstanceType, NumberValidation, SubschemaValidation, ObjectValidation}, Set, Map};
 use serde_json::Value;
 use strum::IntoEnumIterator;
 

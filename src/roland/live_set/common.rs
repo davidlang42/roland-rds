@@ -29,21 +29,17 @@ pub struct Common {
     voice_reserve: HashMap<MidiChannel, VoiceReserve>,
     #[validate(range(min = 10, max = 500))]
     live_set_tempo: u16,
-    //TODO validate that this doesn't use the 2 "system only" pedal functions, or make a separate enum
     #[validate]
-    fc1_assign: PedalFunction, // 0-144
-    //TODO validate that this doesn't use the 2 "system only" pedal functions, or make a separate enum
+    fc1_assign: PedalFunction,
     #[validate]
-    fc2_assign: PedalFunction, // 0-144
+    fc2_assign: PedalFunction,
     sound_focus_switch: bool,
     #[validate]
     sound_focus_type: SoundFocusType,
     #[validate(range(max = 127))]
     sound_focus_value: u8,
-    //TODO validate that this doesn't use the 3 "system only" button functions, or make a separate enum
-    s1_assign: ButtonFunction, // 0-17
-    //TODO validate that this doesn't use the 3 "system only" button functions, or make a separate enum
-    s2_assign: ButtonFunction, // 0-17
+    s1_assign: ButtonFunction,
+    s2_assign: ButtonFunction,
     s1_state: bool,
     s2_state: bool,
     unused_eq_settings: Bits<68>,
