@@ -82,3 +82,11 @@ pub fn out_of_range_err<T: Serialize>(field: &'static str, min: &T, max: &T) -> 
     e.add(field, range_err);
     e
 }
+
+pub fn unused_by_rd300nx_err<T: Serialize>(field: &'static str, unused_value: &T) -> ValidationErrors {
+    let mut e = ValidationErrors::new();
+    let mut unused_err = ValidationError::new("Selected value not available on the RD300NX");
+    unused_err.add_param(Cow::from("UnusedValue"), unused_value);
+    e.add(field, unused_err);
+    e
+}

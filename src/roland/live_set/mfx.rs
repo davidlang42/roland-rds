@@ -14,6 +14,7 @@ pub struct Mfx {
     enable: bool,
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<8>::zero")]
     unused1: Bits<8>,
+    #[validate]
     mfx_type: MfxType,
     #[serde(skip_serializing_if="Bits::is_unit", default="Bits::<8>::unit")]
     padding1: Bits<8>,

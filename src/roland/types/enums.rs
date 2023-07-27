@@ -3,7 +3,7 @@ use strum::IntoEnumIterator;
 use strum_macros::{EnumIter, Display};
 use validator::Validate;
 
-use crate::json::{validation::{validate_control_change, out_of_range_err}, type_name_pretty, schema::{one_of_schema, enum_schema, u8_schema, single_property_schema, enum_except_one_schema}};
+use crate::json::{validation::{validate_control_change, out_of_range_err, unused_by_rd300nx_err}, type_name_pretty, schema::{one_of_schema, enum_schema, u8_schema, single_property_schema, enum_except_one_schema}};
 
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
 pub enum OutputPort { // 0-5
@@ -566,7 +566,6 @@ impl Default for ReverbType {
 pub enum SoundFocusType { // 0-31
     PianoType1,
     PianoType2,
-    //TODO validate that the RD700NX only value is not used
     UnusedEPianoType, // RD700NX only
     SoundLift,
     Enhancer,
@@ -609,6 +608,7 @@ impl Validate for SoundFocusType {
     fn validate(&self) -> Result<(), validator::ValidationErrors> {
         match self {
             Self::Other(o) if *o < Self::MIN_OTHER || *o > Self::MAX_OTHER => Err(out_of_range_err("Other", &Self::MIN_OTHER, &Self::MAX_OTHER)),
+            Self::UnusedEPianoType => Err(unused_by_rd300nx_err("0", self)),
             _ => Ok(())
         }
     }
@@ -707,7 +707,6 @@ pub enum MfxType { // 0-255
     ChorusDelay,
     FlangerDelay,
     ChorusFlanger,
-    //TODO validate that the RD700NX only values are not used
     UnusedVrChorus, //RD700NX only
     UnusedVrTremolo, //RD700NX only
     UnusedVrAutoWah, //RD700NX only
@@ -742,6 +741,21 @@ impl Into<u8> for MfxType {
 impl Default for MfxType {
     fn default() -> Self {
         Self::from(0)
+    }
+}
+
+impl Validate for MfxType {
+    fn validate(&self) -> Result<(), validator::ValidationErrors> {
+        match self {
+            Self::UnusedVrChorus => Err(unused_by_rd300nx_err("0", self)),
+            Self::UnusedVrTremolo => Err(unused_by_rd300nx_err("0", self)),
+            Self::UnusedVrAutoWah => Err(unused_by_rd300nx_err("0", self)),
+            Self::UnusedVrPhaser => Err(unused_by_rd300nx_err("0", self)),
+            Self::UnusedOrganMulti => Err(unused_by_rd300nx_err("0", self)),
+            Self::UnusedLinedrive => Err(unused_by_rd300nx_err("0", self)),
+            Self::UnusedSmallPhaser => Err(unused_by_rd300nx_err("0", self)),
+            _ => Ok(())
+        }
     }
 }
 
