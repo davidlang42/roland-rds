@@ -57,7 +57,7 @@ pub struct Common {
     #[serde(deserialize_with = "serialize_map_keys_in_order::deserialize")]
     #[serde(serialize_with = "serialize_map_keys_in_order::serialize")]
     #[schemars(with = "serialize_map_keys_in_order::RequiredMapSchema::<Layer, SliderFunction>")]
-    #[validate] //TODO confirm this still validates the Values even with the custom one set below
+    #[validate]
     #[validate(custom = "contains_all_keys")]
     slider_assign: HashMap<Layer, SliderFunction>,
     split_switch_internal: bool, //TODO validate that split_switch is ON if layers have non-full ranges
