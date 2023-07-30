@@ -33,13 +33,15 @@ pub struct LiveSet {
     reverb: Reverb, // 42 bytes
     #[validate]
     mfx: Mfx, // 76 bytes
-    #[validate(custom = "valid_boxed_elements")]
+    // don't validate because it can contain values unused by the RD300NX
+    //#[validate(custom = "valid_boxed_elements")]
     unused_mfx: Box<[Mfx; 7]>, // 532 bytes
     //#[validate]
     unused_resonance: Resonance, // 76 bytes
     #[validate(custom = "valid_boxed_elements")]
     layers: Box<[LogicalLayer; 3]>, // 332*3=996 bytes
-    #[validate]
+    // don't validate because it can contain values unused by the RD300NX
+    //#[validate]
     unused_layer: LogicalLayer, // 332 bytes
     #[serde(skip_serializing_if="Bits::is_unit", default="Bits::<8>::unit")]
     padding: Bits<8>, // 1 byte
