@@ -42,8 +42,8 @@ impl ToneNumber {
 
     pub fn as_piano_tone(&self) -> Option<PianoToneNumber> {
         let max = PianoToneNumber::piano_tones_list().len() as u16;
-        if self.0 < max {
-            Some(PianoToneNumber::from(self.0 as u8))
+        if self.0 <= max {
+            Some(PianoToneNumber::from(self.0 as u8 - 1))
         } else {
             None
         }
