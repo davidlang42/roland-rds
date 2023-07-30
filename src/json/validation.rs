@@ -6,7 +6,7 @@ use validator::{ValidationError, Validate, ValidationErrors};
 use std::hash::Hash;
 use std::cmp::Eq;
 
-use crate::roland::layers::{ToneLayer, PianoLayer};
+use crate::roland::layers::LogicalLayer;
 
 pub fn valid_chars<const N: usize>(chars: &[char; N]) -> Result<(), ValidationError> {
     const MIN: u8 = 32;
@@ -93,15 +93,13 @@ pub fn unused_by_rd300nx_err<T: Serialize>(field: &'static str, unused_value: &T
     e
 }
 
-pub fn matching_piano_tone(tone: &ToneLayer, piano: &PianoLayer) -> Result<(), ValidationErrors> {
-    if let Some(piano_tone) = tone.tone_number.as_piano_tone() {
-        if piano.tone_number != piano_tone {
-            let mut e = ValidationErrors::new();
+pub fn matching_piano_tone(layer: &LogicalLayer) -> Result<(), ValidationError> {
+    if let Some(piano_tone) = layer.tone.tone_number.as_piano_tone() {
+        if layer.piano.tone_number != piano_tone {
             let mut tone_err = ValidationError::new("Piano tone does not match tone number");
-            tone_err.add_param(Cow::from("PianoToneNumber"), &piano.tone_number);
+            tone_err.add_param(Cow::from("PianoToneNumber"), &layer.piano.tone_number);
             tone_err.add_param(Cow::from("ToneNumber"), &piano_tone);
-            e.add("tone_number", tone_err);
-            return Err(e);
+            return Err(tone_err);
         }
     }
     Ok(())
