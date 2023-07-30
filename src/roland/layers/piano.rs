@@ -14,7 +14,7 @@ use crate::json::serialize_map_keys_in_order;
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct PianoLayer {
     #[validate]
-    tone_number: PianoToneNumber,
+    pub tone_number: PianoToneNumber,
     #[validate(range(max = 63))]
     stereo_width: u8,
     nuance: NuanceType,

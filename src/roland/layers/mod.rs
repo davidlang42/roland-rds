@@ -13,24 +13,32 @@ pub use tone::ToneLayer;
 pub use piano::PianoLayer;
 pub use e_piano::EPianoLayer;
 pub use tone_wheel::ToneWheelLayer;
-use validator::Validate;
+use validator::{Validate, ValidationErrors};
 
-use crate::json::{Json, StructuredJson, StructuredJsonError};
+use crate::json::{Json, StructuredJson, StructuredJsonError, validation::matching_piano_tone};
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema)]
 pub struct LogicalLayer {
-    #[validate]
     pub internal: InternalLayer,
-    #[validate]
     pub external: ExternalLayer,
-    #[validate]
     pub tone: ToneLayer,
-    #[validate]
     pub piano: PianoLayer,
-    //#[validate]
     pub unused_e_piano: EPianoLayer,
-    //#[validate]
     pub unused_tone_wheel: ToneWheelLayer
+}
+
+impl Validate for LogicalLayer {
+    fn validate(&self) -> Result<(), validator::ValidationErrors> {
+        let mut r = Ok(());
+        r = ValidationErrors::merge(r, "internal", self.internal.validate());
+        r = ValidationErrors::merge(r, "external", self.external.validate());
+        r = ValidationErrors::merge(r, "tone", self.tone.validate());
+        r = ValidationErrors::merge(r, "piano", self.piano.validate());
+        r = ValidationErrors::merge(r, "tone/piano", matching_piano_tone(&self.tone, &self.piano));
+        //r = ValidationErrors::merge(r, "unused_e_piano", self.unused_e_piano.validate());
+        //r = ValidationErrors::merge(r, "unused_tone_wheel", self.unused_tone_wheel.validate());
+        r
+    }
 }
 
 impl LogicalLayer {

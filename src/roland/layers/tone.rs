@@ -11,7 +11,7 @@ use super::super::tones::ToneNumber;
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct ToneLayer {
     #[validate]
-    tone_number: ToneNumber,
+    pub tone_number: ToneNumber,
     #[validate]
     course_tune_semitones: OffsetU8<64, 16, 112>, // 16-112 (-48 - +48)
     #[validate]

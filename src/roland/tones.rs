@@ -39,6 +39,14 @@ impl ToneNumber {
         }
         None
     }
+
+    pub fn as_piano_tone(&self) -> Option<PianoToneNumber> {
+        if self.details().msb == PianoToneNumber::PIANO_TONE_MSB {
+            Some(PianoToneNumber::from(self.0 as u8))
+        } else {
+            None
+        }
+    }
 }
 
 impl From<u16> for ToneNumber {
@@ -123,7 +131,7 @@ fn tone_schema<'a, I: Iterator<Item = &'a Tone>>(allowed_tones: I) -> Schema {
     ])
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct PianoToneNumber(u8); // 0-8 (1-9)
 
 impl PianoToneNumber {

@@ -6,6 +6,8 @@ use validator::{ValidationError, Validate, ValidationErrors};
 use std::hash::Hash;
 use std::cmp::Eq;
 
+use crate::roland::layers::{ToneLayer, PianoLayer};
+
 pub fn valid_chars<const N: usize>(chars: &[char; N]) -> Result<(), ValidationError> {
     const MIN: u8 = 32;
     const MAX: u8 = 127;
@@ -89,4 +91,18 @@ pub fn unused_by_rd300nx_err<T: Serialize>(field: &'static str, unused_value: &T
     unused_err.add_param(Cow::from("UnusedValue"), unused_value);
     e.add(field, unused_err);
     e
+}
+
+pub fn matching_piano_tone(tone: &ToneLayer, piano: &PianoLayer) -> Result<(), ValidationErrors> {
+    if let Some(piano_tone) = tone.tone_number.as_piano_tone() {
+        if piano.tone_number != piano_tone {
+            let mut e = ValidationErrors::new();
+            let mut tone_err = ValidationError::new("Piano tone does not match tone number");
+            tone_err.add_param(Cow::from("PianoToneNumber"), &piano.tone_number);
+            tone_err.add_param(Cow::from("ToneNumber"), &piano_tone);
+            e.add("tone_number", tone_err);
+            return Err(e);
+        }
+    }
+    Ok(())
 }

@@ -21,7 +21,7 @@ mod song_rhythm;
 mod mfx;
 mod resonance;
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]//TODO validate that the piano_tone_number and tone_number match (as per https://github.com/davidlang42/roland-rds/issues/7)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct LiveSet {
     #[validate]
     common: Common, // 56 bytes
