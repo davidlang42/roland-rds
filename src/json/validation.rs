@@ -106,3 +106,13 @@ pub fn matching_piano_tone(tone: &ToneLayer, piano: &PianoLayer) -> Result<(), V
     }
     Ok(())
 }
+
+// ValidationErrors::merge_all() is broken and will falsely return Ok(()) without the additional steps below
+pub fn merge_all_fixed(parent: Result<(), ValidationErrors>, field: &'static str, children: Vec<Result<(), ValidationErrors>>) -> Result<(), ValidationErrors> {
+    let results: Vec<_> = children.into_iter().map(|child| {
+        let mut result = Ok(());
+        result = ValidationErrors::merge(result, field, child);
+        result
+    }).collect();
+    ValidationErrors::merge_all(parent, field, results)
+}

@@ -1,5 +1,5 @@
 use crate::bytes::{Bytes, BytesError, BitStream};
-use crate::json::validation::validate_boxed_array;
+use crate::json::validation::{validate_boxed_array, merge_all_fixed};
 use crate::json::{StructuredJson, Json, StructuredJsonError, serialize_array_as_vec};
 use super::live_set::LiveSet;
 use super::system::System;
@@ -21,9 +21,9 @@ pub struct RD300NX {
 impl Validate for RD300NX {
     fn validate(&self) -> Result<(), ValidationErrors> {
         let mut r = Ok(());
-        r = ValidationErrors::merge_all(r, "user_sets", validate_boxed_array(&self.user_sets));
-        r = ValidationErrors::merge_all(r, "piano", validate_boxed_array(&self.piano));
-        r = ValidationErrors::merge_all(r, "e_piano", validate_boxed_array(&self.e_piano));
+        r = merge_all_fixed(r, "user_sets", validate_boxed_array(&self.user_sets));
+        r = merge_all_fixed(r, "piano", validate_boxed_array(&self.piano));
+        r = merge_all_fixed(r, "e_piano", validate_boxed_array(&self.e_piano));
         r = ValidationErrors::merge(r, "system", self.system.validate());
         r
     }
