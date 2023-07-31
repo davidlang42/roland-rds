@@ -7,6 +7,7 @@ use std::hash::Hash;
 use std::cmp::Eq;
 
 use crate::roland::layers::LogicalLayer;
+use crate::roland::types::notes::PianoKey;
 
 pub fn valid_chars<const N: usize>(chars: &[char; N]) -> Result<(), ValidationError> {
     const MIN: u8 = 32;
@@ -113,4 +114,33 @@ pub fn merge_all_fixed(parent: Result<(), ValidationErrors>, field: &'static str
         result
     }).collect();
     ValidationErrors::merge_all(parent, field, results)
+}
+
+pub trait LayerRanges {
+    fn get_range_upper(&self) -> PianoKey;
+    fn get_range_lower(&self) -> PianoKey;
+    fn get_velocity_upper(&self) -> u8;
+    fn get_velocity_lower(&self) -> u8;
+}
+
+pub fn valid_key_range<T: LayerRanges>(layer: &T) -> Result<(), ValidationError> {
+    if layer.get_range_upper() < layer.get_range_lower() {
+        let mut e = ValidationError::new("range_upper is less than range_lower");
+        e.add_param(Cow::from("range_lower"), &layer.get_range_lower());
+        e.add_param(Cow::from("range_upper"), &layer.get_range_upper());
+        Err(e)
+    } else {
+        Ok(())
+    }
+}
+
+pub fn valid_velocity_range<T: LayerRanges>(layer: &T) -> Result<(), ValidationError> {
+    if layer.get_velocity_upper() < layer.get_velocity_lower() {
+        let mut e = ValidationError::new("velocity_range_upper is less than velocity_range_lower");
+        e.add_param(Cow::from("velocity_range_lower"), &layer.get_velocity_lower());
+        e.add_param(Cow::from("velocity_range_upper"), &layer.get_velocity_upper());
+        Err(e)
+    } else {
+        Ok(())
+    }
 }

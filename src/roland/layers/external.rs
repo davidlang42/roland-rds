@@ -7,12 +7,14 @@ use validator::Validate;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::serialize_map_keys_in_order;
-use crate::json::validation::contains_all_keys;
+use crate::json::validation::{contains_all_keys, LayerRanges, valid_key_range, valid_velocity_range};
 use crate::roland::types::numeric::OffsetU8;
 use crate::roland::types::notes::PianoKey;
 use crate::roland::types::enums::{Layer, TransmitPort, MonoPolyOnly, Pan, MidiChannel};
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
+#[validate(schema(function = "valid_key_range"))]
+#[validate(schema(function = "valid_velocity_range"))]
 pub struct ExternalLayer {
     range_lower: PianoKey, // max 87 (A0-C8)
     range_upper: PianoKey, // max 87 (A0-C8), must be >= lower
@@ -277,5 +279,23 @@ impl Bytes<30> for ExternalLayer {
 impl ExternalLayer {
     pub fn uses_full_range(&self) -> bool {
         self.range_lower == PianoKey::A0 && self.range_upper == PianoKey::C8
+    }
+}
+
+impl LayerRanges for ExternalLayer {
+    fn get_range_upper(&self) -> PianoKey {
+        self.range_upper
+    }
+
+    fn get_range_lower(&self) -> PianoKey {
+        self.range_lower
+    }
+
+    fn get_velocity_upper(&self) -> u8 {
+        self.velocity_range_upper
+    }
+
+    fn get_velocity_lower(&self) -> u8 {
+        self.velocity_range_lower
     }
 }
