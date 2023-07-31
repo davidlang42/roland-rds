@@ -20,12 +20,12 @@ pub struct Common {
     fc1_polarity: Polarity,
     fc2_polarity: Polarity,
     eq_mode: SettingMode,
-    pedal_mode: SettingMode,
+    pub pedal_mode: SettingMode,
     s1_s2_mode: SettingMode,
     #[validate]
-    fc1_assign: PedalFunction, // 0-146
+    pub fc1_assign: PedalFunction, // 0-146
     #[validate]
-    fc2_assign: PedalFunction, // 0-146
+    pub fc2_assign: PedalFunction, // 0-146
     s1_assign: ButtonFunction, // 0-20
     s2_assign: ButtonFunction, // 0-20
     pub tone_remain: bool,

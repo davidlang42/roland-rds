@@ -28,9 +28,9 @@ pub struct Common {
     #[validate(range(min = 10, max = 500))]
     live_set_tempo: u16,
     #[validate]
-    fc1_assign: PedalFunction, // 0-144
+    pub fc1_assign: PedalFunction, // 0-144
     #[validate]
-    fc2_assign: PedalFunction, // 0-144
+    pub fc2_assign: PedalFunction, // 0-144
     sound_focus_switch: bool,
     #[validate]
     sound_focus_type: SoundFocusType,

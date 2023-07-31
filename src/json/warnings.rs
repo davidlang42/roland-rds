@@ -4,12 +4,13 @@
 // a warning only indicates that although valid, the configuration provided may not operate as expected
 // in some scenarios.
 
-use crate::roland::live_set::LiveSet;
+use strum::IntoEnumIterator;
+
+use crate::roland::{live_set::{LiveSet, mfx::Mfx, reverb::Reverb, chorus::Chorus}, layers::InternalLayer, types::enums::{Layer, ChorusType, ReverbType, PedalFunction}};
 
 use super::validation::LayerRanges;
 
 pub trait Warnings {
-    //TODO (possibly future feature) interactive fixes where possible
     fn warnings(&self) -> Vec<String>;
 }
 
@@ -25,7 +26,42 @@ pub fn split_switch_warning<'a, L: LayerRanges + 'a, I: Iterator<Item = &'a L>>(
     None
 }
 
-pub fn tone_remain_warnings(_a: &LiveSet, _b: &LiveSet) -> Vec<String> {
-    //TODO warn if patches won't tone_remain properly (and maybe with a secondary classification for "almost" where it should be practically fine even though it isnt technically perfect)
-    Vec::new()
+pub fn tone_remain_warnings(a: &LiveSet, b: &LiveSet, fc1_from_system: Option<PedalFunction>, fc2_from_system: Option<PedalFunction>) -> Vec<String> {
+    let mut reasons = Vec::new();
+    if let Some(reason) = Mfx::tone_remain_warning(&a.mfx, &b.mfx) {
+        reasons.push(reason);
+    }
+    if let Some(reason) = Reverb::tone_remain_warning(
+        &a.reverb,
+        &b.reverb,
+        a.layers.iter().map(|l| l.internal.reverb).max().unwrap(),
+        b.layers.iter().map(|l| l.internal.reverb).max().unwrap()
+    ) {
+        reasons.push(reason);
+    }
+    if let Some(reason) = Chorus::tone_remain_warning(
+        &a.chorus,
+        &b.chorus,
+        a.layers.iter().map(|l| l.internal.chorus).max().unwrap(),
+        b.layers.iter().map(|l| l.internal.chorus).max().unwrap()
+    ) {
+        reasons.push(reason);
+    }
+    let layer_names: Vec<_> = Layer::iter().collect();
+    for i in 0..a.layers.len() {
+        if let Some(reason) = InternalLayer::tone_remain_warning(
+            &layer_names[i],
+            &a.layers[i].internal, 
+            &b.layers[i].internal,
+            a.chorus.chorus_type != ChorusType::Off,
+            a.reverb.reverb_type != ReverbType::Off,
+            &fc1_from_system.unwrap_or(a.common.fc1_assign),
+            &fc1_from_system.unwrap_or(b.common.fc1_assign),
+            &fc2_from_system.unwrap_or(a.common.fc2_assign),
+            &fc2_from_system.unwrap_or(b.common.fc2_assign)
+        ) {
+            reasons.push(reason);
+        }
+    }
+    reasons
 }

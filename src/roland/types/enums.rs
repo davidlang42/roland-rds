@@ -159,7 +159,7 @@ impl Default for StretchTuneType {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq)]
 pub enum Pan { // 0-127 (L64 - 63R)
     Left(u8),
     Centre,
@@ -1067,6 +1067,35 @@ impl JsonSchema for PedalFunction {
             enum_except_one_schema::<PedalFunction>("ControlChange"),
             single_property_schema("ControlChange", u8_schema(0, 127))
         ])
+    }
+}
+
+impl PedalFunction {
+    pub fn tone_remain_warning(a: &Self, b: &Self, a_enable: bool, b_enable: bool) -> Option<String> {
+        if !a.can_affect_tone_remain() && !b.can_affect_tone_remain() {
+            None // neither of these types of PedalFunction can affect tone remain
+        } else if a.can_affect_tone_remain() && a_enable && !b_enable {
+            Some(format!("({:?}) STOPS working", a))
+        } else if b.can_affect_tone_remain() && !a_enable && b_enable {
+            Some(format!("({:?}) STARTS working", b))
+        } else if !a_enable && !b_enable {
+            None // PedalFunction doesn't matter if not turned on
+        } else if a != b {
+            Some(format!("({:?}) changes to {:?}", a, b))
+        } else {
+            None
+        }
+    }
+
+    fn can_affect_tone_remain(&self) -> bool {
+        match self {
+            Self::ControlChange(_) => true,
+            Self::BendUp => true,
+            Self::BendDown => true,
+            Self::AfterTouch => true,
+            Self::RotarySpeed => true,
+            _ => false
+        }
     }
 }
 

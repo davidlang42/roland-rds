@@ -101,3 +101,27 @@ impl Json for Mfx {
         serde_json::from_str(&json)
     }
 }
+
+impl Mfx {
+    fn active(&self) -> bool {
+        self.enable && self.mfx_type != MfxType::Thru
+    }
+}
+
+impl Mfx {
+    pub fn tone_remain_warning(a: &Self, b: &Self) -> Option<String> {
+        if a.active() && !b.active() {
+            Some(format!("Mfx ({:?}) turns OFF", a.mfx_type))
+        } else if !a.active() && b.active() {
+            Some(format!("Mfx ({:?}) turns ON", b.mfx_type))
+        } else if !a.active() && !b.active() {
+            None // other changes to Mfx are irrelevant if Mfx is off 
+        } else if a.mfx_type != b.mfx_type {
+            Some(format!("Mfx ({:?}) changes to {:?}", a.mfx_type, b.mfx_type))
+        } else if a.parameters != b.parameters {
+            Some(format!("Mfx ({:?}) parameters change", a.mfx_type))
+        } else {
+            None
+        }
+    }
+}

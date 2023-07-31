@@ -4,6 +4,7 @@ use crate::json::warnings::{Warnings, tone_remain_warnings};
 use crate::json::{StructuredJson, Json, StructuredJsonError, serialize_array_as_vec};
 use super::live_set::LiveSet;
 use super::system::System;
+use super::types::enums::SettingMode;
 use schemars::JsonSchema;
 use validator::{Validate, ValidationErrors};
 
@@ -49,8 +50,21 @@ impl Warnings for RD300NX {
             }
         }
         if self.system.common.tone_remain {
+            let fc1 = match self.system.common.pedal_mode {
+                SettingMode::LiveSet => None,
+                SettingMode::System => Some(self.system.common.fc1_assign)
+            };
+            let fc2 = match self.system.common.pedal_mode {
+                SettingMode::LiveSet => None,
+                SettingMode::System => Some(self.system.common.fc2_assign)
+            };
             for i in 0..(self.user_sets.len() - 1) {
-                let reasons = tone_remain_warnings(&self.user_sets[i], &self.user_sets[i+1]);
+                let reasons = tone_remain_warnings(
+                    &self.user_sets[i], 
+                    &self.user_sets[i+1],
+                    fc1,
+                    fc2
+                );
                 for reason in reasons {
                     warnings.push(format!("User #{}-#{}: Tone remain may malfunction because {}", i+1, i+2, reason));
                 }

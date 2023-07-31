@@ -16,31 +16,31 @@ use self::song_rhythm::SongRhythm;
 use super::layers::{LogicalLayer, ToneWheelLayer, EPianoLayer, InternalLayer, ExternalLayer, ToneLayer, PianoLayer};
 
 mod common;
-mod chorus;
-mod reverb;
+pub mod chorus;
+pub mod reverb;
 mod song_rhythm;
-mod mfx;
+pub mod mfx;
 mod resonance;
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct LiveSet {
     #[validate]
-    common: Common, // 56 bytes
+    pub common: Common, // 56 bytes
     #[validate]
     song_rhythm: SongRhythm, // 6 bytes
     #[validate]
-    chorus: Chorus, // 42 bytes
+    pub chorus: Chorus, // 42 bytes
     #[validate]
-    reverb: Reverb, // 42 bytes
+    pub reverb: Reverb, // 42 bytes
     #[validate]
-    mfx: Mfx, // 76 bytes
+    pub mfx: Mfx, // 76 bytes
     // don't validate because it can contain values unused by the RD300NX
     //#[validate(custom = "valid_boxed_elements")]
     unused_mfx: Box<[Mfx; 7]>, // 532 bytes
     //#[validate]
     unused_resonance: Resonance, // 76 bytes
     #[validate(custom = "valid_boxed_elements")]
-    layers: Box<[LogicalLayer; 3]>, // 332*3=996 bytes
+    pub layers: Box<[LogicalLayer; 3]>, // 332*3=996 bytes
     // don't validate because it can contain values unused by the RD300NX
     //#[validate]
     unused_layer: LogicalLayer, // 332 bytes

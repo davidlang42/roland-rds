@@ -11,7 +11,7 @@ use crate::roland::types::enums::ReverbType;
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct Reverb {
-    reverb_type: ReverbType,
+    pub reverb_type: ReverbType,
     #[validate(range(max = 127))]
     depth: u8,
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<2>::zero")]
@@ -74,5 +74,27 @@ impl Json for Reverb {
 
     fn from_json(json: String) -> Result<Self, serde_json::Error> {
         serde_json::from_str(&json)
+    }
+}
+
+impl Reverb {
+    pub fn tone_remain_warning(a: &Self, b: &Self, a_max_reverb_level: u8, b_max_reverb_level: u8) -> Option<String> {
+        let a_off = a_max_reverb_level == 0 || a.reverb_type == ReverbType::Off;
+        let b_off = b_max_reverb_level == 0 || b.reverb_type == ReverbType::Off;
+        if a_off && !b_off {
+            Some(format!("Reverb ({:?}) turns ON", b.reverb_type))
+        } else if !a_off && b_off {
+            Some(format!("Reverb ({:?}) turns OFF", a.reverb_type))
+        } else if a_off && b_off {
+            None // other changes to Reverb are irrelevant if Reverb is off 
+        } else if a.reverb_type != b.reverb_type {
+            Some(format!("Reverb ({:?}) changes to {:?}", a.reverb_type, b.reverb_type))
+        } else if a.depth != b.depth {
+            Some(format!("Reverb ({:?}) depth changes from {} to {}", a.reverb_type, a.depth, b.depth))
+        } else if a.parameters != b.parameters {
+            Some(format!("Reverb ({:?}) parameters change", a.reverb_type))
+        } else {
+            None
+        }
     }
 }
