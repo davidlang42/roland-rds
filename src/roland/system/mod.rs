@@ -21,7 +21,7 @@ pub struct System {
     #[serde(skip_serializing_if="Bits::is_unit", default="Bits::<16>::unit")]
     padding1: Bits<16>, // 2 bytes padding
     #[validate]
-    common: Common, // 10 bytes
+    pub common: Common, // 10 bytes
     unsure2: Bits<16>, // 2 bytes Common checksum?
     #[serde(skip_serializing_if="Bits::is_unit", default="Bits::<16>::unit")]
     padding2: Bits<16>, // 2 bytes padding

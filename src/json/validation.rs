@@ -121,6 +121,10 @@ pub trait LayerRanges {
     fn get_range_lower(&self) -> PianoKey;
     fn get_velocity_upper(&self) -> u8;
     fn get_velocity_lower(&self) -> u8;
+
+    fn uses_full_range(&self) -> bool {
+        self.get_range_lower() == PianoKey::A0 && self.get_range_upper() == PianoKey::C8
+    }
 }
 
 pub fn valid_key_range<T: LayerRanges>(layer: &T) -> Result<(), ValidationError> {

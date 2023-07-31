@@ -1,6 +1,6 @@
 use crate::bytes::{Bytes, BytesError, BitStream};
 use crate::json::validation::{validate_boxed_array, merge_all_fixed};
-use crate::json::warnings::Warnings;
+use crate::json::warnings::{Warnings, tone_remain_warnings};
 use crate::json::{StructuredJson, Json, StructuredJsonError, serialize_array_as_vec};
 use super::live_set::LiveSet;
 use super::system::System;
@@ -46,6 +46,14 @@ impl Warnings for RD300NX {
         for (i, live_set) in self.e_piano.iter().enumerate() {
             for warning in live_set.warnings() {
                 warnings.push(format!("EPiano #{}: {}", i+1, warning));
+            }
+        }
+        if self.system.common.tone_remain {
+            for i in 0..(self.user_sets.len() - 1) {
+                let reasons = tone_remain_warnings(&self.user_sets[i], &self.user_sets[i+1]);
+                for reason in reasons {
+                    warnings.push(format!("User #{}-#{}: Tone remain may malfunction because {}", i+1, i+2, reason));
+                }
             }
         }
         warnings

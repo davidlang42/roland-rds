@@ -276,12 +276,6 @@ impl Bytes<30> for ExternalLayer {
     }
 }
 
-impl ExternalLayer {
-    pub fn uses_full_range(&self) -> bool {
-        self.range_lower == PianoKey::A0 && self.range_upper == PianoKey::C8
-    }
-}
-
 impl LayerRanges for ExternalLayer {
     fn get_range_upper(&self) -> PianoKey {
         self.range_upper

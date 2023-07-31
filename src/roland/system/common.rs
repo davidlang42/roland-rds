@@ -28,7 +28,7 @@ pub struct Common {
     fc2_assign: PedalFunction, // 0-146
     s1_assign: ButtonFunction, // 0-20
     s2_assign: ButtonFunction, // 0-20
-    tone_remain: bool,
+    pub tone_remain: bool,
     receive_gm_gm2_system_on: bool,
     receive_gs_reset: bool,
     part_mode: PartMode,
