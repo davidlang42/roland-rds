@@ -13,6 +13,7 @@ pub mod serialize_default_terminated_array;
 pub mod serialize_map_keys_in_order;
 pub mod validation;
 pub mod schema;
+pub mod warnings;
 
 pub fn type_name_pretty<T>() -> &'static str {
     let full_name = std::any::type_name::<T>();

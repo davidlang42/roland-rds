@@ -1,5 +1,6 @@
 use crate::bytes::{Bytes, BytesError, BitStream};
 use crate::json::validation::{validate_boxed_array, merge_all_fixed};
+use crate::json::warnings::Warnings;
 use crate::json::{StructuredJson, Json, StructuredJsonError, serialize_array_as_vec};
 use super::live_set::LiveSet;
 use super::system::System;
@@ -26,6 +27,28 @@ impl Validate for RD300NX {
         r = merge_all_fixed(r, "e_piano", validate_boxed_array(&self.e_piano));
         r = ValidationErrors::merge(r, "system", self.system.validate());
         r
+    }
+}
+
+impl Warnings for RD300NX {
+    fn warnings(&self) -> Vec<String> {
+        let mut warnings = Vec::new();
+        for (i, live_set) in self.user_sets.iter().enumerate() {
+            for warning in live_set.warnings() {
+                warnings.push(format!("User #{}: {}", i+1, warning));
+            }
+        }
+        for (i, live_set) in self.piano.iter().enumerate() {
+            for warning in live_set.warnings() {
+                warnings.push(format!("Piano #{}: {}", i+1, warning));
+            }
+        }
+        for (i, live_set) in self.e_piano.iter().enumerate() {
+            for warning in live_set.warnings() {
+                warnings.push(format!("EPiano #{}: {}", i+1, warning));
+            }
+        }
+        warnings
     }
 }
 

@@ -5,6 +5,7 @@ use std::io;
 use std::io::Read;
 use std::io::Write;
 use std::path::PathBuf;
+use json::warnings::Warnings;
 use schemars::schema_for;
 use validator::Validate;
 
@@ -112,7 +113,15 @@ fn validate(input_json: Option<String>) -> Result<(), Box<dyn Error>> {
             println!("Error with {}: {:?}", p, e);
         }
     } else {
-        println!("Validation completed with no errors or warnings.");
+        let warnings = rds.warnings();
+        if warnings.len() > 0 {
+            println!("{} warnings: ", warnings.len());
+            for warning in warnings {
+                println!("- {}", warning);
+            }
+        } else {
+            println!("Validation completed with no errors or warnings.");
+        }
     }
     Ok(())
 }

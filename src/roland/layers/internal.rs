@@ -156,3 +156,8 @@ impl Bytes<14> for InternalLayer {
     }
 }
 
+impl InternalLayer {
+    pub fn uses_full_range(&self) -> bool {
+        self.range_lower == PianoKey::A0 && self.range_upper == PianoKey::C8
+    }
+}

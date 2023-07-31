@@ -3,6 +3,7 @@ use schemars::JsonSchema;
 use validator::Validate;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
+use crate::json::warnings::Warnings;
 use crate::json::{Json, StructuredJson, StructuredJsonError};
 use crate::json::validation::valid_boxed_elements;
 use self::chorus::Chorus;
@@ -206,4 +207,27 @@ impl Json for LiveSet {
 
 fn sum_to_zero(sum: u16) -> u8 {
     (u8::MAX - sum.to_be_bytes()[1]).wrapping_add(1)
+}
+
+impl Warnings for LiveSet {
+    fn warnings(&self) -> Vec<String> {
+        let mut warnings = Vec::new();
+        if !self.common.split_switch_internal {
+            let layers: Vec<usize> = self.layers.iter().enumerate()
+                .filter(|(_, l)| !l.internal.uses_full_range())
+                .map(|(i, _)| i).collect();
+            if layers.len() > 0 {
+                warnings.push(format!("Internal layers {:?} have non-full ranges, but split switch is OFF", layers));
+            }
+        }
+        if !self.common.split_switch_external {
+            let layers: Vec<usize> = self.layers.iter().enumerate()
+                .filter(|(_, l)| !l.external.uses_full_range())
+                .map(|(i, _)| i).collect();
+            if layers.len() > 0 {
+                warnings.push(format!("External layers {:?} have non-full ranges, but split switch is OFF", layers));
+            }
+        }
+        warnings
+    }
 }

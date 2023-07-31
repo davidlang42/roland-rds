@@ -60,8 +60,8 @@ pub struct Common {
     #[validate]
     #[validate(custom = "contains_all_keys")]
     slider_assign: HashMap<Layer, SliderFunction>,
-    split_switch_internal: bool, //TODO validate that split_switch is ON if layers have non-full ranges
-    split_switch_external: bool, //TODO validate that split_switch is ON if layers have non-full ranges
+    pub split_switch_internal: bool,
+    pub split_switch_external: bool,
     #[serde(deserialize_with = "serialize_map_keys_in_order::deserialize")]
     #[serde(serialize_with = "serialize_map_keys_in_order::serialize")]
     #[schemars(with = "serialize_map_keys_in_order::RequiredMapSchema::<Layer, StateMap<HarmonicBar>>")]
