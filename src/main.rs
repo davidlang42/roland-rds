@@ -89,6 +89,9 @@ fn decode(input_rds: Option<String>, output_json: Option<String>) -> Result<(), 
         Err(format!("File should be {} bytes but found {}", RD300NX::BYTE_SIZE, size).into())
     } else {
         let rds = RD300NX::from_bytes(bytes.try_into().unwrap())?;
+        if rds.validate().is_err() {
+            return Err(format!("Data validation failed.").into());
+        }
         write_json(&output_json, rds.to_json())?;
         if let Some(file) = &output_json {
             println!("Decoded RDS data into '{}'", file);
@@ -99,6 +102,9 @@ fn decode(input_rds: Option<String>, output_json: Option<String>) -> Result<(), 
 
 fn encode(input_json: Option<String>, output_rds: Option<String>) -> Result<(), Box<dyn Error>> {
     let rds = read_json(&input_json)?;
+    if rds.validate().is_err() {
+        return Err(format!("Data validation failed.").into());
+    }
     write_data(&output_rds, &*rds.to_bytes()?)?;
     if let Some(file) = &output_rds {
         println!("Encoded RDS data into '{}'", file);
