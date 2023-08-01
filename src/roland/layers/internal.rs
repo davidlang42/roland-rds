@@ -3,26 +3,39 @@ use std::fmt::Debug;
 
 use schemars::JsonSchema;
 use strum::IntoEnumIterator;
+use validator::Validate;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::serialize_map_keys_in_order;
-use crate::roland::types::enums::{Pan, Layer};
+use crate::json::validation::{contains_all_keys, LayerRanges, valid_key_range, valid_velocity_range};
+use crate::roland::types::enums::{Pan, Layer, PedalFunction};
 use crate::roland::types::notes::PianoKey;
 use crate::roland::types::numeric::OffsetU8;
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
+#[validate(schema(function = "valid_key_range"))]
+#[validate(schema(function = "valid_velocity_range"))]
 pub struct InternalLayer {
-    volume: u8, // max 127
+    #[validate(range(max = 127))]
+    volume: u8,
+    #[validate]
     pan: Pan,
-    chorus: u8, // max 127
-    reverb: u8, // max 127
+    #[validate(range(max = 127))]
+    pub chorus: u8,
+    #[validate(range(max = 127))]
+    pub reverb: u8,
     range_lower: PianoKey,
     range_upper: PianoKey,
-    velocity_range_lower: u8, // 1-127
-    velocity_range_upper: u8, // 1-127
-    velocity_sensitivity: OffsetU8<64>, // 1-127 (-63 - +63)
-    velocity_max: u8, // 1-127
-    transpose: OffsetU8<64>, // 16-112 (-48 - +48)
+    #[validate(range(min = 1, max = 127))]
+    velocity_range_lower: u8,
+    #[validate(range(min = 1, max = 127))]
+    velocity_range_upper: u8,
+    #[validate]
+    velocity_sensitivity: OffsetU8<64, 1, 127>, // 1-127 (-63 - +63)
+    #[validate(range(min = 1, max = 127))]
+    velocity_max: u8,
+    #[validate]
+    transpose: OffsetU8<64, 16, 112>, // 16-112 (-48 - +48)
     enable: bool,
     damper: bool,
     fc1: bool,
@@ -32,6 +45,7 @@ pub struct InternalLayer {
     #[serde(deserialize_with = "serialize_map_keys_in_order::deserialize")]
     #[serde(serialize_with = "serialize_map_keys_in_order::serialize")]
     #[schemars(with = "serialize_map_keys_in_order::RequiredMapSchema::<Layer, bool>")]
+    #[validate(custom = "contains_all_keys")]
     control_slider: HashMap<Layer, bool>,
     s1: bool,
     s2: bool,
@@ -144,3 +158,64 @@ impl Bytes<14> for InternalLayer {
     }
 }
 
+impl LayerRanges for InternalLayer {
+    fn get_range_upper(&self) -> PianoKey {
+        self.range_upper
+    }
+
+    fn get_range_lower(&self) -> PianoKey {
+        self.range_lower
+    }
+
+    fn get_velocity_upper(&self) -> u8 {
+        self.velocity_range_upper
+    }
+
+    fn get_velocity_lower(&self) -> u8 {
+        self.velocity_range_lower
+    }
+}
+
+impl InternalLayer {
+    pub fn active(&self) -> bool {
+        if !self.enable {
+            false
+        } else if self.range_lower == self.range_upper && (self.range_lower == PianoKey::A0 || self.range_lower == PianoKey::C8) {
+            false // by convention, a one note range at the top or bottom of the keyboard is considered no range
+        } else if self.volume == 0 {
+            false
+        } else {
+            true
+        }
+    }
+}
+
+impl InternalLayer {
+    pub fn tone_remain_warning(id: &Layer, a: &Self, b: &Self, chorus_active: bool, reverb_active: bool, a_fc1: &PedalFunction, b_fc1: &PedalFunction, a_fc2: &PedalFunction, b_fc2: &PedalFunction) -> Option<String> {
+        if !a.active() {
+            None // if this layer wasn't on to begin with then it can't have any tone which needs remaining
+        } else if !b.enable {
+            Some(format!("Layer[{}] turns OFF", id))
+        } else if a.volume != b.volume {
+            Some(format!("Layer[{}] volume changes from {} to {}", id, a.volume, b.volume))
+        } else if a.pan != b.pan {
+            Some(format!("Layer[{}] pan moves from {:?} to {:?}", id, a.pan, b.pan))
+        } else if chorus_active && a.chorus != b.chorus {
+            Some(format!("Layer[{}] chorus level changes from {} to {}", id, a.chorus, b.chorus))
+        } else if reverb_active && a.reverb != b.reverb {
+            Some(format!("Layer[{}] reverb level changes from {} to {}", id, a.reverb, b.reverb))
+        } else if a.damper && !b.damper {
+            Some(format!("Layer[{}] damper pedal STOPS working", id))
+        } else if a.modulation && !b.modulation {
+            Some(format!("Layer[{}] modulation STOPS working", id))
+        } else if a.bender && !b.bender {
+            Some(format!("Layer[{}] bend STOPS working", id))
+        } else if let Some(fc1_reason) = PedalFunction::tone_remain_warning(a_fc1, b_fc1, a.fc1, b.fc1) {
+            Some(format!("Layer[{}] fc1 pedal {}", id, fc1_reason))
+        } else if let Some(fc2_reason) = PedalFunction::tone_remain_warning(a_fc2, b_fc2, a.fc2, b.fc2) {
+            Some(format!("Layer[{}] fc2 pedal {}", id, fc2_reason))
+        } else {
+            None
+        }
+    }
+}

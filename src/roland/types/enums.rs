@@ -1,6 +1,9 @@
 use schemars::JsonSchema;
 use strum::IntoEnumIterator;
 use strum_macros::{EnumIter, Display};
+use validator::Validate;
+
+use crate::json::{validation::{validate_control_change, out_of_range_err, unused_by_rd300nx_err}, type_name_pretty, schema::{one_of_schema, enum_schema, u8_schema, single_property_schema, enum_except_one_schema}};
 
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
 pub enum OutputPort { // 0-5
@@ -156,7 +159,7 @@ impl Default for StretchTuneType {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq)]
 pub enum Pan { // 0-127 (L64 - 63R)
     Left(u8),
     Centre,
@@ -165,6 +168,9 @@ pub enum Pan { // 0-127 (L64 - 63R)
 
 impl Pan {
     const CENTRE: u8 = 64;
+    const MIN_LR: u8 = 1;
+    const MAX_L: u8 = 64;
+    const MAX_R: u8 = 63;
 }
 
 impl From<u8> for Pan {
@@ -192,6 +198,30 @@ impl Into<u8> for Pan {
 impl Default for Pan {
     fn default() -> Self {
         Self::from(0)
+    }
+}
+
+impl Validate for Pan {
+    fn validate(&self) -> Result<(), validator::ValidationErrors> {
+        match self {
+            Self::Left(l) if *l < Self::MIN_LR || *l > Self::MAX_L => Err(out_of_range_err("Left", &Self::MIN_LR, &Self::MAX_L)),
+            Self::Right(r) if *r < Self::MIN_LR || *r > Self::MAX_R => Err(out_of_range_err("Right", &Self::MIN_LR, &Self::MAX_R)),
+            _ => Ok(())
+        }
+    }
+}
+
+impl JsonSchema for Pan {
+    fn schema_name() -> String {
+        type_name_pretty::<Pan>().into()
+    }
+
+    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        one_of_schema(vec![
+            single_property_schema("Left", u8_schema(1, Self::MAX_L)),
+            enum_schema(vec!["Centre".into()]),
+            single_property_schema("Right", u8_schema(1, Self::MAX_R))
+        ])
     }
 }
 
@@ -367,10 +397,15 @@ impl Default for SliderSelect {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
 pub enum KeyTouchVelocity { // 0-127 (REAL, 1-127)
     Real,
     Fixed(u8)
+}
+
+impl KeyTouchVelocity {
+    const MIN_FIXED: u8 = 1;
+    const MAX_FIXED: u8 = 127;
 }
 
 impl From<u8> for KeyTouchVelocity {
@@ -395,6 +430,28 @@ impl Into<u8> for KeyTouchVelocity {
 impl Default for KeyTouchVelocity {
     fn default() -> Self {
         Self::from(0)
+    }
+}
+
+impl Validate for KeyTouchVelocity {
+    fn validate(&self) -> Result<(), validator::ValidationErrors> {
+        match self {
+            Self::Fixed(f) if *f < Self::MIN_FIXED || *f > Self::MAX_FIXED => Err(out_of_range_err("Fixed", &Self::MIN_FIXED, &Self::MAX_FIXED)),
+            _ => Ok(())
+        }
+    }
+}
+
+impl JsonSchema for KeyTouchVelocity {
+    fn schema_name() -> String {
+        type_name_pretty::<KeyTouchVelocity>().into()
+    }
+
+    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        one_of_schema(vec![
+            enum_schema(vec!["Real".into()]),
+            single_property_schema("Fixed", u8_schema(Self::MIN_FIXED, Self::MAX_FIXED))
+        ])
     }
 }
 
@@ -505,7 +562,7 @@ impl Default for ReverbType {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
 pub enum SoundFocusType { // 0-31
     PianoType1,
     PianoType2,
@@ -514,6 +571,11 @@ pub enum SoundFocusType { // 0-31
     Enhancer,
     MidBoost,
     Other(u8)
+}
+
+impl SoundFocusType {
+    const MIN_OTHER: u8 = 6;
+    const MAX_OTHER: u8 = 31;
 }
 
 impl From<u8> for SoundFocusType {
@@ -539,6 +601,29 @@ impl Into<u8> for SoundFocusType {
 impl Default for SoundFocusType {
     fn default() -> Self {
         Self::from(0)
+    }
+}
+
+impl Validate for SoundFocusType {
+    fn validate(&self) -> Result<(), validator::ValidationErrors> {
+        match self {
+            Self::Other(o) if *o < Self::MIN_OTHER || *o > Self::MAX_OTHER => Err(out_of_range_err("Other", &Self::MIN_OTHER, &Self::MAX_OTHER)),
+            Self::UnusedEPianoType => Err(unused_by_rd300nx_err("0", self)),
+            _ => Ok(())
+        }
+    }
+}
+
+impl JsonSchema for SoundFocusType {
+    fn schema_name() -> String {
+        type_name_pretty::<SoundFocusType>().into()
+    }
+
+    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        one_of_schema(vec![
+            enum_except_one_schema::<SoundFocusType>("Other"),
+            single_property_schema("Other", u8_schema(Self::MIN_OTHER, Self::MAX_OTHER))
+        ])
     }
 }
 
@@ -659,6 +744,21 @@ impl Default for MfxType {
     }
 }
 
+impl Validate for MfxType {
+    fn validate(&self) -> Result<(), validator::ValidationErrors> {
+        match self {
+            Self::UnusedVrChorus => Err(unused_by_rd300nx_err("0", self)),
+            Self::UnusedVrTremolo => Err(unused_by_rd300nx_err("0", self)),
+            Self::UnusedVrAutoWah => Err(unused_by_rd300nx_err("0", self)),
+            Self::UnusedVrPhaser => Err(unused_by_rd300nx_err("0", self)),
+            Self::UnusedOrganMulti => Err(unused_by_rd300nx_err("0", self)),
+            Self::UnusedLinedrive => Err(unused_by_rd300nx_err("0", self)),
+            Self::UnusedSmallPhaser => Err(unused_by_rd300nx_err("0", self)),
+            _ => Ok(())
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, EnumIter, PartialEq, JsonSchema)]
 pub enum OptionalMidiChannel { // 0-16 (OFF, 1-16)
     Off,
@@ -736,10 +836,14 @@ impl Default for MidiChannel {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq)]
 pub enum VoiceReserve {  // 0-64 (0-63, full)
     Voices(u8),
     Full
+}
+
+impl VoiceReserve {
+    const MAX_VOICES: u8 = 63;
 }
 
 impl From<u8> for VoiceReserve {
@@ -764,6 +868,28 @@ impl Into<u8> for VoiceReserve {
 impl Default for VoiceReserve {
     fn default() -> Self {
         Self::from(0)
+    }
+}
+
+impl Validate for VoiceReserve {
+    fn validate(&self) -> Result<(), validator::ValidationErrors> {
+        match self {
+            Self::Voices(v) if *v > Self::MAX_VOICES => Err(out_of_range_err("Voices", &0, &Self::MAX_VOICES)),
+            _ => Ok(())
+        }
+    }
+}
+
+impl JsonSchema for VoiceReserve {
+    fn schema_name() -> String {
+        type_name_pretty::<VoiceReserve>().into()
+    }
+
+    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        one_of_schema(vec![
+            single_property_schema("Voices", u8_schema(0, Self::MAX_VOICES)),
+            enum_schema(vec!["Full".into()]),
+        ])
     }
 }
 
@@ -871,7 +997,7 @@ impl Default for ButtonFunction {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
 pub enum PedalFunction { // 0-146 (OFF, CC00 - CC127, BEND-UP, BEND-DOWN, AFTERTOUCH, OCT-UP, OCT-DOWN, START/STOP, TAP-TEMPO, RHY PLY/STP, SONG PLY/STP, SONG RESET, MFX1 SW, MFX2 SW, MFX1 CONTROL, MFX2 CONTROL, ROTARY SPEED, SOUND FOCUS VALUE, LIVE SET UP, LIVE SET DOWN)
     Off,
     ControlChange(u8),
@@ -891,6 +1017,16 @@ pub enum PedalFunction { // 0-146 (OFF, CC00 - CC127, BEND-UP, BEND-DOWN, AFTERT
     SoundFocusValue,
     LiveSetUp, // system only
     LiveSetDown // system only
+}
+
+impl Validate for PedalFunction {
+    fn validate(&self) -> Result<(), validator::ValidationErrors> {
+        if let Self::ControlChange(cc) = self {
+            validate_control_change(cc)
+        } else {
+            Ok(())
+        }
+    }
 }
 
 impl From<u8> for PedalFunction {
@@ -921,8 +1057,49 @@ impl Default for PedalFunction {
     }
 }
 
+impl JsonSchema for PedalFunction {
+    fn schema_name() -> String {
+        type_name_pretty::<PedalFunction>().into()
+    }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
+    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        one_of_schema(vec![
+            enum_except_one_schema::<PedalFunction>("ControlChange"),
+            single_property_schema("ControlChange", u8_schema(0, 127))
+        ])
+    }
+}
+
+impl PedalFunction {
+    pub fn tone_remain_warning(a: &Self, b: &Self, a_enable: bool, b_enable: bool) -> Option<String> {
+        if !a.can_affect_tone_remain() && !b.can_affect_tone_remain() {
+            None // neither of these types of PedalFunction can affect tone remain
+        } else if a.can_affect_tone_remain() && a_enable && !b_enable {
+            Some(format!("({:?}) STOPS working", a))
+        } else if b.can_affect_tone_remain() && !a_enable && b_enable {
+            Some(format!("({:?}) STARTS working", b))
+        } else if !a_enable && !b_enable {
+            None // PedalFunction doesn't matter if not turned on
+        } else if a != b {
+            Some(format!("({:?}) changes to {:?}", a, b))
+        } else {
+            None
+        }
+    }
+
+    fn can_affect_tone_remain(&self) -> bool {
+        match self {
+            Self::ControlChange(_) => true,
+            Self::BendUp => true,
+            Self::BendDown => true,
+            Self::AfterTouch => true,
+            Self::RotarySpeed => true,
+            _ => false
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
 pub enum SliderFunction { // 0-133 (OFF, CC00 - CC127, BEND-UP, BEND-DOWN, AFTERTOUCH, MFX1 CONTROL, MFX2 CONTROL)
     Off,
     ControlChange(u8),
@@ -958,6 +1135,29 @@ impl Into<u8> for SliderFunction {
 impl Default for SliderFunction {
     fn default() -> Self {
         Self::from(0)
+    }
+}
+
+impl Validate for SliderFunction {
+    fn validate(&self) -> Result<(), validator::ValidationErrors> {
+        if let Self::ControlChange(cc) = self {
+            validate_control_change(cc)
+        } else {
+            Ok(())
+        }
+    }
+}
+
+impl JsonSchema for SliderFunction {
+    fn schema_name() -> String {
+        type_name_pretty::<SliderFunction>().into()
+    }
+
+    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        one_of_schema(vec![
+            enum_except_one_schema::<SliderFunction>("ControlChange"),
+            single_property_schema("ControlChange", u8_schema(0, 127))
+        ])
     }
 }
 

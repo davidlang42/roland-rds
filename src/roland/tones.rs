@@ -1,8 +1,9 @@
-use schemars::{JsonSchema, schema::{SchemaObject, InstanceType, SubschemaValidation, NumberValidation, Schema}};
+use schemars::{JsonSchema, schema::Schema};
 use serde_json::Value;
 use serde::{de, Serialize, Deserialize};
+use validator::Validate;
 
-use crate::json::type_name_pretty;
+use crate::json::{type_name_pretty, schema::{u16_schema, one_of_schema, enum_schema}, validation::out_of_range_err};
 
 pub struct Tone {
     _number: u16,
@@ -37,6 +38,15 @@ impl ToneNumber {
             }
         }
         None
+    }
+
+    pub fn as_piano_tone(&self) -> Option<PianoToneNumber> {
+        let max = PianoToneNumber::piano_tones_list().len() as u16;
+        if self.0 <= max {
+            Some(PianoToneNumber::from(self.0 as u8 - 1))
+        } else {
+            None
+        }
     }
 }
 
@@ -89,48 +99,40 @@ impl<'de> Deserialize<'de> for ToneNumber {
     }
 }
 
+impl Validate for ToneNumber {
+    fn validate(&self) -> Result<(), validator::ValidationErrors> {
+        let max = TONE_LIST.len() as u16;
+        if self.0 < 1 || self.0 > max {
+            Err(out_of_range_err("0", &1, &max))
+        } else {
+            Ok(())
+        }
+    }
+}
+
 impl JsonSchema for ToneNumber {
     fn schema_name() -> String {
         type_name_pretty::<ToneNumber>().into()
     }
 
     fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-        let mut names = Vec::new();
-        for tone in &TONE_LIST {
-            names.push(Value::String(tone.numbered_string()));
-        }
-        let max = names.len();
-        let enum_schema = Schema::Object(SchemaObject {
-            instance_type: Some(InstanceType::String.into()),
-            enum_values: Some(names),
-            ..Default::default()
-        });
-        let numeric_schema = Schema::Object(SchemaObject {
-            instance_type: Some(InstanceType::Integer.into()),
-            number: Some(Box::new(NumberValidation {
-                minimum: Some(1.0),
-                maximum: Some(max as f64),
-                ..Default::default()
-            })),
-            format: Some("uint16".into()),
-            ..Default::default()
-        });
-        SchemaObject {
-            instance_type: Some(InstanceType::Null.into()),
-            subschemas: Some(Box::new(SubschemaValidation {
-                one_of: Some(vec![
-                    enum_schema,
-                    numeric_schema
-                ]),
-                ..Default::default()
-            })),
-            ..Default::default()
-        }
-        .into()
+        tone_schema(TONE_LIST.iter())
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+fn tone_schema<'a, I: Iterator<Item = &'a Tone>>(allowed_tones: I) -> Schema {
+    let mut names = Vec::new();
+    for tone in allowed_tones {
+        names.push(tone.numbered_string());
+    }
+    let max = names.len() as u16;
+    one_of_schema(vec![
+        enum_schema(names),
+        u16_schema(1, max)
+    ])
+}
+
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct PianoToneNumber(u8); // 0-8 (1-9)
 
 impl PianoToneNumber {
@@ -222,38 +224,18 @@ impl JsonSchema for PianoToneNumber {
     }
 
     fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-        let mut names = Vec::new();
-        for tone in Self::piano_tones_list() {
-            names.push(Value::String(tone.numbered_string()));
+        tone_schema(Self::piano_tones_list().into_iter())
+    }
+}
+
+impl Validate for PianoToneNumber {
+    fn validate(&self) -> Result<(), validator::ValidationErrors> {
+        let max = Self::piano_tones_list().len() as u8;
+        if self.0 < 1 || self.0 > max {
+            Err(out_of_range_err("0", &1, &max))
+        } else {
+            Ok(())
         }
-        let max = names.len();
-        let enum_schema = Schema::Object(SchemaObject {
-            instance_type: Some(InstanceType::String.into()),
-            enum_values: Some(names),
-            ..Default::default()
-        });
-        let numeric_schema = Schema::Object(SchemaObject {
-            instance_type: Some(InstanceType::Integer.into()),
-            number: Some(Box::new(NumberValidation {
-                minimum: Some(1.0),
-                maximum: Some(max as f64),
-                ..Default::default()
-            })),
-            format: Some("uint8".into()),
-            ..Default::default()
-        });
-        SchemaObject {
-            instance_type: Some(InstanceType::Null.into()),
-            subschemas: Some(Box::new(SubschemaValidation {
-                one_of: Some(vec![
-                    enum_schema,
-                    numeric_schema
-                ]),
-                ..Default::default()
-            })),
-            ..Default::default()
-        }
-        .into()
     }
 }
 

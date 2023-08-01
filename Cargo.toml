@@ -14,3 +14,4 @@ strum = "0.24.1"
 strum_macros = "0.24.1"
 test-case = "3.0.0"
 schemars = { version = "0.8.12", features = ["preserve_order"] }
+validator = { version = "0.16.1", features = ["derive"] }

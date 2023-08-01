@@ -1,21 +1,25 @@
 use std::fmt::Debug;
 use schemars::JsonSchema;
+use validator::Validate;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{Json, StructuredJson, StructuredJsonError, serialize_default_terminated_array};
+use crate::json::validation::valid_boxed_elements;
 use crate::roland::types::enums::{OutputSelect, ChorusType};
 use crate::roland::types::numeric::Parameter;
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct Chorus {
-    chorus_type: ChorusType,
-    depth: u8, // max 127
+    pub chorus_type: ChorusType,
+    #[validate(range(max = 127))]
+    depth: u8,
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<2>::zero")]
     unused1: Bits<2>,
     output_select: OutputSelect,
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
     #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 20>")]
+    #[validate(custom = "valid_boxed_elements")]
     parameters: Box<[Parameter; 20]>,
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<1>::zero")]
     unused: Bits<1>
@@ -73,5 +77,29 @@ impl Json for Chorus {
 
     fn from_json(json: String) -> Result<Self, serde_json::Error> {
         serde_json::from_str(&json)
+    }
+}
+
+impl Chorus {
+    pub fn tone_remain_warning(a: &Self, b: &Self, a_max_chorus_level: u8, b_max_chorus_level: u8) -> Option<String> {
+        let a_off = a_max_chorus_level == 0 || a.chorus_type == ChorusType::Off;
+        let b_off = b_max_chorus_level == 0 || b.chorus_type == ChorusType::Off;
+        if a_off && !b_off {
+            Some(format!("Chorus ({:?}) turns ON", b.chorus_type))
+        } else if !a_off && b_off {
+            Some(format!("Chorus ({:?}) turns OFF", a.chorus_type))
+        } else if a_off && b_off {
+            None // other changes to Chorus are irrelevant if Chorus is off 
+        } else if a.chorus_type != b.chorus_type {
+            Some(format!("Chorus ({:?}) changes to {:?}", a.chorus_type, b.chorus_type))
+        } else if a.depth != b.depth {
+            Some(format!("Chorus ({:?}) depth changes from {} to {}", a.chorus_type, a.depth, b.depth))
+        } else if a.output_select != b.output_select {
+            Some(format!("Chorus ({:?}) output changes from {:?} to {:?}", a.chorus_type, a.output_select, b.output_select))
+        } else if a.parameters != b.parameters {
+            Some(format!("Chorus ({:?}) parameters change", a.chorus_type))
+        } else {
+            None
+        }
     }
 }

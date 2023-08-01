@@ -3,7 +3,7 @@ use schemars::JsonSchema;
 use strum::IntoEnumIterator;
 use strum_macros::{EnumIter, Display};
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema, PartialOrd)]
 pub enum PianoKey { // 0-87
     A0,
     Bb0,

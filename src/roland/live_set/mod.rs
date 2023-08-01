@@ -1,8 +1,11 @@
 use std::fmt::Debug;
 use schemars::JsonSchema;
+use validator::Validate;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
+use crate::json::warnings::{Warnings, split_switch_warning};
 use crate::json::{Json, StructuredJson, StructuredJsonError};
+use crate::json::validation::valid_boxed_elements;
 use self::chorus::Chorus;
 use self::common::Common;
 use self::mfx::Mfx;
@@ -13,22 +16,33 @@ use self::song_rhythm::SongRhythm;
 use super::layers::{LogicalLayer, ToneWheelLayer, EPianoLayer, InternalLayer, ExternalLayer, ToneLayer, PianoLayer};
 
 mod common;
-mod chorus;
-mod reverb;
+pub mod chorus;
+pub mod reverb;
 mod song_rhythm;
-mod mfx;
+pub mod mfx;
 mod resonance;
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct LiveSet {
-    common: Common, // 56 bytes
+    #[validate]
+    pub common: Common, // 56 bytes
+    #[validate]
     song_rhythm: SongRhythm, // 6 bytes
-    chorus: Chorus, // 42 bytes
-    reverb: Reverb, // 42 bytes
-    mfx: Mfx, // 76 bytes
+    #[validate]
+    pub chorus: Chorus, // 42 bytes
+    #[validate]
+    pub reverb: Reverb, // 42 bytes
+    #[validate]
+    pub mfx: Mfx, // 76 bytes
+    // don't validate because it can contain values unused by the RD300NX
+    //#[validate(custom = "valid_boxed_elements")]
     unused_mfx: Box<[Mfx; 7]>, // 532 bytes
+    //#[validate]
     unused_resonance: Resonance, // 76 bytes
-    layers: Box<[LogicalLayer; 3]>, // 332*3=996 bytes
+    #[validate(custom = "valid_boxed_elements")]
+    pub layers: Box<[LogicalLayer; 3]>, // 332*3=996 bytes
+    // don't validate because it can contain values unused by the RD300NX
+    //#[validate]
     unused_layer: LogicalLayer, // 332 bytes
     #[serde(skip_serializing_if="Bits::is_unit", default="Bits::<8>::unit")]
     padding: Bits<8>, // 1 byte
@@ -193,4 +207,17 @@ impl Json for LiveSet {
 
 fn sum_to_zero(sum: u16) -> u8 {
     (u8::MAX - sum.to_be_bytes()[1]).wrapping_add(1)
+}
+
+impl Warnings for LiveSet {
+    fn warnings(&self) -> Vec<String> {
+        let mut warnings = Vec::new();
+        if let Some(warning) = split_switch_warning("Internal", self.common.split_switch_internal, self.layers.iter().map(|l| &l.internal)) {
+            warnings.push(warning);
+        }
+        if let Some(warning) = split_switch_warning("External", self.common.split_switch_internal, self.layers.iter().map(|l| &l.internal)) {
+            warnings.push(warning);
+        }
+        warnings
+    }
 }

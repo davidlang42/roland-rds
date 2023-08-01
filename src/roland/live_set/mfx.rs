@@ -1,17 +1,20 @@
 use std::fmt::Debug;
 
 use schemars::JsonSchema;
+use validator::Validate;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{Json, StructuredJson, StructuredJsonError, serialize_default_terminated_array};
+use crate::json::validation::valid_boxed_elements;
 use crate::roland::types::enums::MfxType;
 use crate::roland::types::numeric::Parameter;
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct Mfx {
     enable: bool,
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<8>::zero")]
     unused1: Bits<8>,
+    #[validate]
     mfx_type: MfxType,
     #[serde(skip_serializing_if="Bits::is_unit", default="Bits::<8>::unit")]
     padding1: Bits<8>,
@@ -26,6 +29,7 @@ pub struct Mfx {
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
     #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 32>")]
+    #[validate(custom = "valid_boxed_elements")]
     parameters: Box<[Parameter; 32]>,
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<3>::zero")]
     unused3: Bits<3>
@@ -95,5 +99,31 @@ impl Json for Mfx {
 
     fn from_json(json: String) -> Result<Self, serde_json::Error> {
         serde_json::from_str(&json)
+    }
+}
+
+impl Mfx {
+    fn active(&self) -> bool {
+        self.enable && self.mfx_type != MfxType::Thru
+    }
+}
+
+impl Mfx {
+    pub fn tone_remain_warning(a: &Self, b: &Self, a_layer0_active: &bool) -> Option<String> {
+        if !a_layer0_active {
+            None // if layer0 wasn't on to begin with then mfx can't affect any tone which needs remaining
+        } else if a.active() && !b.active() {
+            Some(format!("Mfx ({:?}) turns OFF", a.mfx_type))
+        } else if !a.active() && b.active() {
+            Some(format!("Mfx ({:?}) turns ON", b.mfx_type))
+        } else if !a.active() && !b.active() {
+            None // other changes to Mfx are irrelevant if Mfx is off 
+        } else if a.mfx_type != b.mfx_type {
+            Some(format!("Mfx ({:?}) changes to {:?}", a.mfx_type, b.mfx_type))
+        } else if a.parameters != b.parameters {
+            Some(format!("Mfx ({:?}) parameters change", a.mfx_type))
+        } else {
+            None
+        }
     }
 }

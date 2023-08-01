@@ -38,6 +38,7 @@ impl<const N: usize> JsonSchema for StringSchema<N> {
             string: Some(Box::new(StringValidation {
                 min_length: Some(required_size),
                 max_length: Some(required_size),
+                pattern: Some("[ -~]*".to_owned()), // ascii chars 32-127
                 ..Default::default()
             })),
             ..Default::default()

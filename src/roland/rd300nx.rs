@@ -1,9 +1,12 @@
 use crate::bytes::{Bytes, BytesError, BitStream};
-use crate::json::{StructuredJson, Json, StructuredJsonError};
-use crate::json::serialize_array_as_vec;
+use crate::json::validation::{validate_boxed_array, merge_all_fixed};
+use crate::json::warnings::{Warnings, tone_remain_warnings};
+use crate::json::{StructuredJson, Json, StructuredJsonError, serialize_array_as_vec};
 use super::live_set::LiveSet;
 use super::system::System;
+use super::types::enums::SettingMode;
 use schemars::JsonSchema;
+use validator::{Validate, ValidationErrors};
 
 #[derive(Serialize, Deserialize, JsonSchema)]
 pub struct RD300NX {
@@ -15,6 +18,70 @@ pub struct RD300NX {
     pub e_piano: Box<[LiveSet; Self::E_PIANO_SETS]>,
     system: System
     // checksum: 2 bytes
+}
+
+impl Validate for RD300NX {
+    fn validate(&self) -> Result<(), ValidationErrors> {
+        let mut r = Ok(());
+        r = merge_all_fixed(r, "user_sets", validate_boxed_array(&self.user_sets));
+        r = merge_all_fixed(r, "piano", validate_boxed_array(&self.piano));
+        r = merge_all_fixed(r, "e_piano", validate_boxed_array(&self.e_piano));
+        r = ValidationErrors::merge(r, "system", self.system.validate());
+        r
+    }
+}
+
+impl Warnings for RD300NX {
+    fn warnings(&self) -> Vec<String> {
+        let mut warnings = Vec::new();
+        for (i, live_set) in self.user_sets.iter().enumerate() {
+            for warning in live_set.warnings() {
+                warnings.push(format!("User #{}: {}", i+1, warning));
+            }
+        }
+        for (i, live_set) in self.piano.iter().enumerate() {
+            for warning in live_set.warnings() {
+                warnings.push(format!("Piano #{}: {}", i+1, warning));
+            }
+        }
+        for (i, live_set) in self.e_piano.iter().enumerate() {
+            for warning in live_set.warnings() {
+                warnings.push(format!("EPiano #{}: {}", i+1, warning));
+            }
+        }
+        if self.system.common.tone_remain {
+            let fc1 = match self.system.common.pedal_mode {
+                SettingMode::LiveSet => None,
+                SettingMode::System => Some(self.system.common.fc1_assign)
+            };
+            let fc2 = match self.system.common.pedal_mode {
+                SettingMode::LiveSet => None,
+                SettingMode::System => Some(self.system.common.fc2_assign)
+            };
+            for i in 0..(self.user_sets.len() - 1) {
+                let reasons = tone_remain_warnings(
+                    &self.user_sets[i], 
+                    &self.user_sets[i+1],
+                    fc1,
+                    fc2
+                );
+                for reason in reasons {
+                    warnings.push(format!("User #{}-#{}: Tone remain may malfunction because {}", i+1, i+2, reason));
+                }
+            }
+        }
+        warnings
+    }
+}
+
+impl RD300NX {
+    const USER_SETS: usize = 60;
+    const PIANO_SETS: usize = 10;
+    const E_PIANO_SETS: usize = 15;
+
+    pub fn all_live_sets(&self) -> Vec<&LiveSet> {
+        self.user_sets.iter().chain(self.piano.iter()).chain(self.e_piano.iter()).collect()
+    }
 }
 
 impl Bytes<183762> for RD300NX {
@@ -84,15 +151,5 @@ impl Json for RD300NX {
 
     fn from_json(json: String) -> Result<Self, serde_json::Error> {
         serde_json::from_str(&json)
-    }
-}
-
-impl RD300NX {
-    const USER_SETS: usize = 60;
-    const PIANO_SETS: usize = 10;
-    const E_PIANO_SETS: usize = 15;
-
-    pub fn all_live_sets(&self) -> Vec<&LiveSet> {
-        self.user_sets.iter().chain(self.piano.iter()).chain(self.e_piano.iter()).collect()
     }
 }

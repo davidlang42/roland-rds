@@ -5,7 +5,9 @@ use std::io;
 use std::io::Read;
 use std::io::Write;
 use std::path::PathBuf;
+use json::warnings::Warnings;
 use schemars::schema_for;
+use validator::Validate;
 
 use crate::bytes::Bytes;
 use crate::json::{Json, StructuredJson};
@@ -25,13 +27,16 @@ fn main() -> Result<(), Box<dyn Error>> {
     let cmd = args.next().unwrap();
     if let Some(verb) = args.next() {
         match verb.as_str() {
+            "decode" => decode(
+                optional(args.next().ok_or("The 2nd argument should be the FILENAME for the input RDS file (or '-' for STDIN)")?),
+                optional(args.next().ok_or("The 3rd argument should be the FILENAME for the output JSON file (or '-' for STDOUT)")?)
+            )?,
             "encode" => encode(
                 optional(args.next().ok_or("The 2nd argument should be the FILENAME for the input JSON file (or '-' for STDIN)")?),
                 optional(args.next().ok_or("The 3rd argument should be the FILENAME for the output RDS file (or '-' for STDOUT)")?)
             )?,
-            "decode" => decode(
-                optional(args.next().ok_or("The 2nd argument should be the FILENAME for the input RDS file (or '-' for STDIN)")?),
-                optional(args.next().ok_or("The 3rd argument should be the FILENAME for the output JSON file (or '-' for STDOUT)")?)
+            "validate" => validate(
+                optional(args.next().ok_or("The 2nd argument should be the FILENAME for the input JSON file (or '-' for STDIN)")?),
             )?,
             "split" => split(
                 optional(args.next().ok_or("The 2nd argument should be the FILENAME for the input JSON file (or '-' for STDIN)")?),
@@ -69,6 +74,7 @@ fn help(cmd: &str) {
     println!("Usage:");
     println!("  {} decode INPUT.RDS OUTPUT.JSON     -- read RDS file and write to JSON file", cmd);
     println!("  {} encode INPUT.JSON OUTPUT.RDS     -- read JSON file and write to RDS file", cmd);
+    println!("  {} validate INPUT.JSON              -- read JSON file and validate its contents", cmd);
     println!("  {} split INPUT.JSON OUTPUT_FOLDER   -- split JSON file into a folder structure of nested JSON files", cmd);
     println!("  {} merge INPUT_FOLDER OUTPUT.JSON   -- merge folder structure of nested JSON files into a JSON file", cmd);
     println!("  {} schema OUTPUT.JSON               -- write JSON schema to JSON file", cmd);
@@ -83,6 +89,9 @@ fn decode(input_rds: Option<String>, output_json: Option<String>) -> Result<(), 
         Err(format!("File should be {} bytes but found {}", RD300NX::BYTE_SIZE, size).into())
     } else {
         let rds = RD300NX::from_bytes(bytes.try_into().unwrap())?;
+        if rds.validate().is_err() {
+            return Err(format!("Data validation failed.").into());
+        }
         write_json(&output_json, rds.to_json())?;
         if let Some(file) = &output_json {
             println!("Decoded RDS data into '{}'", file);
@@ -93,9 +102,32 @@ fn decode(input_rds: Option<String>, output_json: Option<String>) -> Result<(), 
 
 fn encode(input_json: Option<String>, output_rds: Option<String>) -> Result<(), Box<dyn Error>> {
     let rds = read_json(&input_json)?;
+    if rds.validate().is_err() {
+        return Err(format!("Data validation failed.").into());
+    }
     write_data(&output_rds, &*rds.to_bytes()?)?;
     if let Some(file) = &output_rds {
         println!("Encoded RDS data into '{}'", file);
+    }
+    Ok(())
+}
+
+fn validate(input_json: Option<String>) -> Result<(), Box<dyn Error>> {
+    let rds = read_json(&input_json)?;
+    if let Err(errors) = rds.validate() {
+        for (p, e) in errors.into_errors() {
+            println!("Error with {}: {:?}", p, e);
+        }
+    } else {
+        let warnings = rds.warnings();
+        if warnings.len() > 0 {
+            println!("{} warnings: ", warnings.len());
+            for warning in warnings {
+                println!("- {}", warning);
+            }
+        } else {
+            println!("Validation completed with no errors or warnings.");
+        }
     }
     Ok(())
 }
