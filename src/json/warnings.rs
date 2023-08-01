@@ -28,7 +28,11 @@ pub fn split_switch_warning<'a, L: LayerRanges + 'a, I: Iterator<Item = &'a L>>(
 
 pub fn tone_remain_warnings(a: &LiveSet, b: &LiveSet, fc1_from_system: Option<PedalFunction>, fc2_from_system: Option<PedalFunction>) -> Vec<String> {
     let mut reasons = Vec::new();
-    if let Some(reason) = Mfx::tone_remain_warning(&a.mfx, &b.mfx) {
+    if let Some(reason) = Mfx::tone_remain_warning(
+        &a.mfx,
+        &b.mfx,
+        &a.layers[0].internal.active()
+    ) {
         reasons.push(reason);
     }
     if let Some(reason) = Reverb::tone_remain_warning(

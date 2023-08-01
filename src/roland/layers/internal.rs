@@ -177,11 +177,23 @@ impl LayerRanges for InternalLayer {
 }
 
 impl InternalLayer {
+    pub fn active(&self) -> bool {
+        if !self.enable {
+            false
+        } else if self.range_lower == self.range_upper && (self.range_lower == PianoKey::A0 || self.range_lower == PianoKey::C8) {
+            false // by convention, a one note range at the top or bottom of the keyboard is considered no range
+        } else if self.volume == 0 {
+            false
+        } else {
+            true
+        }
+    }
+}
+
+impl InternalLayer {
     pub fn tone_remain_warning(id: &Layer, a: &Self, b: &Self, chorus_active: bool, reverb_active: bool, a_fc1: &PedalFunction, b_fc1: &PedalFunction, a_fc2: &PedalFunction, b_fc2: &PedalFunction) -> Option<String> {
-        if !a.enable {
+        if !a.active() {
             None // if this layer wasn't on to begin with then it can't have any tone which needs remaining
-        } else if a.range_lower == a.range_upper && (a.range_lower == PianoKey::A0 || a.range_lower == PianoKey::C8) {
-            None // by convention, a one note range at the top or bottom of the keyboard is considered no range
         } else if !b.enable {
             Some(format!("Layer[{}] turns OFF", id))
         } else if a.volume != b.volume {

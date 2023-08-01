@@ -109,8 +109,10 @@ impl Mfx {
 }
 
 impl Mfx {
-    pub fn tone_remain_warning(a: &Self, b: &Self) -> Option<String> {
-        if a.active() && !b.active() {
+    pub fn tone_remain_warning(a: &Self, b: &Self, a_layer0_active: &bool) -> Option<String> {
+        if !a_layer0_active {
+            None // if layer0 wasn't on to begin with then mfx can't affect any tone which needs remaining
+        } else if a.active() && !b.active() {
             Some(format!("Mfx ({:?}) turns OFF", a.mfx_type))
         } else if !a.active() && b.active() {
             Some(format!("Mfx ({:?}) turns ON", b.mfx_type))
