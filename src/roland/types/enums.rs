@@ -33,6 +33,13 @@ impl Default for OutputPort {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+pub enum FilterType {
+    Off,
+    LowPassFilter,
+    HighPassFilter
+}
+
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
 pub enum TransmitPort { // 0-4
     All,
@@ -502,32 +509,6 @@ impl Into<u8> for OutputSelect {
 }
 
 impl Default for OutputSelect {
-    fn default() -> Self {
-        Self::from(0)
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
-pub enum ChorusType { // 0-3
-    Off,
-    Chorus,
-    Delay,
-    Gm2Chorus
-}
-
-impl From<u8> for ChorusType {
-    fn from(value: u8) -> Self {
-        Self::iter().nth(value as usize).unwrap()
-    }
-}
-
-impl Into<u8> for ChorusType {
-    fn into(self) -> u8 {
-        Self::iter().position(|s| s == self).unwrap() as u8
-    }
-}
-
-impl Default for ChorusType {
     fn default() -> Self {
         Self::from(0)
     }
