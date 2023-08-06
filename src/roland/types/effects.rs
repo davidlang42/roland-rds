@@ -130,8 +130,20 @@ pub struct ChorusParameters {//TODO add validation
 }
 
 impl From<[Parameter; 20]> for ChorusParameters {
-    fn from(_value: [Parameter; 20]) -> Self {
-        todo!()//TODO
+    fn from(value: [Parameter; 20]) -> Self {
+        let mut p = value.into_iter();
+        Self {
+            filter_type: p.next().unwrap().into(),
+            cutoff_frequency: p.next().unwrap().into(),
+            pre_delay: p.next().unwrap().into(),
+            rate_mode: p.next().unwrap().into(),
+            rate_hz: p.next().unwrap().into(),
+            rate_note: p.next().unwrap().into(),
+            depth: p.next().unwrap().into(),
+            phase: p.next().unwrap().into(),
+            feedback: p.next().unwrap().into(),
+            unused_parameters: Box::new(p.collect().try_into().unwrap())
+        }
     }
 }
 
@@ -147,9 +159,21 @@ enum Frequency {
     //TODO
 }
 
+impl From<Parameter> for Frequency {
+    fn from(value: Parameter) -> Self {
+        todo!() //TODO
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
 enum Milliseconds {
     //TODO
+}
+
+impl From<Parameter> for Milliseconds {
+    fn from(value: Parameter) -> Self {
+        todo!() //TODO
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
@@ -157,7 +181,19 @@ enum TimingMode {
     //TODO
 }
 
+impl From<Parameter> for TimingMode {
+    fn from(value: Parameter) -> Self {
+        todo!() //TODO
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
 enum NoteLength {
     //TODO
+}
+
+impl From<Parameter> for NoteLength {
+    fn from(value: Parameter) -> Self {
+        todo!() //TODO
+    }
 }
