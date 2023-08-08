@@ -284,19 +284,19 @@ impl Default for DelayParameters {
 }
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
-pub struct Gm2ChorusParameters { //TODO Default for Gm2ChorusParameters
+pub struct Gm2ChorusParameters {
     #[validate(range(max = 7))]
     pre_lpf: u8,
     #[validate(range(max = 127))]
-    level: u8, //default 64
+    level: u8,
     #[validate(range(max = 127))]
-    feedback: u8, //default 8
+    feedback: u8,
     #[validate(range(max = 127))]
-    delay: u8, //default 80
+    delay: u8,
     #[validate(range(max = 127))]
-    rate: u8, //default 3
+    rate: u8,
     #[validate(range(max = 127))]
-    depth: u8, //default 19
+    depth: u8,
     #[validate(range(max = 127))]
     send_to_reverb: u8,
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
@@ -336,5 +336,20 @@ impl Parameters<20> for Gm2ChorusParameters {
             p.push(*unused_parameter);
         }
         p.try_into().unwrap()
+    }
+}
+
+impl Default for Gm2ChorusParameters {
+    fn default() -> Self {
+        Self {
+            pre_lpf: Default::default(),
+            level: 64,
+            feedback: 8,
+            delay: 80,
+            rate: 3,
+            depth: 19,
+            send_to_reverb: Default::default(),
+            unused_parameters: Default::default()
+        }
     }
 }
