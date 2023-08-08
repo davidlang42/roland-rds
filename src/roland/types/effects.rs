@@ -1,6 +1,6 @@
 use super::parameters::{FilterType, RateMode, NoteLength, DelayMode};
 use super::numeric::Parameter;
-use super::discrete::{LogFrequency, LogMilliseconds, LinearFrequency, LogFrequencyOrByPass};
+use super::discrete::{LogFrequency, LogMilliseconds, LinearFrequency, LogFrequencyOrByPass, EvenPercent};
 use crate::json::{serialize_default_terminated_array, validation::merge_all_fixed};
 use crate::json::validation::{valid_boxed_elements, validate_boxed_array};
 use schemars::JsonSchema;
@@ -199,7 +199,7 @@ pub struct DelayParameters { //TODO Default for DelayParameters
     #[validate(range(min = 1, max = 1000))]
     delay_centre_ms: u16, //default 600
     delay_centre_note: NoteLength, // default quarternote
-    centre_feedback: u8, //TODO -98% to 98% by 2, default +20
+    centre_feedback_percent: EvenPercent, // default +20
     hf_damp: LogFrequencyOrByPass, //default bypass
     #[validate(range(max = 127))]
     left_level: u8, //default 127
@@ -227,7 +227,7 @@ impl From<[Parameter; 20]> for DelayParameters {
             delay_centre_mode: p.next().unwrap().into(),
             delay_centre_ms: p.next().unwrap().0 as u16,
             delay_centre_note: p.next().unwrap().into(),
-            centre_feedback: p.next().unwrap().0 as u8,
+            centre_feedback_percent: p.next().unwrap().into(),
             hf_damp: p.next().unwrap().into(),
             left_level: p.next().unwrap().0 as u8,
             right_level: p.next().unwrap().0 as u8,
@@ -249,7 +249,7 @@ impl Parameters<20> for DelayParameters {
         p.push(self.delay_centre_mode.into());
         p.push(Parameter(self.delay_centre_ms as i16));
         p.push(self.delay_centre_note.into());
-        p.push(Parameter(self.centre_feedback as i16));
+        p.push(self.centre_feedback_percent.into());
         p.push(self.hf_damp.into());
         p.push(Parameter(self.left_level as i16));
         p.push(Parameter(self.right_level as i16));

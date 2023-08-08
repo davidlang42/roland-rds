@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{fmt::Display, ops::AddAssign};
 use schemars::JsonSchema;
 use super::numeric::Parameter;
 
@@ -126,7 +126,7 @@ impl DiscreteValues<f64> for LogMilliseconds {
     }
 }
 
-fn enumerate(start: f64, end: f64, step: f64) -> Vec<f64> {
+fn enumerate<T: PartialOrd + AddAssign + Copy>(start: T, end: T, step: T) -> Vec<T> {
     let mut values = Vec::new();
     let mut v = start;
     while v <= end {
@@ -153,6 +153,27 @@ impl From<Parameter> for LogMilliseconds {
 }
 
 impl Into<Parameter> for LogMilliseconds {
+    fn into(self) -> Parameter {
+        Self::into_parameter(self.0)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Copy, Clone)] //TODO DiscreteValues schema
+pub struct EvenPercent(pub i8); // 0-? (-98% to 98% by 2)
+
+impl DiscreteValues<i8> for EvenPercent {
+    fn values() -> Vec<i8> {
+        enumerate(-98, 98, 2)
+    }
+}
+
+impl From<Parameter> for EvenPercent {
+    fn from(parameter: Parameter) -> Self {
+        Self(Self::value_from(parameter))
+    }
+}
+
+impl Into<Parameter> for EvenPercent {
     fn into(self) -> Parameter {
         Self::into_parameter(self.0)
     }
