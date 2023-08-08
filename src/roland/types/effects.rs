@@ -163,17 +163,18 @@ impl Parameters<20> for ChorusParameters {
 //TODO move things below this into enums/numeric/etc
 
 trait DiscreteValues<T: PartialEq + Display> {
-    const VALUES: Vec<T>;
+    fn values() -> Vec<T>;
 
     fn value_from(parameter: Parameter) -> T {
-        if parameter.0 < 0 || parameter.0 as usize >= Self::VALUES.len() {
-            panic!("Parameter out of range: {} (expected 0-{})", parameter.0, Self::VALUES.len()-1)
+        let values = Self::values();
+        if parameter.0 < 0 || parameter.0 as usize >= values.len() {
+            panic!("Parameter out of range: {} (expected 0-{})", parameter.0, values.len()-1)
         }
-        *Self::VALUES.iter().nth(parameter.0 as usize).unwrap()
+        values.into_iter().nth(parameter.0 as usize).unwrap()
     }
 
     fn into_parameter(value: T) -> Parameter {
-        if let Some(position) = Self::VALUES.iter().position(|v| *v == value) {
+        if let Some(position) = Self::values().iter().position(|v| *v == value) {
             return Parameter(position as i16);
         } else {
             panic!("Invalid discrete value: {}", value);
@@ -181,17 +182,18 @@ trait DiscreteValues<T: PartialEq + Display> {
     }
 }
 
-impl<T: RepeatingValues> DiscreteValues<u16> for T {
-    const VALUES: Vec<u16> = Self::enumerate_values();
+#[derive(Serialize, Deserialize, Debug, JsonSchema)] //TODO DiscreteValues schema
+struct LogFrequency<const DEFAULT: u16>(u16); // 0-16 (200-8000Hz)
+
+impl<const D: u16> LogFrequency<D> {
+    const BASE_VALUES: [u16; 10] = [200, 250, 315, 400, 500, 630, 800, 1000, 1250, 1600];
+    const MIN: u16 = 200;
+    const MAX: u16 = 8000;
+    const _DEFAULT: u16 = D; //TODO default
 }
 
-trait RepeatingValues : DiscreteValues<u16> {
-    const MIN: u16;
-    const MAX: u16;
-    const DEFAULT: u16;
-    const BASE_VALUES: Vec<u16>;
-
-    fn enumerate_values() -> Vec<u16> {
+impl<const D: u16> DiscreteValues<u16> for LogFrequency<D> {
+    fn values() -> Vec<u16> {
         let mut factor = 1;
         let mut v = Vec::new();
         loop {
@@ -208,16 +210,6 @@ trait RepeatingValues : DiscreteValues<u16> {
             factor *= 10;
         }
     }
-}
-
-#[derive(Serialize, Deserialize, Debug, JsonSchema)] //TODO DiscreteValues schema
-struct LogFrequency<const DEFAULT: u16>(u16); // 0-16 (200-8000Hz)
-
-impl<const D: u16> RepeatingValues for LogFrequency<D> {
-    const BASE_VALUES: Vec<u16> = vec![200, 250, 315, 400, 500, 630, 800, 1000, 1250, 1600];
-    const MIN: u16 = 200;
-    const MAX: u16 = 8000;
-    const DEFAULT: u16 = D;
 }
 
 impl<const D: u16> From<Parameter> for LogFrequency<D> {
@@ -240,10 +232,10 @@ enum LogFrequencyOrByPass<const DEFAULT: u16> { // 0-17 (200-8000Hz, BYPASS)
 
 impl<const D: u16> From<Parameter> for LogFrequencyOrByPass<D> {
     fn from(value: Parameter) -> Self {
-        let index = value.0 as usize;
-        if value.0 < 0 || value.0 > LogFrequency::<D>::VALUES.len() as i16 {
-            panic!("Parameter out of range: {} (expected 0-{})", value.0, LogFrequency::<D>::VALUES.len())
-        } else if value.0 == LogFrequency::<D>::VALUES.len() as i16 {
+        let values = LogFrequency::<D>::values();
+        if value.0 < 0 || value.0 > values.len() as i16 {
+            panic!("Parameter out of range: {} (expected 0-{})", value.0, values.len())
+        } else if value.0 == values.len() as i16 {
             Self::ByPass
         } else {
             Self::LogFrequency(value.into())
@@ -255,7 +247,7 @@ impl<const D: u16> Into<Parameter> for LogFrequencyOrByPass<D> {
     fn into(self) -> Parameter {
         match self {
             Self::LogFrequency(u) => u.into(),
-            Self::ByPass => Parameter(LogFrequency::<D>::VALUES.len() as i16)
+            Self::ByPass => Parameter(LogFrequency::<D>::values().len() as i16)
         }
     }
 }
@@ -264,7 +256,9 @@ impl<const D: u16> Into<Parameter> for LogFrequencyOrByPass<D> {
 struct LinearFrequency(f64); // 0-? (0.05-10 by 0.05)
 
 impl DiscreteValues<f64> for LinearFrequency {
-    const VALUES: Vec<f64> = enumerate(0.05, 10.0, 0.05);
+    fn values() -> Vec<f64> {
+        enumerate(0.05, 10.0, 0.05)
+    }
 }
 
 impl From<Parameter> for LinearFrequency {
@@ -283,12 +277,14 @@ impl Into<Parameter> for LinearFrequency {
 struct LogMilliseconds(f64); // 0-? (0-5 by 0.1, 5-10 by 0.5, 10-50 by 1, 50-100 by 2)
 
 impl DiscreteValues<f64> for LogMilliseconds {
-    const VALUES: Vec<f64> = flatten(vec![
-        enumerate(0.0, 4.9, 0.1),
-        enumerate(5.0, 9.5, 0.5),
-        enumerate(10.0, 49.0, 1.0),
-        enumerate(50.0, 100.0, 2.0)
-    ]);
+    fn values() -> Vec<f64> {
+        flatten(vec![
+            enumerate(0.0, 4.9, 0.1),
+            enumerate(5.0, 9.5, 0.5),
+            enumerate(10.0, 49.0, 1.0),
+            enumerate(50.0, 100.0, 2.0)
+        ])
+    }
 }
 
 fn enumerate(start: f64, end: f64, step: f64) -> Vec<f64> {
@@ -347,7 +343,7 @@ impl Default for TimingMode {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, PartialEq)]
 enum NoteLength {
     SixtyFourthNoteTriplet,
     SixtyFourthNote,
@@ -375,7 +371,19 @@ enum NoteLength {
 
 impl From<Parameter> for NoteLength {
     fn from(value: Parameter) -> Self {
-        todo!() //TODO
+        Self::iter().nth(Into::<u16>::into(value) as usize).unwrap()
+    }
+}
+
+impl Into<Parameter> for NoteLength {
+    fn into(self) -> Parameter {
+        (Self::iter().position(|s| s == self).unwrap() as u16).into()
+    }
+}
+
+impl Default for NoteLength {
+    fn default() -> Self {
+        Self::from(Parameter::default())
     }
 }
 
