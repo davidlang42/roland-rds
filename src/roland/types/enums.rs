@@ -35,7 +35,7 @@ impl Default for OutputPort {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, PartialEq, Copy, Clone)]
 pub enum FilterType {
     Off,
     LowPassFilter,

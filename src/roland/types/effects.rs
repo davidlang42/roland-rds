@@ -118,17 +118,17 @@ impl Validate for ChorusType {
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct ChorusParameters {//TODO implement Default for ChorusParameters
     filter_type: FilterType,
-    cutoff_frequency: LogFrequency,//TOO default 800
-    pre_delay: LogMilliseconds, //TODO default 2.0
+    cutoff_frequency: LogFrequency, //default 800
+    pre_delay: LogMilliseconds, //default 2.0
     rate_mode: TimingMode,
-    rate_hz: LinearFrequency, //TODO default 1
-    rate_note: NoteLength,//default whole note
+    rate_hz: LinearFrequency, //default 1
+    rate_note: NoteLength, //default whole note
     #[validate(range(max = 127))]
-    depth: u8, //TODO default 40
+    depth: u8, //default 40
     #[validate(range(max = 180))]
-    phase_degrees: u8, //TODO default 180deg
+    phase_degrees: u8, //default 180deg
     #[validate(range(max = 127))]
-    feedback: u8, //TODO default 8
+    feedback: u8, //default 8
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
     #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 11>")]
@@ -156,7 +156,20 @@ impl From<[Parameter; 20]> for ChorusParameters {
 
 impl Parameters<20> for ChorusParameters {
     fn parameters(&self) -> [Parameter; 20] {
-        todo!()//TODO
+        let mut p: Vec<Parameter> = Vec::new();
+        p.push(self.filter_type.into());
+        p.push(self.cutoff_frequency.into());
+        p.push(self.pre_delay.into());
+        p.push(self.rate_mode.into());
+        p.push(self.rate_hz.into());
+        p.push(self.rate_note.into());
+        p.push(Parameter(self.depth as i16));
+        p.push(Parameter(self.phase_degrees as i16));
+        p.push(Parameter(self.feedback as i16));
+        for unused_parameter in self.unused_parameters.iter() {
+            p.push(*unused_parameter);
+        }
+        p.try_into().unwrap()
     }
 }
 
@@ -182,7 +195,7 @@ trait DiscreteValues<T: PartialEq + Display> {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema)] //TODO DiscreteValues schema
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Copy, Clone)] //TODO DiscreteValues schema
 struct LogFrequency(u16); // 0-16 (200-8000Hz)
 
 impl LogFrequency {
@@ -251,7 +264,7 @@ impl Into<Parameter> for LogFrequencyOrByPass {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema)] //TODO DiscreteValues schema
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Copy, Clone)] //TODO DiscreteValues schema
 struct LinearFrequency(f64); // 0-? (0.05-10 by 0.05)
 
 impl DiscreteValues<f64> for LinearFrequency {
@@ -272,7 +285,7 @@ impl Into<Parameter> for LinearFrequency {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema)] //TODO DiscreteValues schema
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Copy, Clone)] //TODO DiscreteValues schema
 struct LogMilliseconds(f64); // 0-? (0-5 by 0.1, 5-10 by 0.5, 10-50 by 1, 50-100 by 2)
 
 impl DiscreteValues<f64> for LogMilliseconds {
@@ -318,7 +331,7 @@ impl Into<Parameter> for LogMilliseconds {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, PartialEq, Copy, Clone)]
 enum TimingMode {
     Hertz,
     Note
@@ -342,7 +355,7 @@ impl Default for TimingMode {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, PartialEq, Copy, Clone)]
 enum NoteLength {
     SixtyFourthNoteTriplet,
     SixtyFourthNote,
