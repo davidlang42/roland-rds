@@ -114,7 +114,7 @@ impl Validate for ChorusType {
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct ChorusParameters {//TODO add validation
     filter_type: FilterType,
-    cutoff_frequency: LogarithmicFrequency<200, 8000, 800>,
+    cutoff_frequency: LogFrequency<800>,
     pre_delay: Milliseconds, // default 2.0
     rate_mode: TimingMode,
     #[validate(range(min = 0.05, max = 10.0))] // by 0.05
@@ -155,20 +155,23 @@ impl Parameters<20> for ChorusParameters {
 }
 
 //TODO move things below this into enums/numeric/etc
-#[derive(Serialize, Deserialize, Debug, JsonSchema)]
-struct LogarithmicFrequency<const MIN: u16, const MAX: u16, const DEFAULT: u16>(u16);
 
-impl<const L: u16, const H: u16, const D: u16> LogarithmicFrequency<L, H, D> {
-    const BASE_VALUES: [u16; 10] = [200, 250, 315, 400, 500, 630, 800, 1000, 1250, 1600];
 
-    fn values() -> Vec<u16> {
+trait RepeatingValues<const N: usize> {
+    const MIN: u16;
+    const MAX: u16;
+    const DEFAULT: u16;
+    const BASE_VALUES: [u16; N];
+    const VALUES: Vec<u16> = Self::enumerate_values();
+
+    fn enumerate_values() -> Vec<u16> {
         let mut factor = 1;
         let mut v = Vec::new();
         loop {
             for base_value in Self::BASE_VALUES {
                 let current = base_value * factor;
-                if current >= L {
-                    if current <= H {
+                if current >= Self::MIN {
+                    if current <= Self::MAX {
                         v.push(current);
                     } else {
                         return v;
@@ -178,15 +181,70 @@ impl<const L: u16, const H: u16, const D: u16> LogarithmicFrequency<L, H, D> {
             factor *= 10;
         }
     }
+
+    fn u16_from(value: Parameter) -> u16 {
+        if value.0 < 0 || value.0 as usize >= Self::VALUES.len() {
+            panic!("Parameter out of range: {} (expected 0-{})", value.0, Self::VALUES.len()-1)
+        }
+        *Self::VALUES.iter().nth(value.0 as usize).unwrap()
+    }
+
+    fn u16_into(value: u16) -> Parameter {
+        if let Some(position) = Self::VALUES.iter().position(|v| *v == value) {
+            return Parameter(position as i16);
+        } else {
+            panic!("Invalid discrete value: {}", value);
+        }
+    }
 }
 
-impl<const L: u16, const H: u16, const D: u16> From<Parameter> for LogarithmicFrequency<L, H, D> {
+#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+struct LogFrequency<const DEFAULT: u16>(u16); // 0-16 (200-8000Hz)
+
+impl<const D: u16> RepeatingValues<10> for LogFrequency<D> {
+    const BASE_VALUES: [u16; 10] = [200, 250, 315, 400, 500, 630, 800, 1000, 1250, 1600];
+    const MIN: u16 = 200;
+    const MAX: u16 = 8000;
+    const DEFAULT: u16 = D;
+}
+
+impl<const D: u16> From<Parameter> for LogFrequency<D> {
     fn from(value: Parameter) -> Self {
-        let values = Self::values();
-        if value.0 < 0 || value.0 >= values.len() {
-            panic!("Parameter out of range: {} (expected 0-{})", value.0, values.len()-1)
+        Self(Self::u16_from(value))
+    }
+}
+
+impl<const D: u16> Into<Parameter> for LogFrequency<D> {
+    fn into(self) -> Parameter {
+        Self::u16_into(self.0)
+    }
+}
+
+//#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+enum LogFrequencyOrByPass<const DEFAULT: u16> { // 0-17 (200-8000Hz, BYPASS)
+    LogFrequency(LogFrequency<DEFAULT>),
+    ByPass
+}
+
+impl<const D: u16> From<Parameter> for LogFrequencyOrByPass<D> {
+    fn from(value: Parameter) -> Self {
+        let index = value.0 as usize;
+        if value.0 < 0 || value.0 > LogFrequency::<D>::VALUES.len() as i16 {
+            panic!("Parameter out of range: {} (expected 0-{})", value.0, LogFrequency::<D>::VALUES.len())
+        } else if value.0 == LogFrequency::<D>::VALUES.len() as i16 {
+            Self::ByPass
+        } else {
+            Self::LogFrequency(value.into())
         }
-        values.iter().nth(value.0).unwrap();
+    }
+}
+
+impl<const D: u16> Into<Parameter> for LogFrequencyOrByPass<D> {
+    fn into(self) -> Parameter {
+        match self {
+            Self::LogFrequency(u) => u.into(),
+            Self::ByPass => Parameter(LogFrequency::<D>::VALUES.len() as i16)
+        }
     }
 }
 
