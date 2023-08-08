@@ -186,27 +186,27 @@ impl Default for ChorusParameters {
 }
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
-pub struct DelayParameters { //TODO Default for DelayParameters
-    delay_left_mode: DelayMode,//default note
+pub struct DelayParameters {
+    delay_left_mode: DelayMode,
     #[validate(range(min = 1, max = 1000))]
-    delay_left_ms: u16, //default 200
-    delay_left_note: NoteLength, // default eighth note triplet
-    delay_right_mode: DelayMode,//default note
+    delay_left_ms: u16,
+    delay_left_note: NoteLength,
+    delay_right_mode: DelayMode,
     #[validate(range(min = 1, max = 1000))]
-    delay_right_ms: u16, //default 400
-    delay_right_note: NoteLength,//default quarternote triplet
-    delay_centre_mode: DelayMode,//default note
+    delay_right_ms: u16,
+    delay_right_note: NoteLength,
+    delay_centre_mode: DelayMode,
     #[validate(range(min = 1, max = 1000))]
-    delay_centre_ms: u16, //default 600
-    delay_centre_note: NoteLength, // default quarternote
-    centre_feedback_percent: EvenPercent, // default +20
-    hf_damp: LogFrequencyOrByPass, //default bypass
+    delay_centre_ms: u16,
+    delay_centre_note: NoteLength,
+    centre_feedback_percent: EvenPercent,
+    hf_damp: LogFrequencyOrByPass,
     #[validate(range(max = 127))]
-    left_level: u8, //default 127
+    left_level: u8,
     #[validate(range(max = 127))]
-    right_level: u8, //default 127
+    right_level: u8,
     #[validate(range(max = 127))]
-    centre_level: u8, //default 127
+    centre_level: u8,
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
     #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 6>")]
@@ -258,6 +258,28 @@ impl Parameters<20> for DelayParameters {
             p.push(*unused_parameter);
         }
         p.try_into().unwrap()
+    }
+}
+
+impl Default for DelayParameters {
+    fn default() -> Self {
+        Self {
+            delay_left_mode: DelayMode::Note,
+            delay_left_ms: 200,
+            delay_left_note: NoteLength::EighthNoteTriplet,
+            delay_right_mode: DelayMode::Note,
+            delay_right_ms: 400,
+            delay_right_note: NoteLength::QuarterNoteTriplet,
+            delay_centre_mode: DelayMode::Note,
+            delay_centre_ms: 600,
+            delay_centre_note: NoteLength::QuarterNote,
+            centre_feedback_percent: EvenPercent(20),
+            hf_damp: LogFrequencyOrByPass::ByPass,
+            left_level: 127,
+            right_level: 127,
+            centre_level: 127,
+            unused_parameters: Default::default()
+        }
     }
 }
 
