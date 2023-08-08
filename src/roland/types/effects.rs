@@ -5,7 +5,6 @@ use super::enums::FilterType;
 use super::numeric::Parameter;
 use crate::json::{serialize_default_terminated_array, validation::merge_all_fixed};
 use crate::json::validation::{valid_boxed_elements, validate_boxed_array};
-use crate::roland::live_set::chorus::Chorus;
 use schemars::JsonSchema;
 use strum_macros::EnumIter;
 use validator::{Validate, ValidationErrors};
