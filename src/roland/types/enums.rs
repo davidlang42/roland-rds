@@ -5,8 +5,6 @@ use validator::Validate;
 
 use crate::json::{validation::{validate_control_change, out_of_range_err, unused_by_rd300nx_err}, type_name_pretty, schema::{one_of_schema, enum_schema, u8_schema, single_property_schema, enum_except_one_schema}};
 
-use super::numeric::Parameter;
-
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
 pub enum OutputPort { // 0-5
     All,
@@ -32,31 +30,6 @@ impl Into<u8> for OutputPort {
 impl Default for OutputPort {
     fn default() -> Self {
         Self::from(0)
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, PartialEq, Copy, Clone)]
-pub enum FilterType {
-    Off,
-    LowPassFilter,
-    HighPassFilter
-}
-
-impl From<Parameter> for FilterType {
-    fn from(value: Parameter) -> Self {
-        Self::iter().nth(Into::<u16>::into(value) as usize).unwrap()
-    }
-}
-
-impl Into<Parameter> for FilterType {
-    fn into(self) -> Parameter {
-        (Self::iter().position(|s| s == self).unwrap() as u16).into()
-    }
-}
-
-impl Default for FilterType {
-    fn default() -> Self {
-        Self::from(Parameter::default())
     }
 }
 
