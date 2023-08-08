@@ -116,9 +116,9 @@ impl Validate for ChorusType {
 }
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
-pub struct ChorusParameters {//TODO add validation
+pub struct ChorusParameters {//TODO implement Default for ChorusParameters
     filter_type: FilterType,
-    cutoff_frequency: LogFrequency<800>,
+    cutoff_frequency: LogFrequency,//TOO default 800
     pre_delay: LogMilliseconds, //TODO default 2.0
     rate_mode: TimingMode,
     rate_hz: LinearFrequency, //TODO default 1
@@ -183,16 +183,15 @@ trait DiscreteValues<T: PartialEq + Display> {
 }
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema)] //TODO DiscreteValues schema
-struct LogFrequency<const DEFAULT: u16>(u16); // 0-16 (200-8000Hz)
+struct LogFrequency(u16); // 0-16 (200-8000Hz)
 
-impl<const D: u16> LogFrequency<D> {
+impl LogFrequency {
     const BASE_VALUES: [u16; 10] = [200, 250, 315, 400, 500, 630, 800, 1000, 1250, 1600];
     const MIN: u16 = 200;
     const MAX: u16 = 8000;
-    const _DEFAULT: u16 = D; //TODO default
 }
 
-impl<const D: u16> DiscreteValues<u16> for LogFrequency<D> {
+impl DiscreteValues<u16> for LogFrequency {
     fn values() -> Vec<u16> {
         let mut factor = 1;
         let mut v = Vec::new();
@@ -212,42 +211,42 @@ impl<const D: u16> DiscreteValues<u16> for LogFrequency<D> {
     }
 }
 
-impl<const D: u16> From<Parameter> for LogFrequency<D> {
+impl From<Parameter> for LogFrequency {
     fn from(parameter: Parameter) -> Self {
         Self(Self::value_from(parameter))
     }
 }
 
-impl<const D: u16> Into<Parameter> for LogFrequency<D> {
+impl Into<Parameter> for LogFrequency {
     fn into(self) -> Parameter {
         Self::into_parameter(self.0)
     }
 }
 
 //#[derive(Serialize, Deserialize, Debug, JsonSchema)]
-enum LogFrequencyOrByPass<const DEFAULT: u16> { // 0-17 (200-8000Hz, BYPASS)
-    LogFrequency(LogFrequency<DEFAULT>),
+enum LogFrequencyOrByPass { // 0-17 (200-8000Hz, BYPASS)
+    Frequency(LogFrequency),
     ByPass
 }
 
-impl<const D: u16> From<Parameter> for LogFrequencyOrByPass<D> {
+impl From<Parameter> for LogFrequencyOrByPass {
     fn from(value: Parameter) -> Self {
-        let values = LogFrequency::<D>::values();
+        let values = LogFrequency::values();
         if value.0 < 0 || value.0 > values.len() as i16 {
             panic!("Parameter out of range: {} (expected 0-{})", value.0, values.len())
         } else if value.0 == values.len() as i16 {
             Self::ByPass
         } else {
-            Self::LogFrequency(value.into())
+            Self::Frequency(value.into())
         }
     }
 }
 
-impl<const D: u16> Into<Parameter> for LogFrequencyOrByPass<D> {
+impl Into<Parameter> for LogFrequencyOrByPass {
     fn into(self) -> Parameter {
         match self {
-            Self::LogFrequency(u) => u.into(),
-            Self::ByPass => Parameter(LogFrequency::<D>::values().len() as i16)
+            Self::Frequency(f) => f.into(),
+            Self::ByPass => Parameter(LogFrequency::values().len() as i16)
         }
     }
 }
