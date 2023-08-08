@@ -1,8 +1,12 @@
+use std::fmt::Display;
+use strum::IntoEnumIterator;
+
 use super::enums::FilterType;
 use super::numeric::Parameter;
 use crate::json::{serialize_default_terminated_array, validation::merge_all_fixed};
 use crate::json::validation::{valid_boxed_elements, validate_boxed_array};
 use schemars::JsonSchema;
+use strum_macros::EnumIter;
 use validator::{Validate, ValidationErrors};
 
 trait Parameters<const N: usize> : Validate + From<[Parameter; N]> {
@@ -115,14 +119,16 @@ impl Validate for ChorusType {
 pub struct ChorusParameters {//TODO add validation
     filter_type: FilterType,
     cutoff_frequency: LogFrequency<800>,
-    pre_delay: Milliseconds, // default 2.0
+    pre_delay: LogMilliseconds, //TODO default 2.0
     rate_mode: TimingMode,
-    #[validate(range(min = 0.05, max = 10.0))] // by 0.05
-    rate_hz: f64,//default 1
+    rate_hz: LinearFrequency, //TODO default 1
     rate_note: NoteLength,//default whole note
-    depth: u8,//0-127, default 40
-    phase: u8,//0-180, default 180
-    feedback: u8,//0-127, default 8
+    #[validate(range(max = 127))]
+    depth: u8, //TODO default 40
+    #[validate(range(max = 180))]
+    phase_degrees: u8, //TODO default 180deg
+    #[validate(range(max = 127))]
+    feedback: u8, //TODO default 8
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
     #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 11>")]
@@ -140,10 +146,10 @@ impl From<[Parameter; 20]> for ChorusParameters {
             rate_mode: p.next().unwrap().into(),
             rate_hz: p.next().unwrap().into(),
             rate_note: p.next().unwrap().into(),
-            depth: p.next().unwrap().into(),
-            phase: p.next().unwrap().into(),
-            feedback: p.next().unwrap().into(),
-            unused_parameters: Box::new(p.collect().try_into().unwrap())
+            depth: p.next().unwrap().0 as u8,
+            phase_degrees: p.next().unwrap().0 as u8,
+            feedback: p.next().unwrap().0 as u8,
+            unused_parameters: Box::new(p.collect::<Vec<_>>().try_into().unwrap())
         }
     }
 }
@@ -156,13 +162,34 @@ impl Parameters<20> for ChorusParameters {
 
 //TODO move things below this into enums/numeric/etc
 
+trait DiscreteValues<T: PartialEq + Display> {
+    const VALUES: Vec<T>;
 
-trait RepeatingValues<const N: usize> {
+    fn value_from(parameter: Parameter) -> T {
+        if parameter.0 < 0 || parameter.0 as usize >= Self::VALUES.len() {
+            panic!("Parameter out of range: {} (expected 0-{})", parameter.0, Self::VALUES.len()-1)
+        }
+        *Self::VALUES.iter().nth(parameter.0 as usize).unwrap()
+    }
+
+    fn into_parameter(value: T) -> Parameter {
+        if let Some(position) = Self::VALUES.iter().position(|v| *v == value) {
+            return Parameter(position as i16);
+        } else {
+            panic!("Invalid discrete value: {}", value);
+        }
+    }
+}
+
+impl<T: RepeatingValues> DiscreteValues<u16> for T {
+    const VALUES: Vec<u16> = Self::enumerate_values();
+}
+
+trait RepeatingValues : DiscreteValues<u16> {
     const MIN: u16;
     const MAX: u16;
     const DEFAULT: u16;
-    const BASE_VALUES: [u16; N];
-    const VALUES: Vec<u16> = Self::enumerate_values();
+    const BASE_VALUES: Vec<u16>;
 
     fn enumerate_values() -> Vec<u16> {
         let mut factor = 1;
@@ -181,42 +208,27 @@ trait RepeatingValues<const N: usize> {
             factor *= 10;
         }
     }
-
-    fn u16_from(value: Parameter) -> u16 {
-        if value.0 < 0 || value.0 as usize >= Self::VALUES.len() {
-            panic!("Parameter out of range: {} (expected 0-{})", value.0, Self::VALUES.len()-1)
-        }
-        *Self::VALUES.iter().nth(value.0 as usize).unwrap()
-    }
-
-    fn u16_into(value: u16) -> Parameter {
-        if let Some(position) = Self::VALUES.iter().position(|v| *v == value) {
-            return Parameter(position as i16);
-        } else {
-            panic!("Invalid discrete value: {}", value);
-        }
-    }
 }
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema)] //TODO DiscreteValues schema
 struct LogFrequency<const DEFAULT: u16>(u16); // 0-16 (200-8000Hz)
 
-impl<const D: u16> RepeatingValues<10> for LogFrequency<D> {
-    const BASE_VALUES: [u16; 10] = [200, 250, 315, 400, 500, 630, 800, 1000, 1250, 1600];
+impl<const D: u16> RepeatingValues for LogFrequency<D> {
+    const BASE_VALUES: Vec<u16> = vec![200, 250, 315, 400, 500, 630, 800, 1000, 1250, 1600];
     const MIN: u16 = 200;
     const MAX: u16 = 8000;
     const DEFAULT: u16 = D;
 }
 
 impl<const D: u16> From<Parameter> for LogFrequency<D> {
-    fn from(value: Parameter) -> Self {
-        Self(Self::u16_from(value))
+    fn from(parameter: Parameter) -> Self {
+        Self(Self::value_from(parameter))
     }
 }
 
 impl<const D: u16> Into<Parameter> for LogFrequency<D> {
     fn into(self) -> Parameter {
-        Self::u16_into(self.0)
+        Self::into_parameter(self.0)
     }
 }
 
@@ -248,18 +260,70 @@ impl<const D: u16> Into<Parameter> for LogFrequencyOrByPass<D> {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema)]
-enum LogMilliseconds {
-    //TODO 0-5 by 0.1, 5-10 by 0.5, 10-50 by 1, 50-100 by 2
+#[derive(Serialize, Deserialize, Debug, JsonSchema)] //TODO DiscreteValues schema
+struct LinearFrequency(f64); // 0-? (0.05-10 by 0.05)
+
+impl DiscreteValues<f64> for LinearFrequency {
+    const VALUES: Vec<f64> = enumerate(0.05, 10.0, 0.05);
 }
 
-impl From<Parameter> for Milliseconds {
-    fn from(value: Parameter) -> Self {
-        todo!() //TODO
+impl From<Parameter> for LinearFrequency {
+    fn from(parameter: Parameter) -> Self {
+        Self(Self::value_from(parameter))
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+impl Into<Parameter> for LinearFrequency {
+    fn into(self) -> Parameter {
+        Self::into_parameter(self.0)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema)] //TODO DiscreteValues schema
+struct LogMilliseconds(f64); // 0-? (0-5 by 0.1, 5-10 by 0.5, 10-50 by 1, 50-100 by 2)
+
+impl DiscreteValues<f64> for LogMilliseconds {
+    const VALUES: Vec<f64> = flatten(vec![
+        enumerate(0.0, 4.9, 0.1),
+        enumerate(5.0, 9.5, 0.5),
+        enumerate(10.0, 49.0, 1.0),
+        enumerate(50.0, 100.0, 2.0)
+    ]);
+}
+
+fn enumerate(start: f64, end: f64, step: f64) -> Vec<f64> {
+    let mut values = Vec::new();
+    let mut v = start;
+    while v <= end {
+        values.push(v);
+        v += step;
+    }
+    values
+}
+
+fn flatten<T>(vectors: Vec<Vec<T>>) -> Vec<T> {
+    let mut output = Vec::new();
+    for vec in vectors.into_iter() {
+        for t in vec.into_iter() {
+            output.push(t);
+        }
+    }
+    output
+}
+
+impl From<Parameter> for LogMilliseconds {
+    fn from(parameter: Parameter) -> Self {
+        Self(Self::value_from(parameter))
+    }
+}
+
+impl Into<Parameter> for LogMilliseconds {
+    fn into(self) -> Parameter {
+        Self::into_parameter(self.0)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, PartialEq)]
 enum TimingMode {
     Hertz,
     Note
@@ -267,7 +331,19 @@ enum TimingMode {
 
 impl From<Parameter> for TimingMode {
     fn from(value: Parameter) -> Self {
-        todo!() //TODO
+        Self::iter().nth(Into::<u16>::into(value) as usize).unwrap()
+    }
+}
+
+impl Into<Parameter> for TimingMode {
+    fn into(self) -> Parameter {
+        (Self::iter().position(|s| s == self).unwrap() as u16).into()
+    }
+}
+
+impl Default for TimingMode {
+    fn default() -> Self {
+        Self::from(Parameter::default())
     }
 }
 
