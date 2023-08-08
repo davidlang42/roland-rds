@@ -5,6 +5,7 @@ use super::enums::FilterType;
 use super::numeric::Parameter;
 use crate::json::{serialize_default_terminated_array, validation::merge_all_fixed};
 use crate::json::validation::{valid_boxed_elements, validate_boxed_array};
+use crate::roland::live_set::chorus::Chorus;
 use schemars::JsonSchema;
 use strum_macros::EnumIter;
 use validator::{Validate, ValidationErrors};
@@ -116,19 +117,19 @@ impl Validate for ChorusType {
 }
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
-pub struct ChorusParameters {//TODO implement Default for ChorusParameters
+pub struct ChorusParameters {
     filter_type: FilterType,
-    cutoff_frequency: LogFrequency, //default 800
-    pre_delay: LogMilliseconds, //default 2.0
+    cutoff_frequency: LogFrequency,
+    pre_delay: LogMilliseconds,
     rate_mode: TimingMode,
-    rate_hz: LinearFrequency, //default 1
-    rate_note: NoteLength, //default whole note
+    rate_hz: LinearFrequency,
+    rate_note: NoteLength,
     #[validate(range(max = 127))]
-    depth: u8, //default 40
+    depth: u8,
     #[validate(range(max = 180))]
-    phase_degrees: u8, //default 180deg
+    phase_degrees: u8,
     #[validate(range(max = 127))]
-    feedback: u8, //default 8
+    feedback: u8,
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
     #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 11>")]
@@ -170,6 +171,22 @@ impl Parameters<20> for ChorusParameters {
             p.push(*unused_parameter);
         }
         p.try_into().unwrap()
+    }
+}
+
+impl Default for ChorusParameters {
+    fn default() -> Self {
+        Self {
+            filter_type: Default::default(),
+            cutoff_frequency: LogFrequency(800),
+            pre_delay: LogMilliseconds(2.0),
+            rate_mode: Default::default(),
+            rate_hz: LinearFrequency(1.0),
+            rate_note: NoteLength::WholeNote,
+            depth: 40,
+            phase_degrees: 180,
+            feedback: 8,
+            unused_parameters: Default::default() }
     }
 }
 
@@ -390,12 +407,6 @@ impl From<Parameter> for NoteLength {
 impl Into<Parameter> for NoteLength {
     fn into(self) -> Parameter {
         (Self::iter().position(|s| s == self).unwrap() as u16).into()
-    }
-}
-
-impl Default for NoteLength {
-    fn default() -> Self {
-        Self::from(Parameter::default())
     }
 }
 
