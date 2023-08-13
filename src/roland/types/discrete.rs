@@ -1,9 +1,15 @@
 use std::{fmt::Display, ops::AddAssign};
 use schemars::JsonSchema;
+use serde_json::Value;
+use crate::json::{schema::enum_schema, type_name_pretty};
+
 use super::numeric::Parameter;
+use serde::{Serialize, Deserialize, de};
 
 trait DiscreteValues<T: PartialEq + Display> {
     fn values() -> Vec<T>;
+
+    fn format(value: T) -> String;
 
     fn value_from(parameter: Parameter) -> T {
         let values = Self::values();
@@ -22,7 +28,7 @@ trait DiscreteValues<T: PartialEq + Display> {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema, Copy, Clone)] //TODO DiscreteValues schema
+#[derive(Debug, Copy, Clone)]
 pub struct LogFrequency(pub u16); // 0-16 (200-8000Hz)
 
 impl LogFrequency {
@@ -47,6 +53,45 @@ impl DiscreteValues<u16> for LogFrequency {
                 }
             }
             factor *= 10;
+        }
+    }
+
+    fn format(value: u16) -> String {
+        format!("{}Hz", value)
+    }
+}
+
+impl JsonSchema for LogFrequency {
+    fn schema_name() -> String {
+        type_name_pretty::<Self>().into()
+    }
+
+    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        enum_schema(Self::values().into_iter().map(Self::format).collect())
+    }
+}
+
+impl Serialize for LogFrequency {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where S: serde::Serializer {
+        Self::format(self.0).serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for LogFrequency {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where D: serde::Deserializer<'de> {
+        let value: Value = Deserialize::deserialize(deserializer)?;
+        match value {
+            Value::String(s) => {
+                for v in Self::values().into_iter() {
+                    if s == Self::format(v) {
+                        return Ok(Self(v));
+                    }
+                }
+                Err(de::Error::custom(format!("String is not a valid discrete value: {}", s)))
+            }
+            _ => Err(de::Error::custom(format!("Expected string")))
         }
     }
 }
@@ -91,12 +136,51 @@ impl Into<Parameter> for LogFrequencyOrByPass {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema, Copy, Clone)] //TODO DiscreteValues schema
+#[derive(Debug, Copy, Clone)]
 pub struct LinearFrequency(pub f64); // 0-? (0.05-10 by 0.05)
 
 impl DiscreteValues<f64> for LinearFrequency {
     fn values() -> Vec<f64> {
         enumerate(0.05, 10.0, 0.05)
+    }
+
+    fn format(value: f64) -> String {
+        format!("{:.2}ms", value)
+    }
+}
+
+impl JsonSchema for LinearFrequency {
+    fn schema_name() -> String {
+        type_name_pretty::<Self>().into()
+    }
+
+    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        enum_schema(Self::values().into_iter().map(Self::format).collect())
+    }
+}
+
+impl Serialize for LinearFrequency {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where S: serde::Serializer {
+        Self::format(self.0).serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for LinearFrequency {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where D: serde::Deserializer<'de> {
+        let value: Value = Deserialize::deserialize(deserializer)?;
+        match value {
+            Value::String(s) => {
+                for v in Self::values().into_iter() {
+                    if s == Self::format(v) {
+                        return Ok(Self(v));
+                    }
+                }
+                Err(de::Error::custom(format!("String is not a valid discrete value: {}", s)))
+            }
+            _ => Err(de::Error::custom(format!("Expected string")))
+        }
     }
 }
 
@@ -112,7 +196,7 @@ impl Into<Parameter> for LinearFrequency {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema, Copy, Clone)] //TODO DiscreteValues schema
+#[derive(Debug, Copy, Clone)]
 pub struct LogMilliseconds(pub f64); // 0-? (0-5 by 0.1, 5-10 by 0.5, 10-50 by 1, 50-100 by 2)
 
 impl DiscreteValues<f64> for LogMilliseconds {
@@ -123,6 +207,45 @@ impl DiscreteValues<f64> for LogMilliseconds {
             enumerate(10.0, 49.0, 1.0),
             enumerate(50.0, 100.0, 2.0)
         ])
+    }
+
+    fn format(value: f64) -> String {
+        format!("{:.1}ms", value)
+    }
+}
+
+impl JsonSchema for LogMilliseconds {
+    fn schema_name() -> String {
+        type_name_pretty::<Self>().into()
+    }
+
+    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        enum_schema(Self::values().into_iter().map(Self::format).collect())
+    }
+}
+
+impl Serialize for LogMilliseconds {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where S: serde::Serializer {
+        Self::format(self.0).serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for LogMilliseconds {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where D: serde::Deserializer<'de> {
+        let value: Value = Deserialize::deserialize(deserializer)?;
+        match value {
+            Value::String(s) => {
+                for v in Self::values().into_iter() {
+                    if s == Self::format(v) {
+                        return Ok(Self(v));
+                    }
+                }
+                Err(de::Error::custom(format!("String is not a valid discrete value: {}", s)))
+            }
+            _ => Err(de::Error::custom(format!("Expected string")))
+        }
     }
 }
 
@@ -158,12 +281,51 @@ impl Into<Parameter> for LogMilliseconds {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema, Copy, Clone)] //TODO DiscreteValues schema
+#[derive(Debug, Copy, Clone)]
 pub struct EvenPercent(pub i8); // 0-? (-98% to 98% by 2)
 
 impl DiscreteValues<i8> for EvenPercent {
     fn values() -> Vec<i8> {
         enumerate(-98, 98, 2)
+    }
+
+    fn format(value: i8) -> String {
+        format!("{}%", value)
+    }
+}
+
+impl JsonSchema for EvenPercent {
+    fn schema_name() -> String {
+        type_name_pretty::<Self>().into()
+    }
+
+    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        enum_schema(Self::values().into_iter().map(Self::format).collect())
+    }
+}
+
+impl Serialize for EvenPercent {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where S: serde::Serializer {
+        Self::format(self.0).serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for EvenPercent {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where D: serde::Deserializer<'de> {
+        let value: Value = Deserialize::deserialize(deserializer)?;
+        match value {
+            Value::String(s) => {
+                for v in Self::values().into_iter() {
+                    if s == Self::format(v) {
+                        return Ok(Self(v));
+                    }
+                }
+                Err(de::Error::custom(format!("String is not a valid discrete value: {}", s)))
+            }
+            _ => Err(de::Error::custom(format!("Expected string")))
+        }
     }
 }
 
