@@ -6,7 +6,7 @@
 
 use strum::IntoEnumIterator;
 
-use crate::roland::{live_set::{LiveSet, mfx::Mfx, reverb::Reverb, chorus::Chorus}, layers::InternalLayer, types::enums::{Layer, ChorusType, ReverbType, PedalFunction}};
+use crate::roland::{live_set::{LiveSet, mfx::Mfx, reverb::Reverb, chorus::Chorus}, layers::InternalLayer, types::enums::{Layer, ReverbType, PedalFunction}};
 
 use super::validation::LayerRanges;
 
@@ -57,7 +57,7 @@ pub fn tone_remain_warnings(a: &LiveSet, b: &LiveSet, fc1_from_system: Option<Pe
             &layer_names[i],
             &a.layers[i].internal, 
             &b.layers[i].internal,
-            a.chorus.chorus_type != ChorusType::Off,
+            !a.chorus.chorus_type.is_off(),
             a.reverb.reverb_type != ReverbType::Off,
             &fc1_from_system.unwrap_or(a.common.fc1_assign),
             &fc1_from_system.unwrap_or(b.common.fc1_assign),

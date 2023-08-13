@@ -5,7 +5,7 @@ use crate::json::{type_name_pretty, schema::{u8_schema, i16_schema, i8_schema, u
 use crate::json::validation::out_of_range_err;
 
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq)]
-pub struct Parameter(i16); // 12768-52768 (-20000 - +20000)
+pub struct Parameter(pub i16); // 12768-52768 (-20000 - +20000)
 
 impl Parameter {
     const ZERO: u16 = 32768;
