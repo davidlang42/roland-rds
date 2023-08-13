@@ -6,12 +6,10 @@ Roland stage pianos (such as the RD300NX) have the abiity to program a set of pa
 
 Although the functionality in the keyboard is great for performances, due to being an embedded system with limited controls and no keyboard, it can take a very long time to program a complex set of live set patches, and as it is tedious it is prone to human error. More significantly, making small changes such as changing the order of 2 patches, or inserting a single patch and shift everything else down can take hours.
 
-Due to these reasons, a way of editing these RDS files would be very valuable, even if not all parameter values are initially editable. This library is a starting point, which overtime I expect to support:
-- editing all parameter values for the live set
-- other Roland stage pianos, such as:
-- - RD700NX (also uses 2160byte live sets and seemingly the same structure as RD300NX but with more patches)
-- - RD-2000 (appears to use 5090byte live sets)
-- a GUI application to edit patches (not part of this repo, but perhaps another project someone might like to undertake)
+## Supported Hardware
+The [Roland RD300NX](https://www.roland.com/au/products/rd-300nx/) ([MIDI implementation](https://static.roland.com/assets/media/pdf/RD-300NX_MI.pdf)) is currently the only supported model, however the [Roland RD700NX](https://www.roland.com/au/products/rd-700nx/) ([MIDI implementation](https://static.roland.com/assets/media/pdf/RD-700NX_MI2.pdf)) could be supported with minimal effort as it also uses 2160 byte live sets and seemingly the same structure as RD300NX but with more patches. This would require someone to provide example RD700NX files and assist with some testing. Both of these models are discontinued.
+
+It is likely that the currently available [Roland RD-88](https://www.roland.com/au/products/rd-88/) ([MIDI implementation](https://static.roland.com/assets/media/pdf/RD-88_MIDI_Imple_eng03_W.pdf)) and [Roland RD-2000](https://www.roland.com/au/products/rd-2000/) ([MIDI implementation](https://static.roland.com/assets/media/pdf/RD-2000_MIDI_Imple_eng02_W.pdf)) could also be supported, however these would require substancial work as they use different size live sets (RD2000 appears to be 5090 byte).
 
 ## Usage
 
@@ -40,6 +38,9 @@ To generate the JSON schema and save to a JSON file:
 In all instances, a file argument can be replaced with '-' to mean read from STDIN or write to STDOUT, however folder arguments must always be supplied.
 
 If you run `roland-rds help` or without args, you will see usage instructions.
+
+## Editing with a GUI
+If you'd rather not edit JSON directly, the recommended way to edit the JSON data is using [JsonEditor](https://github.com/davidlang42/json-editor). This requires the JSON file and the JSON schema file.
 
 ## Development
 I encourage anyone who has time to add to the understanding of the RDS file, or implement for additional Roland devices. I suggest the following 2 approaches, potentially used in tandem.
