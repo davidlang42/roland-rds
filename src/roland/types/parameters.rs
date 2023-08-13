@@ -13,13 +13,13 @@ pub enum FilterType {
 
 impl From<Parameter> for FilterType {
     fn from(value: Parameter) -> Self {
-        Self::iter().nth(Into::<u16>::into(value) as usize).unwrap()
+        Self::iter().nth(value.0 as usize).unwrap()
     }
 }
 
 impl Into<Parameter> for FilterType {
     fn into(self) -> Parameter {
-        (Self::iter().position(|s| s == self).unwrap() as u16).into()
+        Parameter(Self::iter().position(|s| s == self).unwrap() as i16)
     }
 }
 
@@ -37,13 +37,13 @@ pub enum RateMode {
 
 impl From<Parameter> for RateMode {
     fn from(value: Parameter) -> Self {
-        Self::iter().nth(Into::<u16>::into(value) as usize).unwrap()
+        Self::iter().nth(value.0 as usize).unwrap()
     }
 }
 
 impl Into<Parameter> for RateMode {
     fn into(self) -> Parameter {
-        (Self::iter().position(|s| s == self).unwrap() as u16).into()
+        Parameter(Self::iter().position(|s| s == self).unwrap() as i16)
     }
 }
 
@@ -61,13 +61,13 @@ pub enum DelayMode {
 
 impl From<Parameter> for DelayMode {
     fn from(value: Parameter) -> Self {
-        Self::iter().nth(Into::<u16>::into(value) as usize).unwrap()
+        Self::iter().nth(value.0 as usize).unwrap()
     }
 }
 
 impl Into<Parameter> for DelayMode {
     fn into(self) -> Parameter {
-        (Self::iter().position(|s| s == self).unwrap() as u16).into()
+        Parameter(Self::iter().position(|s| s == self).unwrap() as i16)
     }
 }
 
@@ -105,12 +105,12 @@ pub enum NoteLength {
 
 impl From<Parameter> for NoteLength {
     fn from(value: Parameter) -> Self {
-        Self::iter().nth(Into::<u16>::into(value) as usize).unwrap()
+        Self::iter().nth(value.0 as usize).unwrap()
     }
 }
 
 impl Into<Parameter> for NoteLength {
     fn into(self) -> Parameter {
-        (Self::iter().position(|s| s == self).unwrap() as u16).into()
+        Parameter(Self::iter().position(|s| s == self).unwrap() as i16)
     }
 }
