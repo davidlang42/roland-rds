@@ -1,6 +1,7 @@
 use schemars::JsonSchema;
 use validator::Validate;
 
+use crate::roland::types::numeric::OffsetU8;
 use crate::{roland::types::numeric::Parameter, json::serialize_default_terminated_array};
 use crate::json::validation::valid_boxed_elements;
 
@@ -169,11 +170,9 @@ pub struct CharacterParameters {
     #[validate(range(max = 127))]
     diffusion: u8,
     lf_damp_freq: LogFrequency<50, 4000>, // technically this mislabels 64 as 63 and 320 as 315, but it really doesn't matter
-    #[validate(range(min = -36, max = 0))] //TODO confirm this is actually how the parameter is stored
-    lf_damp_gain: i8,
+    lf_damp_gain: OffsetU8<36, 0, 36>,
     hf_damp_freq: LogFrequency<4000, 12500>, // technically this mislabels 6400 as 6300, but it really doesn't matter
-    #[validate(range(min = -36, max = 0))] //TODO confirm this is actually how the parameter is stored
-    hf_damp_gain: i8,
+    hf_damp_gain: OffsetU8<36, 0, 36>,
     #[validate(range(max = 127))]
     level: u8,
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
@@ -194,9 +193,9 @@ impl From<[Parameter; 20]> for CharacterParameters {
             density: p.next().unwrap().0 as u8,
             diffusion: p.next().unwrap().0 as u8,
             lf_damp_freq: p.next().unwrap().into(),
-            lf_damp_gain: p.next().unwrap().0 as i8,
+            lf_damp_gain: (p.next().unwrap().0 as u8).into(),
             hf_damp_freq: p.next().unwrap().into(),
-            hf_damp_gain: p.next().unwrap().0 as i8,
+            hf_damp_gain: (p.next().unwrap().0 as u8).into(),
             level: p.next().unwrap().0 as u8,
             unused_parameters: Box::new(p.collect::<Vec<_>>().try_into().unwrap())
         }
@@ -213,9 +212,9 @@ impl Parameters<20> for CharacterParameters {
         p.push(Parameter(self.density as i16));
         p.push(Parameter(self.diffusion as i16));
         p.push(self.lf_damp_freq.into());
-        p.push(Parameter(self.lf_damp_gain as i16));
+        p.push(Parameter(Into::<u8>::into(self.lf_damp_gain) as i16));
         p.push(self.hf_damp_freq.into());
-        p.push(Parameter(self.hf_damp_gain as i16));
+        p.push(Parameter(Into::<u8>::into(self.hf_damp_gain) as i16));
         p.push(Parameter(self.level as i16));
         for unused_parameter in self.unused_parameters.iter() {
             p.push(*unused_parameter);
