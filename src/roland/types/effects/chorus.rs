@@ -81,7 +81,7 @@ impl Validate for ChorusType {
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct ChorusParameters {
     filter_type: FilterType,
-    cutoff_frequency: LogFrequency,
+    cutoff_frequency: LogFrequency<200, 8000>,
     pre_delay: LogMilliseconds,
     rate_mode: RateMode,
     rate_hz: LinearFrequency,
@@ -167,7 +167,7 @@ pub struct DelayParameters {
     delay_centre_ms: u16,
     delay_centre_note: NoteLength,
     centre_feedback_percent: EvenPercent,
-    hf_damp: LogFrequencyOrByPass,
+    hf_damp: LogFrequencyOrByPass<200, 8000>,
     #[validate(range(max = 127))]
     left_level: u8,
     #[validate(range(max = 127))]

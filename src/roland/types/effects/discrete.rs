@@ -31,15 +31,15 @@ trait DiscreteValues<T: PartialEq + Display, const OFFSET: i16> {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub struct LogFrequency(pub u16); // 0-16 (200-8000Hz)
+pub struct LogFrequency<const MIN: u16, const MAX: u16>(pub u16); // 0-16 (200-8000Hz)
 
-impl LogFrequency {
-    const BASE_VALUES: [u16; 10] = [200, 250, 315, 400, 500, 630, 800, 1000, 1250, 1600];
-    const MIN: u16 = 200;
-    const MAX: u16 = 8000;
+impl<const L: u16, const H: u16> LogFrequency<L, H> {
+    const BASE_VALUES: [u16; 10] = [50, 63, 80, 100, 125, 160, 200, 250, 315, 400];
+    const MIN: u16 = L;
+    const MAX: u16 = H;
 }
 
-impl DiscreteValues<u16, 0> for LogFrequency {
+impl<const L: u16, const H: u16> DiscreteValues<u16, 0> for LogFrequency<L, H> {
     fn values() -> Vec<u16> {
         let mut factor = 1;
         let mut v = Vec::new();
@@ -63,7 +63,7 @@ impl DiscreteValues<u16, 0> for LogFrequency {
     }
 }
 
-impl JsonSchema for LogFrequency {
+impl<const L: u16, const H: u16> JsonSchema for LogFrequency<L, H> {
     fn schema_name() -> String {
         type_name_pretty::<Self>().into()
     }
@@ -73,14 +73,14 @@ impl JsonSchema for LogFrequency {
     }
 }
 
-impl Serialize for LogFrequency {
+impl<const L: u16, const H: u16> Serialize for LogFrequency<L, H> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where S: serde::Serializer {
         Self::format(self.0).serialize(serializer)
     }
 }
 
-impl<'de> Deserialize<'de> for LogFrequency {
+impl<'de, const L: u16, const H: u16> Deserialize<'de> for LogFrequency<L, H> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where D: serde::Deserializer<'de> {
         let value: Value = Deserialize::deserialize(deserializer)?;
@@ -98,29 +98,29 @@ impl<'de> Deserialize<'de> for LogFrequency {
     }
 }
 
-impl From<Parameter> for LogFrequency {
+impl<const L: u16, const H: u16> From<Parameter> for LogFrequency<L, H> {
     fn from(parameter: Parameter) -> Self {
         Self(Self::value_from(parameter))
     }
 }
 
-impl Into<Parameter> for LogFrequency {
+impl<const L: u16, const H: u16> Into<Parameter> for LogFrequency<L, H> {
     fn into(self) -> Parameter {
         Self::into_parameter(self.0)
     }
 }
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Copy, Clone)]
-pub enum LogFrequencyOrByPass { // 0-17 (200-8000Hz, BYPASS)
-    Frequency(LogFrequency),
+pub enum LogFrequencyOrByPass<const MIN: u16, const MAX: u16> { // 0-17 (200-8000Hz, BYPASS)
+    Frequency(LogFrequency<MIN, MAX>),
     ByPass
 }
 
-impl From<Parameter> for LogFrequencyOrByPass {
+impl<const L: u16, const H: u16> From<Parameter> for LogFrequencyOrByPass<L, H> {
     fn from(value: Parameter) -> Self {
-        let values = LogFrequency::values();
-        if value.0 < LogFrequency::OFFSET || value.0 > LogFrequency::OFFSET + values.len() as i16 {
-            panic!("Parameter out of range: {} (expected {}-{})", value.0, LogFrequency::OFFSET, LogFrequency::OFFSET + values.len() as i16)
+        let values = LogFrequency::<L, H>::values();
+        if value.0 < LogFrequency::<L, H>::OFFSET || value.0 > LogFrequency::<L, H>::OFFSET + values.len() as i16 {
+            panic!("Parameter out of range: {} (expected {}-{})", value.0, LogFrequency::<L, H>::OFFSET, LogFrequency::<L, H>::OFFSET + values.len() as i16)
         } else if value.0 == values.len() as i16 {
             Self::ByPass
         } else {
@@ -129,11 +129,11 @@ impl From<Parameter> for LogFrequencyOrByPass {
     }
 }
 
-impl Into<Parameter> for LogFrequencyOrByPass {
+impl<const L: u16, const H: u16> Into<Parameter> for LogFrequencyOrByPass<L, H> {
     fn into(self) -> Parameter {
         match self {
             Self::Frequency(f) => f.into(),
-            Self::ByPass => Parameter(LogFrequency::OFFSET + LogFrequency::values().len() as i16)
+            Self::ByPass => Parameter(LogFrequency::<L, H>::OFFSET + LogFrequency::<L, H>::values().len() as i16)
         }
     }
 }
