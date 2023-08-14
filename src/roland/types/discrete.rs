@@ -6,22 +6,24 @@ use crate::json::{schema::enum_schema, type_name_pretty};
 use super::numeric::Parameter;
 use serde::{Serialize, Deserialize, de};
 
-trait DiscreteValues<T: PartialEq + Display> {
+trait DiscreteValues<T: PartialEq + Display, const OFFSET: i16> {
+    const OFFSET: i16 = OFFSET;
+
     fn values() -> Vec<T>;
 
     fn format(value: T) -> String;
 
     fn value_from(parameter: Parameter) -> T {
         let values = Self::values();
-        if parameter.0 < 0 || parameter.0 as usize >= values.len() {
-            panic!("Parameter out of range: {} (expected 0-{})", parameter.0, values.len()-1)
+        if parameter.0 < OFFSET || parameter.0 >= OFFSET + values.len() as i16 {
+            panic!("Parameter out of range: {} (expected {}-{})", parameter.0, OFFSET, OFFSET + values.len() as i16 - 1)
         }
-        values.into_iter().nth(parameter.0 as usize).unwrap()
+        values.into_iter().nth((parameter.0 as i16 - OFFSET) as usize).unwrap()
     }
 
     fn into_parameter(value: T) -> Parameter {
         if let Some(position) = Self::values().iter().position(|v| *v == value) {
-            return Parameter(position as i16);
+            return Parameter(position as i16 + OFFSET);
         } else {
             panic!("Invalid discrete value: {}", value);
         }
@@ -37,7 +39,7 @@ impl LogFrequency {
     const MAX: u16 = 8000;
 }
 
-impl DiscreteValues<u16> for LogFrequency {
+impl DiscreteValues<u16, 0> for LogFrequency {
     fn values() -> Vec<u16> {
         let mut factor = 1;
         let mut v = Vec::new();
@@ -117,8 +119,8 @@ pub enum LogFrequencyOrByPass { // 0-17 (200-8000Hz, BYPASS)
 impl From<Parameter> for LogFrequencyOrByPass {
     fn from(value: Parameter) -> Self {
         let values = LogFrequency::values();
-        if value.0 < 0 || value.0 > values.len() as i16 {
-            panic!("Parameter out of range: {} (expected 0-{})", value.0, values.len())
+        if value.0 < LogFrequency::OFFSET || value.0 > LogFrequency::OFFSET + values.len() as i16 {
+            panic!("Parameter out of range: {} (expected {}-{})", value.0, LogFrequency::OFFSET, LogFrequency::OFFSET + values.len() as i16)
         } else if value.0 == values.len() as i16 {
             Self::ByPass
         } else {
@@ -131,7 +133,7 @@ impl Into<Parameter> for LogFrequencyOrByPass {
     fn into(self) -> Parameter {
         match self {
             Self::Frequency(f) => f.into(),
-            Self::ByPass => Parameter(LogFrequency::values().len() as i16)
+            Self::ByPass => Parameter(LogFrequency::OFFSET + LogFrequency::values().len() as i16)
         }
     }
 }
@@ -139,9 +141,9 @@ impl Into<Parameter> for LogFrequencyOrByPass {
 #[derive(Debug, Copy, Clone)]
 pub struct LinearFrequency(pub f64); // 1-200 (0.05-10 by 0.05)
 
-impl DiscreteValues<f64> for LinearFrequency {
+impl DiscreteValues<f64, 1> for LinearFrequency {
     fn values() -> Vec<f64> {
-        enumerate_f64(0.00, 10.0, 0.05) //TODO don't allow 0.00, but use an offset in DiscreteValues instead, probably also needed by EvenPercent but need a Delay example file to test with
+        enumerate_f64(0.05, 10.0, 0.05)
     }
 
     fn format(value: f64) -> String {
@@ -199,7 +201,7 @@ impl Into<Parameter> for LinearFrequency {
 #[derive(Debug, Copy, Clone)]
 pub struct LogMilliseconds(pub f64); // 0-? (0-5 by 0.1, 5-10 by 0.5, 10-50 by 1, 50-100 by 2)
 
-impl DiscreteValues<f64> for LogMilliseconds {
+impl DiscreteValues<f64, 0> for LogMilliseconds {
     fn values() -> Vec<f64> {
         flatten(vec![
             enumerate_f64(0.0, 4.9, 0.1),
@@ -253,10 +255,11 @@ fn enumerate_f64(start: f64, end: f64, step: f64) -> Vec<f64> {
     let mut values = Vec::new();
     let mut i: usize = 0;
     let mut v = start;
-    while v <= end {
+    const EPSILON: f64 = 0.000001;
+    while v <= end + EPSILON {
         values.push(v);
         i += 1;
-        v = start + step * i as f64;
+        v = start + i as f64 * step;
     }
     values
 }
@@ -296,7 +299,7 @@ impl Into<Parameter> for LogMilliseconds {
 #[derive(Debug, Copy, Clone)]
 pub struct EvenPercent(pub i8); // 0-? (-98% to 98% by 2)
 
-impl DiscreteValues<i8> for EvenPercent {
+impl DiscreteValues<i8, 0> for EvenPercent { //TODO might need an OFFSET but need a Delay example file to test with
     fn values() -> Vec<i8> {
         enumerate(-98, 98, 2)
     }
