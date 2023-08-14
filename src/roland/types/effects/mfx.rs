@@ -189,7 +189,7 @@ impl MfxType {
         }
     }
 
-    pub fn number(&self) -> u8 {//TODO
+    pub fn number(&self) -> u8 {
         match self {
             Self::Thru(_) => 0,
             Self::Equalizer(_) => 1,
