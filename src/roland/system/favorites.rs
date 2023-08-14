@@ -10,13 +10,13 @@ use crate::roland::types::numeric::{OneIndexedU16, OneIndexedU8};
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct Favorites {
     #[validate]
-    one_touch_piano_current_number: OneIndexedU8,
+    one_touch_piano_current_number: OneIndexedU8<128>,
     #[validate]
-    unused_one_touch_piano_current_number: [OneIndexedU8; 2],
+    unused_one_touch_piano_current_number: [OneIndexedU8<128>; 2],
     #[validate]
-    one_touch_e_piano_current_number: OneIndexedU8,
+    one_touch_e_piano_current_number: OneIndexedU8<128>,
     #[validate]
-    unused_one_touch_e_piano_current_number: [OneIndexedU8; 2],
+    unused_one_touch_e_piano_current_number: [OneIndexedU8<128>; 2],
     #[validate]
     bank_a: Bank,
     #[validate]

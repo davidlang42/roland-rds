@@ -1,7 +1,7 @@
 use schemars::JsonSchema;
 use validator::Validate;
 
-use crate::roland::types::numeric::OffsetU8;
+use crate::roland::types::numeric::{OffsetU8, OneIndexedU8};
 use crate::{roland::types::numeric::Parameter, json::serialize_default_terminated_array};
 use crate::json::validation::valid_boxed_elements;
 
@@ -162,8 +162,7 @@ pub struct CharacterParameters<const DEFAULT_MS: usize, const DEFAULT_TIME: u8> 
     pre_delay: LogMilliseconds,
     #[validate(range(max = 127))]
     time: u8,
-    #[validate(range(min = 1, max = 8))]
-    size: u8, //TODO fix this using OneIndexedU8
+    size: OneIndexedU8<8>,
     high_cut: LogFrequencyOrByPass<160, 12500>, // technically this mislabels 320 as 315 and 640 as 630, but it really doesn't matter
     #[validate(range(max = 127))]
     density: u8,
@@ -188,7 +187,7 @@ impl<const DMS: usize, const DT: u8> From<[Parameter; 20]> for CharacterParamete
         Self {
             pre_delay: p.next().unwrap().into(),
             time: p.next().unwrap().0 as u8,
-            size: p.next().unwrap().0 as u8,
+            size: (p.next().unwrap().0 as u8).into(),
             high_cut: p.next().unwrap().into(),
             density: p.next().unwrap().0 as u8,
             diffusion: p.next().unwrap().0 as u8,
@@ -207,7 +206,7 @@ impl<const DMS: usize, const DT: u8> Parameters<20> for CharacterParameters<DMS,
         let mut p: Vec<Parameter> = Vec::new();
         p.push(self.pre_delay.into());
         p.push(Parameter(self.time as i16));
-        p.push(Parameter(self.size as i16));
+        p.push(Parameter(Into::<u8>::into(self.size) as i16));
         p.push(self.high_cut.into());
         p.push(Parameter(self.density as i16));
         p.push(Parameter(self.diffusion as i16));
@@ -228,7 +227,7 @@ impl<const DMS: usize, const DT: u8> Default for CharacterParameters<DMS, DT> {
         Self {
             pre_delay: LogMilliseconds(LogMilliseconds::values().into_iter().nth(DMS).unwrap()),
             time: DT,
-            size: 8,
+            size: 8.into(),
             high_cut: LogFrequencyOrByPass::Frequency(LogFrequency(12500)),
             density: 127,
             diffusion: 127,
