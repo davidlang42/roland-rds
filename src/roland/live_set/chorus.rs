@@ -5,7 +5,7 @@ use validator::Validate;
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{Json, StructuredJson, StructuredJsonError};
 use crate::roland::types::enums::OutputSelect;
-use crate::roland::types::effects::ChorusType;
+use crate::roland::types::effects::chorus::ChorusType;
 use crate::roland::types::numeric::Parameter;
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]

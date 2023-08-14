@@ -3,7 +3,7 @@ use schemars::JsonSchema;
 use serde_json::Value;
 use crate::json::{schema::enum_schema, type_name_pretty};
 
-use super::numeric::Parameter;
+use super::super::numeric::Parameter;
 use serde::{Serialize, Deserialize, de};
 
 trait DiscreteValues<T: PartialEq + Display, const OFFSET: i16> {

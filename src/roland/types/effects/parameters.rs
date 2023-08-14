@@ -2,7 +2,7 @@ use schemars::JsonSchema;
 use strum_macros::EnumIter;
 use strum::IntoEnumIterator;
 
-use super::numeric::Parameter;
+use super::super::numeric::Parameter;
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, PartialEq, Copy, Clone)]
 pub enum FilterType {
