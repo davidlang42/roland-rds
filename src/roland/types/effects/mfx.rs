@@ -1,99 +1,99 @@
 use schemars::JsonSchema;
-use validator::Validate;
+use validator::{Validate, ValidationErrors};
 
-use crate::{roland::types::numeric::Parameter, json::validation::unused_by_rd300nx_err};
+use crate::{roland::types::numeric::Parameter, json::{validation::{unused_by_rd300nx_err, validate_boxed_array, merge_all_fixed}, serialize_default_terminated_array}};
 
-use super::{UnknownParameters, Parameters};
+use super::{UnusedParameters, Parameters};
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
 pub enum MfxType { // 0-255
-    Thru(UnknownParameters),
-    Equalizer(UnknownParameters),
-    Spectrum(UnknownParameters),
-    Isolator(UnknownParameters),
-    LowBoost(UnknownParameters),
-    SuperFilter(UnknownParameters),
-    StepFilter(UnknownParameters),
-    Enhancer(UnknownParameters),
-    AutoWah(UnknownParameters),
-    Humanizer(UnknownParameters),
-    SpeakerSimulator(UnknownParameters),
-    Phaser(UnknownParameters),
-    StepPhaser(UnknownParameters),
-    MultiStagePhaser(UnknownParameters),
-    InfinitePhaser(UnknownParameters),
-    RingModulator(UnknownParameters),
-    StepRingModulator(UnknownParameters),
-    Tremolo(UnknownParameters),
-    AutoPan(UnknownParameters),
-    StepPan(UnknownParameters),
-    Slicer(UnknownParameters),
-    Rotary(UnknownParameters),
-    VkRotary(UnknownParameters),
-    Chorus(UnknownParameters),
-    Flanger(UnknownParameters),
-    StepFlanger(UnknownParameters),
-    HexaChorus(UnknownParameters),
-    TremoloChorus(UnknownParameters),
-    SpaceD(UnknownParameters),
-    Chorus3D(UnknownParameters),
-    Flanger3D(UnknownParameters),
-    StepFlanger3D(UnknownParameters),
-    TwoBandChorus(UnknownParameters),
-    TwoBandFlanger(UnknownParameters),
-    TwoBandStepFlanger(UnknownParameters),
-    Overdrive(UnknownParameters),
-    Distortion(UnknownParameters),
-    VsOverdrive(UnknownParameters),
-    VsDistortion(UnknownParameters),
-    GuitarAmpSimulator(UnknownParameters),
-    Compressor(UnknownParameters),
-    Limiter(UnknownParameters),
-    Gate(UnknownParameters),
-    Delay(UnknownParameters),
-    LongDelay(UnknownParameters),
-    SerialDelay(UnknownParameters),
-    ModulationDelay(UnknownParameters),
-    ThreeTapPanDelay(UnknownParameters),
-    FourTapPanDelay(UnknownParameters),
-    MultiTapDelay(UnknownParameters),
-    ReverseDelay(UnknownParameters),
-    ShuffleDelay(UnknownParameters),
-    Delay3D(UnknownParameters),
-    TimeCtrlDelay(UnknownParameters),
-    LongTimeCtrlDelay(UnknownParameters),
-    TapeEcho(UnknownParameters),
-    LofiNoise(UnknownParameters),
-    LofiCompress(UnknownParameters),
-    LofiRadio(UnknownParameters),
-    Telephone(UnknownParameters),
-    Photograph(UnknownParameters),
-    PitchShifter(UnknownParameters),
-    TwoVoicePitchShifter(UnknownParameters),
-    StepPitchShifter(UnknownParameters),
-    Reverb(UnknownParameters),
-    GatedReverb(UnknownParameters),
-    ChorusOverdrive(UnknownParameters),
-    OverdriveFlanger(UnknownParameters),
-    OverdriveDelay(UnknownParameters),
-    DistortionChorus(UnknownParameters),
-    DistortionFlanger(UnknownParameters),
-    DistortionDelay(UnknownParameters),
-    EnhancerChorus(UnknownParameters),
-    EnhancerFlanger(UnknownParameters),
-    EnhancerDelay(UnknownParameters),
-    ChorusDelay(UnknownParameters),
-    FlangerDelay(UnknownParameters),
-    ChorusFlanger(UnknownParameters),
-    UnusedVrChorus(UnknownParameters), //RD700NX only
-    UnusedVrTremolo(UnknownParameters), //RD700NX only
-    UnusedVrAutoWah(UnknownParameters), //RD700NX only
-    UnusedVrPhaser(UnknownParameters), //RD700NX only
-    UnusedOrganMulti(UnknownParameters), //RD700NX only
-    UnusedLinedrive(UnknownParameters), //RD700NX only
-    UnusedSmallPhaser(UnknownParameters), //RD700NX only
-    SympatheticResonance(UnknownParameters), //RD300NX only
-    Other(u8, UnknownParameters)
+    Thru(UnusedParameters<32>),
+    Equalizer(UnusedParameters<32>),
+    Spectrum(UnusedParameters<32>),
+    Isolator(UnusedParameters<32>),
+    LowBoost(UnusedParameters<32>),
+    SuperFilter(UnusedParameters<32>),
+    StepFilter(UnusedParameters<32>),
+    Enhancer(UnusedParameters<32>),
+    AutoWah(UnusedParameters<32>),
+    Humanizer(UnusedParameters<32>),
+    SpeakerSimulator(UnusedParameters<32>),
+    Phaser(UnusedParameters<32>),
+    StepPhaser(UnusedParameters<32>),
+    MultiStagePhaser(UnusedParameters<32>),
+    InfinitePhaser(UnusedParameters<32>),
+    RingModulator(UnusedParameters<32>),
+    StepRingModulator(UnusedParameters<32>),
+    Tremolo(UnusedParameters<32>),
+    AutoPan(UnusedParameters<32>),
+    StepPan(UnusedParameters<32>),
+    Slicer(UnusedParameters<32>),
+    Rotary(UnusedParameters<32>),
+    VkRotary(UnusedParameters<32>),
+    Chorus(UnusedParameters<32>),
+    Flanger(UnusedParameters<32>),
+    StepFlanger(UnusedParameters<32>),
+    HexaChorus(UnusedParameters<32>),
+    TremoloChorus(UnusedParameters<32>),
+    SpaceD(UnusedParameters<32>),
+    Chorus3D(UnusedParameters<32>),
+    Flanger3D(UnusedParameters<32>),
+    StepFlanger3D(UnusedParameters<32>),
+    TwoBandChorus(UnusedParameters<32>),
+    TwoBandFlanger(UnusedParameters<32>),
+    TwoBandStepFlanger(UnusedParameters<32>),
+    Overdrive(UnusedParameters<32>),
+    Distortion(UnusedParameters<32>),
+    VsOverdrive(UnusedParameters<32>),
+    VsDistortion(UnusedParameters<32>),
+    GuitarAmpSimulator(UnusedParameters<32>),
+    Compressor(UnusedParameters<32>),
+    Limiter(UnusedParameters<32>),
+    Gate(UnusedParameters<32>),
+    Delay(UnusedParameters<32>),
+    LongDelay(UnusedParameters<32>),
+    SerialDelay(UnusedParameters<32>),
+    ModulationDelay(UnusedParameters<32>),
+    ThreeTapPanDelay(UnusedParameters<32>),
+    FourTapPanDelay(UnusedParameters<32>),
+    MultiTapDelay(UnusedParameters<32>),
+    ReverseDelay(UnusedParameters<32>),
+    ShuffleDelay(UnusedParameters<32>),
+    Delay3D(UnusedParameters<32>),
+    TimeCtrlDelay(UnusedParameters<32>),
+    LongTimeCtrlDelay(UnusedParameters<32>),
+    TapeEcho(UnusedParameters<32>),
+    LofiNoise(UnusedParameters<32>),
+    LofiCompress(UnusedParameters<32>),
+    LofiRadio(UnusedParameters<32>),
+    Telephone(UnusedParameters<32>),
+    Photograph(UnusedParameters<32>),
+    PitchShifter(UnusedParameters<32>),
+    TwoVoicePitchShifter(UnusedParameters<32>),
+    StepPitchShifter(UnusedParameters<32>),
+    Reverb(UnusedParameters<32>),
+    GatedReverb(UnusedParameters<32>),
+    ChorusOverdrive(UnusedParameters<32>),
+    OverdriveFlanger(UnusedParameters<32>),
+    OverdriveDelay(UnusedParameters<32>),
+    DistortionChorus(UnusedParameters<32>),
+    DistortionFlanger(UnusedParameters<32>),
+    DistortionDelay(UnusedParameters<32>),
+    EnhancerChorus(UnusedParameters<32>),
+    EnhancerFlanger(UnusedParameters<32>),
+    EnhancerDelay(UnusedParameters<32>),
+    ChorusDelay(UnusedParameters<32>),
+    FlangerDelay(UnusedParameters<32>),
+    ChorusFlanger(UnusedParameters<32>),
+    UnusedVrChorus(UnusedParameters<32>), //RD700NX only
+    UnusedVrTremolo(UnusedParameters<32>), //RD700NX only
+    UnusedVrAutoWah(UnusedParameters<32>), //RD700NX only
+    UnusedVrPhaser(UnusedParameters<32>), //RD700NX only
+    UnusedOrganMulti(UnusedParameters<32>), //RD700NX only
+    UnusedLinedrive(UnusedParameters<32>), //RD700NX only
+    UnusedSmallPhaser(UnusedParameters<32>), //RD700NX only
+    SympatheticResonance(UnusedParameters<32>), //RD300NX only
+    Other(OtherMfxParameters)
 }
 
 impl MfxType {
@@ -185,7 +185,7 @@ impl MfxType {
             83 => Self::UnusedLinedrive(parameters.into()),
             84 => Self::UnusedSmallPhaser(parameters.into()),
             85 => Self::SympatheticResonance(parameters.into()),
-            other => Self::Other(other, parameters.into())
+            mfx_number => Self::Other(OtherMfxParameters { mfx_number, unknown: parameters.into() })
         }
     }
 
@@ -277,7 +277,7 @@ impl MfxType {
             Self::UnusedLinedrive(_) => 83,
             Self::UnusedSmallPhaser(_) => 84,
             Self::SympatheticResonance(_) => 85,
-            Self::Other(other, _) => *other
+            Self::Other(o) => o.mfx_number
         }
     }
 
@@ -369,7 +369,7 @@ impl MfxType {
             Self::UnusedLinedrive(_) => "UnusedLinedrive".into(),
             Self::UnusedSmallPhaser(_) => "UnusedSmallPhaser".into(),
             Self::SympatheticResonance(_) => "SympatheticResonance".into(),
-            Self::Other(other, _) => format!("Other({})", other)
+            Self::Other(o) => format!("Other({})", o.mfx_number)
         }
     }
     
@@ -461,7 +461,7 @@ impl MfxType {
             Self::UnusedLinedrive(p) => p.parameters(),
             Self::UnusedSmallPhaser(p) => p.parameters(),
             Self::SympatheticResonance(p) => p.parameters(),
-            Self::Other(_, p) => p.parameters()
+            Self::Other(p) => p.parameters()
         }
     }
 
@@ -568,7 +568,33 @@ impl Validate for MfxType {
             Self::UnusedLinedrive(_) => Err(unused_by_rd300nx_err("0", self)),
             Self::UnusedSmallPhaser(_) => Err(unused_by_rd300nx_err("0", self)),
             Self::SympatheticResonance(p) => p.validate(),
-            Self::Other(_, p) => p.validate()
+            Self::Other(p) => p.validate()
         }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+pub struct OtherMfxParameters {
+    #[validate(range(min = 86))]
+    mfx_number: u8,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 32>")]
+    unknown: Box<[Parameter; 32]>
+}
+
+// similar to Parameters<32> but can't implement from because of the mfx_number
+impl OtherMfxParameters {
+    fn parameters(&self) -> [Parameter; 32] {
+        *self.unknown
+    }
+}
+
+impl Validate for OtherMfxParameters {
+    fn validate(&self) -> Result<(), ValidationErrors> {
+        let mut r = Ok(());
+        // technically this should validate that mfx_number is >= 86, but in practise it won't matter
+        r = merge_all_fixed(r, "unknown", validate_boxed_array(&self.unknown));
+        r
     }
 }
