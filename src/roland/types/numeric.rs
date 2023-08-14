@@ -63,7 +63,7 @@ impl Validate for Parameter {
 pub struct OffsetU8<const OFFSET: u8, const MIN: u8, const MAX: u8>(i8); // MIN(0)-MAX(255) (MIN-OFFSET - MAX-OFFSET)
 
 impl<const O: u8, const L: u8, const H: u8> OffsetU8<O, L, H> {
-    const ZERO: u8 = O;
+    pub const ZERO: u8 = O;
 }
 
 impl<const O: u8, const L: u8, const H: u8> From<u8> for OffsetU8<O, L, H> {
@@ -160,33 +160,33 @@ impl Validate for OneIndexedU16 {
 }
 
 #[derive(Serialize, Deserialize, Debug, Copy, Clone)]
-pub struct OneIndexedU8(u8); // 0-127 (1-128)
+pub struct OneIndexedU8<const MAX: u8>(u8); // 0- MAX-1 (1-MAX)
 
-impl OneIndexedU8 {
-    const MAX: u8 = 128; // this is technically arbitrary and could be a generic parameter, but given this type is currently only used with a max of 300 it is hard coded for now
+impl<const M: u8> OneIndexedU8<M> {
+    const MAX: u8 = M;
 }
 
-impl From<u8> for OneIndexedU8 {
+impl<const M: u8> From<u8> for OneIndexedU8<M> {
     fn from(value: u8) -> Self {
         Self(value + 1)
     }
 }
 
-impl Into<u8> for OneIndexedU8 {
+impl<const M: u8> Into<u8> for OneIndexedU8<M> {
     fn into(self) -> u8 {
         self.0 - 1
     }
 }
 
-impl Default for OneIndexedU8 {
+impl<const M: u8> Default for OneIndexedU8<M> {
     fn default() -> Self {
         Self::from(0)
     }
 }
 
-impl JsonSchema for OneIndexedU8 {
+impl<const M: u8> JsonSchema for OneIndexedU8<M> {
     fn schema_name() -> String {
-        type_name_pretty::<OneIndexedU8>().into()
+        type_name_pretty::<OneIndexedU8::<M>>().into()
     }
 
     fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
@@ -194,7 +194,7 @@ impl JsonSchema for OneIndexedU8 {
     }
 }
 
-impl Validate for OneIndexedU8 {
+impl<const M: u8> Validate for OneIndexedU8<M> {
     fn validate(&self) -> Result<(), validator::ValidationErrors> {
         if self.0 < 1 || self.0 > Self::MAX {
             Err(out_of_range_err("0", &1, &Self::MAX))

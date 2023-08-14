@@ -2,7 +2,7 @@ use schemars::JsonSchema;
 use strum_macros::EnumIter;
 use strum::IntoEnumIterator;
 
-use super::numeric::Parameter;
+use super::super::numeric::Parameter;
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, PartialEq, Copy, Clone)]
 pub enum FilterType {
@@ -112,5 +112,65 @@ impl From<Parameter> for NoteLength {
 impl Into<Parameter> for NoteLength {
     fn into(self) -> Parameter {
         Parameter(Self::iter().position(|s| s == self).unwrap() as i16)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, PartialEq, Copy, Clone)]
+pub enum ReverbCharacter {
+    Room1,
+    Room2,
+    Stage1,
+    Stage2,
+    Hall1,
+    Hall2,
+    Delay,
+    PanDelay
+}
+
+impl From<Parameter> for ReverbCharacter {
+    fn from(value: Parameter) -> Self {
+        Self::iter().nth(value.0 as usize).unwrap()
+    }
+}
+
+impl Into<Parameter> for ReverbCharacter {
+    fn into(self) -> Parameter {
+        Parameter(Self::iter().position(|s| s == self).unwrap() as i16)
+    }
+}
+
+impl Default for ReverbCharacter {
+    fn default() -> Self {
+        Self::from(Parameter::default())
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, PartialEq, Copy, Clone)]
+pub enum Gm2ReverbCharacter {
+    Room1,
+    Room2,
+    Room3,
+    Hall1,
+    Hall2,
+    Plate,
+    Delay,
+    PanDelay
+}
+
+impl From<Parameter> for Gm2ReverbCharacter {
+    fn from(value: Parameter) -> Self {
+        Self::iter().nth(value.0 as usize).unwrap()
+    }
+}
+
+impl Into<Parameter> for Gm2ReverbCharacter {
+    fn into(self) -> Parameter {
+        Parameter(Self::iter().position(|s| s == self).unwrap() as i16)
+    }
+}
+
+impl Default for Gm2ReverbCharacter {
+    fn default() -> Self {
+        Self::from(Parameter::default())
     }
 }
