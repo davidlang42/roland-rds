@@ -7,6 +7,7 @@ use validator::{Validate, ValidationErrors};
 pub mod discrete;
 pub mod parameters;
 pub mod chorus;
+pub mod reverb;
 
 trait Parameters<const N: usize> : Validate + From<[Parameter; N]> {
     fn parameters(&self) -> [Parameter; N];

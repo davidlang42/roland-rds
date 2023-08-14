@@ -114,3 +114,33 @@ impl Into<Parameter> for NoteLength {
         Parameter(Self::iter().position(|s| s == self).unwrap() as i16)
     }
 }
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, PartialEq, Copy, Clone)]
+pub enum ReverbOption {
+    Room1,
+    Room2,
+    Stage1,
+    Stage2,
+    Hall1,
+    Hall2,
+    Delay,
+    PanDelay
+}
+
+impl From<Parameter> for ReverbOption {
+    fn from(value: Parameter) -> Self {
+        Self::iter().nth(value.0 as usize).unwrap()
+    }
+}
+
+impl Into<Parameter> for ReverbOption {
+    fn into(self) -> Parameter {
+        Parameter(Self::iter().position(|s| s == self).unwrap() as i16)
+    }
+}
+
+impl Default for ReverbOption {
+    fn default() -> Self {
+        Self::from(Parameter::default())
+    }
+}

@@ -507,35 +507,6 @@ impl Default for OutputSelect {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
-pub enum ReverbType { // 0-6
-    Off,
-    Reverb,
-    Room,
-    Hall,
-    Plate,
-    Gm2Reverb,
-    Cathedral
-}
-
-impl From<u8> for ReverbType {
-    fn from(value: u8) -> Self {
-        Self::iter().nth(value as usize).unwrap()
-    }
-}
-
-impl Into<u8> for ReverbType {
-    fn into(self) -> u8 {
-        Self::iter().position(|s| s == self).unwrap() as u8
-    }
-}
-
-impl Default for ReverbType {
-    fn default() -> Self {
-        Self::from(0)
-    }
-}
-
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter)]
 pub enum SoundFocusType { // 0-31
     PianoType1,
