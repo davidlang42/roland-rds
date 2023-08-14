@@ -63,7 +63,7 @@ impl Validate for Parameter {
 pub struct OffsetU8<const OFFSET: u8, const MIN: u8, const MAX: u8>(i8); // MIN(0)-MAX(255) (MIN-OFFSET - MAX-OFFSET)
 
 impl<const O: u8, const L: u8, const H: u8> OffsetU8<O, L, H> {
-    const ZERO: u8 = O;
+    pub const ZERO: u8 = O;
 }
 
 impl<const O: u8, const L: u8, const H: u8> From<u8> for OffsetU8<O, L, H> {

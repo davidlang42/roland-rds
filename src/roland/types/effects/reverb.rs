@@ -5,7 +5,7 @@ use crate::roland::types::numeric::OffsetU8;
 use crate::{roland::types::numeric::Parameter, json::serialize_default_terminated_array};
 use crate::json::validation::valid_boxed_elements;
 
-use super::discrete::LogMilliseconds;
+use super::discrete::{LogMilliseconds, DiscreteValues};
 use super::parameters::{ReverbCharacter, Gm2ReverbCharacter};
 use super::{UnusedParameters, Parameters, discrete::{LogFrequency, LogFrequencyOrByPass}};
 
@@ -13,9 +13,9 @@ use super::{UnusedParameters, Parameters, discrete::{LogFrequency, LogFrequencyO
 pub enum ReverbType { // 0-6
     Off(UnusedParameters<20>),
     Reverb(ReverbParameters),
-    Room(CharacterParameters),
-    Hall(CharacterParameters),
-    Plate(CharacterParameters),
+    Room(CharacterParameters<50, 64>), // 50 = 5ms
+    Hall(CharacterParameters<76, 70>), // 76 = 26ms
+    Plate(CharacterParameters<66, 64>), // 66 = 16ms
     Gm2Reverb(Gm2ReverbParameters),
     Cathedral(CathedralParameters)
 }
@@ -158,12 +158,12 @@ impl Default for ReverbParameters {
 }
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
-pub struct CharacterParameters {
+pub struct CharacterParameters<const DEFAULT_MS: usize, const DEFAULT_TIME: u8> {
     pre_delay: LogMilliseconds,
     #[validate(range(max = 127))]
     time: u8,
     #[validate(range(min = 1, max = 8))]
-    size: u8,
+    size: u8, //TODO fix this using OneIndexedU8
     high_cut: LogFrequencyOrByPass<160, 12500>, // technically this mislabels 320 as 315 and 640 as 630, but it really doesn't matter
     #[validate(range(max = 127))]
     density: u8,
@@ -182,7 +182,7 @@ pub struct CharacterParameters {
     unused_parameters: Box<[Parameter; 9]>
 }
 
-impl From<[Parameter; 20]> for CharacterParameters {
+impl<const DMS: usize, const DT: u8> From<[Parameter; 20]> for CharacterParameters<DMS, DT> {
     fn from(value: [Parameter; 20]) -> Self {
         let mut p = value.into_iter();
         Self {
@@ -202,7 +202,7 @@ impl From<[Parameter; 20]> for CharacterParameters {
     }
 }
 
-impl Parameters<20> for CharacterParameters {
+impl<const DMS: usize, const DT: u8> Parameters<20> for CharacterParameters<DMS, DT> {
     fn parameters(&self) -> [Parameter; 20] {
         let mut p: Vec<Parameter> = Vec::new();
         p.push(self.pre_delay.into());
@@ -223,19 +223,24 @@ impl Parameters<20> for CharacterParameters {
     }
 }
 
-//TODO add generics for default
-// impl Default for CharacterParameters {
-//     fn default() -> Self {
-//         Self {
-//             character: Gm2ReverbCharacter::Hall2,
-//             pre_lpf: 0,
-//             level: 64,
-//             time: 64,
-//             delay_feedback: 0,
-//             unused_parameters: Default::default()
-//         }
-//     }
-// }
+impl<const DMS: usize, const DT: u8> Default for CharacterParameters<DMS, DT> {
+    fn default() -> Self {
+        Self {
+            pre_delay: LogMilliseconds(LogMilliseconds::values().into_iter().nth(DMS).unwrap()),
+            time: DT,
+            size: 8,
+            high_cut: LogFrequencyOrByPass::Frequency(LogFrequency(12500)),
+            density: 127,
+            diffusion: 127,
+            lf_damp_freq: LogFrequency(4000),
+            lf_damp_gain: OffsetU8::<36, 0, 36>::ZERO.into(), // 0db
+            hf_damp_freq: LogFrequency(4000),
+            hf_damp_gain: OffsetU8::<36, 0, 36>::ZERO.into(), // 0db
+            level: 64,
+            unused_parameters: Default::default()
+        }
+    }
+}
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct Gm2ReverbParameters {

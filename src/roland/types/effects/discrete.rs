@@ -6,7 +6,7 @@ use crate::json::{schema::enum_schema, type_name_pretty};
 use super::super::numeric::Parameter;
 use serde::{Serialize, Deserialize, de};
 
-trait DiscreteValues<T: PartialEq + Display, const OFFSET: i16> {
+pub trait DiscreteValues<T: PartialEq + Display, const OFFSET: i16> {
     const OFFSET: i16 = OFFSET;
 
     fn values() -> Vec<T>;
