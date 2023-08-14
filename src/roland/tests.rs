@@ -7,6 +7,7 @@ use test_case::test_case;
 #[test_case("examples/rd300nx/_DEFAULT_AGAIN.RDS")]
 #[test_case("examples/rd300nx/ASSIGN.RDS")]
 #[test_case("examples/rd300nx/CH.RDS")]
+#[test_case("examples/rd300nx/CH-D.RDS")]
 #[test_case("examples/rd300nx/CHO-REV.RDS")]
 #[test_case("examples/rd300nx/COMMON.RDS")]
 #[test_case("examples/rd300nx/COMP_127.RDS")]

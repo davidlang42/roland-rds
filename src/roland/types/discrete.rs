@@ -299,7 +299,7 @@ impl Into<Parameter> for LogMilliseconds {
 #[derive(Debug, Copy, Clone)]
 pub struct EvenPercent(pub i8); // 0-? (-98% to 98% by 2)
 
-impl DiscreteValues<i8, 0> for EvenPercent { //TODO might need an OFFSET but need a Delay example file to test with
+impl DiscreteValues<i8, 0> for EvenPercent {
     fn values() -> Vec<i8> {
         enumerate(-98, 98, 2)
     }
