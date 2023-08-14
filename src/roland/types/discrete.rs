@@ -137,11 +137,11 @@ impl Into<Parameter> for LogFrequencyOrByPass {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub struct LinearFrequency(pub f64); // 0-? (0.05-10 by 0.05)
+pub struct LinearFrequency(pub f64); // 1-200 (0.05-10 by 0.05)
 
 impl DiscreteValues<f64> for LinearFrequency {
     fn values() -> Vec<f64> {
-        enumerate(0.05, 10.0, 0.05)
+        enumerate_f64(0.00, 10.0, 0.05) //TODO don't allow 0.00, but use an offset in DiscreteValues instead, probably also needed by EvenPercent but need a Delay example file to test with
     }
 
     fn format(value: f64) -> String {
@@ -202,10 +202,10 @@ pub struct LogMilliseconds(pub f64); // 0-? (0-5 by 0.1, 5-10 by 0.5, 10-50 by 1
 impl DiscreteValues<f64> for LogMilliseconds {
     fn values() -> Vec<f64> {
         flatten(vec![
-            enumerate(0.0, 4.9, 0.1),
-            enumerate(5.0, 9.5, 0.5),
-            enumerate(10.0, 49.0, 1.0),
-            enumerate(50.0, 100.0, 2.0)
+            enumerate_f64(0.0, 4.9, 0.1),
+            enumerate_f64(5.0, 9.5, 0.5),
+            enumerate_f64(10.0, 49.0, 1.0),
+            enumerate_f64(50.0, 100.0, 2.0)
         ])
     }
 
@@ -247,6 +247,18 @@ impl<'de> Deserialize<'de> for LogMilliseconds {
             _ => Err(de::Error::custom(format!("Expected string")))
         }
     }
+}
+
+fn enumerate_f64(start: f64, end: f64, step: f64) -> Vec<f64> {
+    let mut values = Vec::new();
+    let mut i: usize = 0;
+    let mut v = start;
+    while v <= end {
+        values.push(v);
+        i += 1;
+        v = start + step * i as f64;
+    }
+    values
 }
 
 fn enumerate<T: PartialOrd + AddAssign + Copy>(start: T, end: T, step: T) -> Vec<T> {
