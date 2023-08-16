@@ -6,7 +6,7 @@ use validator::Validate;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{Json, StructuredJson, serialize_chars_as_string, StructuredJsonError};
-use crate::json::validation::{valid_chars, contains_all_keys};
+use crate::json::validation::{valid_chars, contains_all_keys, not_system_only_button_function, not_system_only_pedal_function};
 use crate::roland::types::StateMap;
 use crate::roland::types::enums::{Layer, SliderSelect, KeyOffPosition, KeyTouchVelocity, KeyTouchCurveType, VoiceReserve, HarmonicBar, MidiChannel, ButtonFunction, PedalFunction, SliderFunction, SoundFocusType};
 use crate::roland::types::numeric::OffsetU8;
@@ -28,15 +28,19 @@ pub struct Common {
     #[validate(range(min = 10, max = 500))]
     live_set_tempo: u16,
     #[validate]
+    #[validate(custom = "not_system_only_pedal_function")]
     pub fc1_assign: PedalFunction, // 0-144
     #[validate]
+    #[validate(custom = "not_system_only_pedal_function")]
     pub fc2_assign: PedalFunction, // 0-144
     sound_focus_switch: bool,
     #[validate]
     sound_focus_type: SoundFocusType,
     #[validate(range(max = 127))]
     sound_focus_value: u8,
+    #[validate(custom = "not_system_only_button_function")]
     s1_assign: ButtonFunction, // 0-17
+    #[validate(custom = "not_system_only_button_function")]
     s2_assign: ButtonFunction, // 0-17
     s1_state: bool,
     s2_state: bool,

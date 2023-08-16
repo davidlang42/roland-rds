@@ -924,6 +924,17 @@ pub enum ButtonFunction { // 0-20
     PanelLock // system only
 }
 
+impl ButtonFunction {
+    pub fn is_system_only(&self) -> bool {
+        match self {
+            Self::LiveSetUp => true,
+            Self::LiveSetDown => true,
+            Self::PanelLock => true,
+            _ => false
+        }
+    }
+}
+
 impl From<u8> for ButtonFunction {
     fn from(value: u8) -> Self {
         Self::iter().nth(value as usize).unwrap()
@@ -958,10 +969,22 @@ pub enum PedalFunction { // 0-146 (OFF, CC00 - CC127, BEND-UP, BEND-DOWN, AFTERT
     SongReset,
     Mfx1Switch,
     UnusedMfx2Switch,
+    Mfx1Control,
+    UnusedMfx2Control,
     RotarySpeed,
     SoundFocusValue,
     LiveSetUp, // system only
     LiveSetDown // system only
+}
+
+impl PedalFunction {
+    pub fn is_system_only(&self) -> bool {
+        match self {
+            Self::LiveSetUp => true,
+            Self::LiveSetDown => true,
+            _ => false
+        }
+    }
 }
 
 impl Validate for PedalFunction {

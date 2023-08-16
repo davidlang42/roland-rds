@@ -7,6 +7,7 @@ use std::hash::Hash;
 use std::cmp::Eq;
 
 use crate::roland::layers::LogicalLayer;
+use crate::roland::types::enums::{ButtonFunction, PedalFunction};
 use crate::roland::types::notes::PianoKey;
 
 pub fn valid_chars<const N: usize>(chars: &[char; N]) -> Result<(), ValidationError> {
@@ -143,6 +144,26 @@ pub fn valid_velocity_range<T: LayerRanges>(layer: &T) -> Result<(), ValidationE
         let mut e = ValidationError::new("velocity_range_upper is less than velocity_range_lower");
         e.add_param(Cow::from("velocity_range_lower"), &layer.get_velocity_lower());
         e.add_param(Cow::from("velocity_range_upper"), &layer.get_velocity_upper());
+        Err(e)
+    } else {
+        Ok(())
+    }
+}
+
+pub fn not_system_only_button_function(value: &ButtonFunction) -> Result<(), ValidationError> {
+    if value.is_system_only() {
+        let mut e = ValidationError::new("System only ButtonFunction used for LiveSet");
+        e.add_param(Cow::from("button_function"), value);
+        Err(e)
+    } else {
+        Ok(())
+    }
+}
+
+pub fn not_system_only_pedal_function(value: &PedalFunction) -> Result<(), ValidationError> {
+    if value.is_system_only() {
+        let mut e = ValidationError::new("System only PedalFunction used for LiveSet");
+        e.add_param(Cow::from("pedal_function"), value);
         Err(e)
     } else {
         Ok(())
