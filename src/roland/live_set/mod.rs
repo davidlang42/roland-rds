@@ -14,6 +14,7 @@ use self::reverb::Reverb;
 use self::song_rhythm::SongRhythm;
 
 use super::layers::{LogicalLayer, ToneWheelLayer, EPianoLayer, InternalLayer, ExternalLayer, ToneLayer, PianoLayer};
+use super::sum_to_zero;
 
 mod common;
 pub mod chorus;
@@ -203,10 +204,6 @@ impl Json for LiveSet {
     fn from_json(json: String) -> Result<Self, serde_json::Error> {
         serde_json::from_str(&json)
     }
-}
-
-fn sum_to_zero(sum: u16) -> u8 {
-    (u8::MAX - sum.to_be_bytes()[1]).wrapping_add(1)
 }
 
 impl Warnings for LiveSet {
