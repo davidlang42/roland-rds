@@ -1,10 +1,12 @@
+use std::borrow::Cow;
+
 use schemars::{schema::{StringValidation, SchemaObject, InstanceType}, JsonSchema};
 use serde::{de, Serialize, Deserialize};
 
 pub fn deserialize<'de, D, const N: usize>(deserializer: D) -> Result<[char; N], D::Error> 
 where D: serde::Deserializer<'de>
 {
-    let s = <&str>::deserialize(deserializer)?;
+    let s = <Cow<'de, str>>::deserialize(deserializer)?; // Cow is required because if the string contains escaped chars (eg. //), you'll get an owned string instead of a borrowed string, but Cow can handle either
     let chars: Vec<char> = s.chars().collect();
     if chars.len() != N {
         Err(de::Error::custom(format!("Expected {} chars, but got {}", N, chars.len())))
