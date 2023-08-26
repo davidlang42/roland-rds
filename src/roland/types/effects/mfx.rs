@@ -10,81 +10,81 @@ pub enum MfxType { // 0-255
     Thru(UnusedParameters<32>),
     Equalizer(EqualizerParameters),
     Spectrum(SpectrumParameters),
-    Isolator(UnusedParameters<32>),
-    LowBoost(UnusedParameters<32>),
-    SuperFilter(UnusedParameters<32>),
-    StepFilter(UnusedParameters<32>),
-    Enhancer(UnusedParameters<32>),
-    AutoWah(UnusedParameters<32>),
-    Humanizer(UnusedParameters<32>),
-    SpeakerSimulator(UnusedParameters<32>),
-    Phaser(UnusedParameters<32>),
-    StepPhaser(UnusedParameters<32>),
-    MultiStagePhaser(UnusedParameters<32>),
-    InfinitePhaser(UnusedParameters<32>),
-    RingModulator(UnusedParameters<32>),
-    StepRingModulator(UnusedParameters<32>),
-    Tremolo(UnusedParameters<32>),
-    AutoPan(UnusedParameters<32>),
-    StepPan(UnusedParameters<32>),
-    Slicer(UnusedParameters<32>),
-    Rotary(UnusedParameters<32>),
-    VkRotary(UnusedParameters<32>),
-    Chorus(UnusedParameters<32>),
-    Flanger(UnusedParameters<32>),
-    StepFlanger(UnusedParameters<32>),
-    HexaChorus(UnusedParameters<32>),
-    TremoloChorus(UnusedParameters<32>),
-    SpaceD(UnusedParameters<32>),
-    Chorus3D(UnusedParameters<32>),
-    Flanger3D(UnusedParameters<32>),
-    StepFlanger3D(UnusedParameters<32>),
-    TwoBandChorus(UnusedParameters<32>),
-    TwoBandFlanger(UnusedParameters<32>),
-    TwoBandStepFlanger(UnusedParameters<32>),
-    Overdrive(UnusedParameters<32>),
-    Distortion(UnusedParameters<32>),
-    VsOverdrive(UnusedParameters<32>),
-    VsDistortion(UnusedParameters<32>),
-    GuitarAmpSimulator(UnusedParameters<32>),
-    Compressor(UnusedParameters<32>),
-    Limiter(UnusedParameters<32>),
-    Gate(UnusedParameters<32>),
-    Delay(UnusedParameters<32>),
-    LongDelay(UnusedParameters<32>),
-    SerialDelay(UnusedParameters<32>),
-    ModulationDelay(UnusedParameters<32>),
-    ThreeTapPanDelay(UnusedParameters<32>),
-    FourTapPanDelay(UnusedParameters<32>),
-    MultiTapDelay(UnusedParameters<32>),
-    ReverseDelay(UnusedParameters<32>),
-    ShuffleDelay(UnusedParameters<32>),
-    Delay3D(UnusedParameters<32>),
-    TimeCtrlDelay(UnusedParameters<32>),
-    LongTimeCtrlDelay(UnusedParameters<32>),
-    TapeEcho(UnusedParameters<32>),
-    LofiNoise(UnusedParameters<32>),
-    LofiCompress(UnusedParameters<32>),
-    LofiRadio(UnusedParameters<32>),
-    Telephone(UnusedParameters<32>),
-    Photograph(UnusedParameters<32>),
-    PitchShifter(UnusedParameters<32>),
-    TwoVoicePitchShifter(UnusedParameters<32>),
-    StepPitchShifter(UnusedParameters<32>),
-    Reverb(UnusedParameters<32>),
-    GatedReverb(UnusedParameters<32>),
-    ChorusOverdrive(UnusedParameters<32>),
-    OverdriveFlanger(UnusedParameters<32>),
-    OverdriveDelay(UnusedParameters<32>),
-    DistortionChorus(UnusedParameters<32>),
-    DistortionFlanger(UnusedParameters<32>),
-    DistortionDelay(UnusedParameters<32>),
-    EnhancerChorus(UnusedParameters<32>),
-    EnhancerFlanger(UnusedParameters<32>),
-    EnhancerDelay(UnusedParameters<32>),
-    ChorusDelay(UnusedParameters<32>),
-    FlangerDelay(UnusedParameters<32>),
-    ChorusFlanger(UnusedParameters<32>),
+    Isolator(UnusedParameters<32>), //TODO implement parameters
+    LowBoost(UnusedParameters<32>), //TODO implement parameters
+    SuperFilter(UnusedParameters<32>), //TODO implement parameters
+    StepFilter(UnusedParameters<32>), //TODO implement parameters
+    Enhancer(UnusedParameters<32>), //TODO implement parameters
+    AutoWah(UnusedParameters<32>), //TODO implement parameters
+    Humanizer(UnusedParameters<32>), //TODO implement parameters
+    SpeakerSimulator(UnusedParameters<32>), //TODO implement parameters
+    Phaser(UnusedParameters<32>), //TODO implement parameters
+    StepPhaser(UnusedParameters<32>), //TODO implement parameters
+    MultiStagePhaser(UnusedParameters<32>), //TODO implement parameters
+    InfinitePhaser(UnusedParameters<32>), //TODO implement parameters
+    RingModulator(UnusedParameters<32>), //TODO implement parameters
+    StepRingModulator(UnusedParameters<32>), //TODO implement parameters
+    Tremolo(UnusedParameters<32>), //TODO implement parameters
+    AutoPan(UnusedParameters<32>), //TODO implement parameters
+    StepPan(UnusedParameters<32>), //TODO implement parameters
+    Slicer(UnusedParameters<32>), //TODO implement parameters
+    Rotary(UnusedParameters<32>), //TODO implement parameters
+    VkRotary(UnusedParameters<32>), //TODO implement parameters
+    Chorus(UnusedParameters<32>), //TODO implement parameters
+    Flanger(UnusedParameters<32>), //TODO implement parameters
+    StepFlanger(UnusedParameters<32>), //TODO implement parameters
+    HexaChorus(UnusedParameters<32>), //TODO implement parameters
+    TremoloChorus(UnusedParameters<32>), //TODO implement parameters
+    SpaceD(UnusedParameters<32>), //TODO implement parameters
+    Chorus3D(UnusedParameters<32>), //TODO implement parameters
+    Flanger3D(UnusedParameters<32>), //TODO implement parameters
+    StepFlanger3D(UnusedParameters<32>), //TODO implement parameters
+    TwoBandChorus(UnusedParameters<32>), //TODO implement parameters
+    TwoBandFlanger(UnusedParameters<32>), //TODO implement parameters
+    TwoBandStepFlanger(UnusedParameters<32>), //TODO implement parameters
+    Overdrive(UnusedParameters<32>), //TODO implement parameters
+    Distortion(UnusedParameters<32>), //TODO implement parameters
+    VsOverdrive(UnusedParameters<32>), //TODO implement parameters
+    VsDistortion(UnusedParameters<32>), //TODO implement parameters
+    GuitarAmpSimulator(UnusedParameters<32>), //TODO implement parameters
+    Compressor(UnusedParameters<32>), //TODO implement parameters
+    Limiter(UnusedParameters<32>), //TODO implement parameters
+    Gate(UnusedParameters<32>), //TODO implement parameters
+    Delay(UnusedParameters<32>), //TODO implement parameters
+    LongDelay(UnusedParameters<32>), //TODO implement parameters
+    SerialDelay(UnusedParameters<32>), //TODO implement parameters
+    ModulationDelay(UnusedParameters<32>), //TODO implement parameters
+    ThreeTapPanDelay(UnusedParameters<32>), //TODO implement parameters
+    FourTapPanDelay(UnusedParameters<32>), //TODO implement parameters
+    MultiTapDelay(UnusedParameters<32>), //TODO implement parameters
+    ReverseDelay(UnusedParameters<32>), //TODO implement parameters
+    ShuffleDelay(UnusedParameters<32>), //TODO implement parameters
+    Delay3D(UnusedParameters<32>), //TODO implement parameters
+    TimeCtrlDelay(UnusedParameters<32>), //TODO implement parameters
+    LongTimeCtrlDelay(UnusedParameters<32>), //TODO implement parameters
+    TapeEcho(UnusedParameters<32>), //TODO implement parameters
+    LofiNoise(UnusedParameters<32>), //TODO implement parameters
+    LofiCompress(UnusedParameters<32>), //TODO implement parameters
+    LofiRadio(UnusedParameters<32>), //TODO implement parameters
+    Telephone(UnusedParameters<32>), //TODO implement parameters
+    Photograph(UnusedParameters<32>), //TODO implement parameters
+    PitchShifter(UnusedParameters<32>), //TODO implement parameters
+    TwoVoicePitchShifter(UnusedParameters<32>), //TODO implement parameters
+    StepPitchShifter(UnusedParameters<32>), //TODO implement parameters
+    Reverb(UnusedParameters<32>), //TODO implement parameters
+    GatedReverb(UnusedParameters<32>), //TODO implement parameters
+    ChorusOverdrive(UnusedParameters<32>), //TODO implement parameters
+    OverdriveFlanger(UnusedParameters<32>), //TODO implement parameters
+    OverdriveDelay(UnusedParameters<32>), //TODO implement parameters
+    DistortionChorus(UnusedParameters<32>), //TODO implement parameters
+    DistortionFlanger(UnusedParameters<32>), //TODO implement parameters
+    DistortionDelay(UnusedParameters<32>), //TODO implement parameters
+    EnhancerChorus(UnusedParameters<32>), //TODO implement parameters
+    EnhancerFlanger(UnusedParameters<32>), //TODO implement parameters
+    EnhancerDelay(UnusedParameters<32>), //TODO implement parameters
+    ChorusDelay(UnusedParameters<32>), //TODO implement parameters
+    FlangerDelay(UnusedParameters<32>), //TODO implement parameters
+    ChorusFlanger(UnusedParameters<32>), //TODO implement parameters
     UnusedVrChorus(UnusedParameters<32>), //RD700NX only
     UnusedVrTremolo(UnusedParameters<32>), //RD700NX only
     UnusedVrAutoWah(UnusedParameters<32>), //RD700NX only
@@ -92,7 +92,7 @@ pub enum MfxType { // 0-255
     UnusedOrganMulti(UnusedParameters<32>), //RD700NX only
     UnusedLinedrive(UnusedParameters<32>), //RD700NX only
     UnusedSmallPhaser(UnusedParameters<32>), //RD700NX only
-    SympatheticResonance(UnusedParameters<32>), //RD300NX only
+    SympatheticResonance(UnusedParameters<32>), //TODO implement parameters //RD300NX only
     Other(OtherMfxParameters)
 }
 
