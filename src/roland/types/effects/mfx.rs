@@ -9,7 +9,7 @@ use super::{UnusedParameters, Parameters, discrete::{LogFrequency, QFactor}};
 pub enum MfxType { // 0-255
     Thru(UnusedParameters<32>),
     Equalizer(EqualizerParameters),
-    Spectrum(UnusedParameters<32>),
+    Spectrum(SpectrumParameters),
     Isolator(UnusedParameters<32>),
     LowBoost(UnusedParameters<32>),
     SuperFilter(UnusedParameters<32>),
@@ -674,6 +674,83 @@ impl Default for EqualizerParameters {
             mid2_q: QFactor(0.5),
             high_freq: LogFrequency(4000),
             high_gain: OffsetU8::default(),
+            level: 127,
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
+pub struct SpectrumParameters {
+    band1_250hz: OffsetU8<15, 0, 30>,
+    band2_500hz: OffsetU8<15, 0, 30>,
+    band3_1000hz: OffsetU8<15, 0, 30>,
+    band4_1250hz: OffsetU8<15, 0, 30>,
+    band5_2000hz: OffsetU8<15, 0, 30>,
+    band6_3150hz: OffsetU8<15, 0, 30>,
+    band7_4000hz: OffsetU8<15, 0, 30>,
+    band8_8000hz: OffsetU8<15, 0, 30>,
+    q: QFactor,
+    #[validate(range(max = 127))]
+    level: u8,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 22>")]
+    #[validate(custom = "valid_boxed_elements")]
+    unused_parameters: Box<[Parameter; 22]>
+}
+
+impl From<[Parameter; 32]> for SpectrumParameters {
+    fn from(value: [Parameter; 32]) -> Self {
+        let mut p = value.into_iter();
+        Self {
+            band1_250hz: (p.next().unwrap().0 as u8).into(),
+            band2_500hz: (p.next().unwrap().0 as u8).into(),
+            band3_1000hz: (p.next().unwrap().0 as u8).into(),
+            band4_1250hz: (p.next().unwrap().0 as u8).into(),
+            band5_2000hz: (p.next().unwrap().0 as u8).into(),
+            band6_3150hz: (p.next().unwrap().0 as u8).into(),
+            band7_4000hz: (p.next().unwrap().0 as u8).into(),
+            band8_8000hz: (p.next().unwrap().0 as u8).into(),
+            q: p.next().unwrap().into(),
+            level: p.next().unwrap().0 as u8,
+            unused_parameters: Box::new(p.collect::<Vec<_>>().try_into().unwrap())
+        }
+    }
+}
+
+impl Parameters<32> for SpectrumParameters {
+    fn parameters(&self) -> [Parameter; 32] {
+        let mut p: Vec<Parameter> = Vec::new();
+        p.push(Parameter(Into::<u8>::into(self.band1_250hz) as i16));
+        p.push(Parameter(Into::<u8>::into(self.band2_500hz) as i16));
+        p.push(Parameter(Into::<u8>::into(self.band3_1000hz) as i16));
+        p.push(Parameter(Into::<u8>::into(self.band4_1250hz) as i16));
+        p.push(Parameter(Into::<u8>::into(self.band5_2000hz) as i16));
+        p.push(Parameter(Into::<u8>::into(self.band6_3150hz) as i16));
+        p.push(Parameter(Into::<u8>::into(self.band7_4000hz) as i16));
+        p.push(Parameter(Into::<u8>::into(self.band8_8000hz) as i16));
+        p.push(self.q.into());
+        p.push(Parameter(self.level as i16));
+        for unused_parameter in self.unused_parameters.iter() {
+            p.push(*unused_parameter);
+        }
+        p.try_into().unwrap()
+    }
+}
+
+impl Default for SpectrumParameters {
+    fn default() -> Self {
+        Self {
+            band1_250hz: OffsetU8::default(),
+            band2_500hz: OffsetU8::default(),
+            band3_1000hz: OffsetU8::default(),
+            band4_1250hz: OffsetU8::default(),
+            band5_2000hz: OffsetU8::default(),
+            band6_3150hz: OffsetU8::default(),
+            band7_4000hz: OffsetU8::default(),
+            band8_8000hz: OffsetU8::default(),
+            q: QFactor(0.5),
             level: 127,
             unused_parameters: Default::default()
         }
