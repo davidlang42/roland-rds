@@ -1,14 +1,14 @@
 use schemars::JsonSchema;
 use validator::{Validate, ValidationErrors};
 
-use crate::{roland::types::numeric::Parameter, json::{validation::{unused_by_rd300nx_err, validate_boxed_array, merge_all_fixed}, serialize_default_terminated_array}};
-
-use super::{UnusedParameters, Parameters};
+use crate::{roland::types::numeric::{Parameter, OffsetU8}, json::{validation::{unused_by_rd300nx_err, validate_boxed_array, merge_all_fixed}, serialize_default_terminated_array}};
+use crate::json::validation::valid_boxed_elements;
+use super::{UnusedParameters, Parameters, discrete::{LogFrequency, QFactor}};
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
 pub enum MfxType { // 0-255
     Thru(UnusedParameters<32>),
-    Equalizer(UnusedParameters<32>),
+    Equalizer(EqualizerParameters),
     Spectrum(UnusedParameters<32>),
     Isolator(UnusedParameters<32>),
     LowBoost(UnusedParameters<32>),
@@ -596,5 +596,86 @@ impl Validate for OtherMfxParameters {
         // technically this should validate that mfx_number is >= 86, but in practise it won't matter
         r = merge_all_fixed(r, "unknown", validate_boxed_array(&self.unknown));
         r
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
+pub struct EqualizerParameters {
+    low_freq: LogFrequency<20, 400>,
+    low_gain: OffsetU8<15, 0, 30>,
+    mid1_freq: LogFrequency<200, 8000>,
+    mid1_gain: OffsetU8<15, 0, 30>,
+    mid1_q: QFactor,
+    mid2_freq: LogFrequency<200, 8000>,
+    mid2_gain: OffsetU8<15, 0, 30>,
+    mid2_q: QFactor,
+    high_freq: LogFrequency<2000, 16000>,
+    high_gain: OffsetU8<15, 0, 30>,
+    #[validate(range(max = 127))]
+    level: u8,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 21>")]
+    #[validate(custom = "valid_boxed_elements")]
+    unused_parameters: Box<[Parameter; 21]>
+}
+
+impl From<[Parameter; 32]> for EqualizerParameters {
+    fn from(value: [Parameter; 32]) -> Self {
+        let mut p = value.into_iter();
+        Self {
+            low_freq: p.next().unwrap().into(),
+            low_gain: (p.next().unwrap().0 as u8).into(),
+            mid1_freq: p.next().unwrap().into(),
+            mid1_gain: (p.next().unwrap().0 as u8).into(),
+            mid1_q: p.next().unwrap().into(),
+            mid2_freq: p.next().unwrap().into(),
+            mid2_gain: (p.next().unwrap().0 as u8).into(),
+            mid2_q: p.next().unwrap().into(),
+            high_freq: p.next().unwrap().into(),
+            high_gain: (p.next().unwrap().0 as u8).into(),
+            level: p.next().unwrap().0 as u8,
+            unused_parameters: Box::new(p.collect::<Vec<_>>().try_into().unwrap())
+        }
+    }
+}
+
+impl Parameters<32> for EqualizerParameters {
+    fn parameters(&self) -> [Parameter; 32] {
+        let mut p: Vec<Parameter> = Vec::new();
+        p.push(self.low_freq.into());
+        p.push(Parameter(Into::<u8>::into(self.low_gain) as i16));
+        p.push(self.mid1_freq.into());
+        p.push(Parameter(Into::<u8>::into(self.mid1_gain) as i16));
+        p.push(self.mid1_q.into());
+        p.push(self.mid2_freq.into());
+        p.push(Parameter(Into::<u8>::into(self.mid2_gain) as i16));
+        p.push(self.mid2_q.into());
+        p.push(self.high_freq.into());
+        p.push(Parameter(Into::<u8>::into(self.high_gain) as i16));
+        p.push(Parameter(self.level as i16));
+        for unused_parameter in self.unused_parameters.iter() {
+            p.push(*unused_parameter);
+        }
+        p.try_into().unwrap()
+    }
+}
+
+impl Default for EqualizerParameters {
+    fn default() -> Self {
+        Self {
+            low_freq: LogFrequency(200),
+            low_gain: OffsetU8::default(),
+            mid1_freq: LogFrequency(1000),
+            mid1_gain: OffsetU8::default(),
+            mid1_q: QFactor(0.5),
+            mid2_freq: LogFrequency(2000),
+            mid2_gain: OffsetU8::default(),
+            mid2_q: QFactor(0.5),
+            high_freq: LogFrequency(4000),
+            high_gain: OffsetU8::default(),
+            level: 127,
+            unused_parameters: Default::default()
+        }
     }
 }

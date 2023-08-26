@@ -12,7 +12,7 @@ use crate::roland::types::numeric::Parameter;
 pub struct Mfx {
     enable: bool,
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<8>::zero")]
-    unused1: Bits<8>,
+    unused1: Bits<8>, //TODO I think this is actually the MFX control choice (which depends on type, so should probably be part of mfx_type)
     #[validate]
     mfx_type: MfxType,
     #[serde(skip_serializing_if="Bits::is_unit", default="Bits::<8>::unit")]

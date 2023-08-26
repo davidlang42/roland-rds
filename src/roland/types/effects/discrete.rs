@@ -34,7 +34,8 @@ pub trait DiscreteValues<T: PartialEq + Display, const OFFSET: i16> {
 pub struct LogFrequency<const MIN: u16, const MAX: u16>(pub u16); // 0-16 (200-8000Hz)
 
 impl<const L: u16, const H: u16> LogFrequency<L, H> {
-    const BASE_VALUES: [u16; 10] = [50, 63, 80, 100, 125, 160, 200, 250, 315, 400];
+    const PRE_VALUES: [u16; 3] = [20, 25, 32];
+    const BASE_VALUES: [u16; 10] = [40, 50, 63, 80, 100, 125, 160, 200, 250, 315];
     const MIN: u16 = L;
     const MAX: u16 = H;
 }
@@ -43,6 +44,15 @@ impl<const L: u16, const H: u16> DiscreteValues<u16, 0> for LogFrequency<L, H> {
     fn values() -> Vec<u16> {
         let mut factor = 1;
         let mut v = Vec::new();
+        for pre_value in Self::PRE_VALUES {
+            if pre_value >= Self::MIN {
+                if pre_value <= Self::MAX {
+                    v.push(pre_value);
+                } else {
+                    break;
+                }
+            }
+        }
         loop {
             for base_value in Self::BASE_VALUES {
                 let current = base_value * factor;
@@ -351,6 +361,66 @@ impl From<Parameter> for EvenPercent {
 }
 
 impl Into<Parameter> for EvenPercent {
+    fn into(self) -> Parameter {
+        Self::into_parameter(self.0)
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct QFactor(pub f64); // 0-4 (0.5, 1.0, 2.0, 4.0, 8.0)
+
+impl DiscreteValues<f64, 0> for QFactor {
+    fn values() -> Vec<f64> {
+        vec![0.5, 1.0, 2.0, 4.0, 8.0]
+    }
+
+    fn format(value: f64) -> String {
+        format!("{:.1}", value)
+    }
+}
+
+impl JsonSchema for QFactor {
+    fn schema_name() -> String {
+        type_name_pretty::<Self>().into()
+    }
+
+    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        enum_schema(Self::values().into_iter().map(Self::format).collect())
+    }
+}
+
+impl Serialize for QFactor {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where S: serde::Serializer {
+        Self::format(self.0).serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for QFactor {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where D: serde::Deserializer<'de> {
+        let value: Value = Deserialize::deserialize(deserializer)?;
+        match value {
+            Value::String(s) => {
+                for v in Self::values().into_iter() {
+                    if s == Self::format(v) {
+                        return Ok(Self(v));
+                    }
+                }
+                Err(de::Error::custom(format!("String is not a valid discrete value: {}", s)))
+            }
+            _ => Err(de::Error::custom(format!("Expected string")))
+        }
+    }
+}
+
+impl From<Parameter> for QFactor {
+    fn from(parameter: Parameter) -> Self {
+        Self(Self::value_from(parameter))
+    }
+}
+
+impl Into<Parameter> for QFactor {
     fn into(self) -> Parameter {
         Self::into_parameter(self.0)
     }
