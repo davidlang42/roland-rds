@@ -10,7 +10,7 @@ pub enum MfxType { // 0-255
     Thru(UnusedParameters<32>),
     Equalizer(EqualizerParameters),
     Spectrum(SpectrumParameters),
-    Isolator(UnusedParameters<32>), //TODO implement parameters
+    Isolator(IsolatorParameters),
     LowBoost(UnusedParameters<32>), //TODO implement parameters
     SuperFilter(UnusedParameters<32>), //TODO implement parameters
     StepFilter(UnusedParameters<32>), //TODO implement parameters
@@ -752,6 +752,86 @@ impl Default for SpectrumParameters {
             band8_8000hz: OffsetU8::default(),
             q: QFactor(0.5),
             level: 127,
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
+pub struct IsolatorParameters {
+    boost_cut_low: OffsetU8<60, 0, 64>,
+    boost_cut_mid: OffsetU8<60, 0, 64>,
+    boost_cut_high: OffsetU8<60, 0, 64>,
+    a_phase_low_sw: bool,
+    #[validate(range(max = 127))]
+    a_phase_low_level: u8,
+    a_phase_mid_sw: bool,
+    #[validate(range(max = 127))]
+    a_phase_mid_level: u8,
+    low_boost_sw: bool,
+    #[validate(range(max = 127))]
+    low_boost_level: u8,
+    #[validate(range(max = 127))]
+    level: u8,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 22>")]
+    #[validate(custom = "valid_boxed_elements")]
+    unused_parameters: Box<[Parameter; 22]>
+}
+
+impl From<[Parameter; 32]> for IsolatorParameters {
+    fn from(value: [Parameter; 32]) -> Self {
+        let mut p = value.into_iter();
+        Self {
+            boost_cut_low: (p.next().unwrap().0 as u8).into(),
+            boost_cut_mid: (p.next().unwrap().0 as u8).into(),
+            boost_cut_high: (p.next().unwrap().0 as u8).into(),
+            a_phase_low_sw: p.next().unwrap().0 as u8 == 1,
+            a_phase_low_level: p.next().unwrap().0 as u8,
+            a_phase_mid_sw: p.next().unwrap().0 as u8 == 1,
+            a_phase_mid_level: p.next().unwrap().0 as u8,
+            low_boost_sw: p.next().unwrap().0 as u8 == 1,
+            low_boost_level: p.next().unwrap().0 as u8,
+            level: p.next().unwrap().0 as u8,
+            unused_parameters: Box::new(p.collect::<Vec<_>>().try_into().unwrap())
+        }
+    }
+}
+
+impl Parameters<32> for IsolatorParameters {
+    fn parameters(&self) -> [Parameter; 32] {
+        let mut p: Vec<Parameter> = Vec::new();
+        p.push(Parameter(Into::<u8>::into(self.boost_cut_low) as i16));
+        p.push(Parameter(Into::<u8>::into(self.boost_cut_mid) as i16));
+        p.push(Parameter(Into::<u8>::into(self.boost_cut_high) as i16));
+        p.push(Parameter(if self.a_phase_low_sw { 1 } else { 0 }));
+        p.push(Parameter(self.a_phase_low_level as i16));
+        p.push(Parameter(if self.a_phase_mid_sw { 1 } else { 0 }));
+        p.push(Parameter(self.a_phase_mid_level as i16));
+        p.push(Parameter(if self.low_boost_sw { 1 } else { 0 }));
+        p.push(Parameter(self.low_boost_level as i16));
+        p.push(Parameter(self.level as i16));
+        for unused_parameter in self.unused_parameters.iter() {
+            p.push(*unused_parameter);
+        }
+        p.try_into().unwrap()
+    }
+}
+
+impl Default for IsolatorParameters {
+    fn default() -> Self {
+        Self {
+            boost_cut_low: OffsetU8::default(),
+            boost_cut_mid: OffsetU8::default(),
+            boost_cut_high: OffsetU8::default(),
+            a_phase_low_sw: false,
+            a_phase_low_level: 127,
+            a_phase_mid_sw: false,
+            a_phase_mid_level: 127,
+            low_boost_sw: false,
+            low_boost_level: 64,
+            level: 128,
             unused_parameters: Default::default()
         }
     }
