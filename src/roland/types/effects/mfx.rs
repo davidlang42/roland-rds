@@ -643,7 +643,7 @@ impl From<[Parameter; 32]> for EqualizerParameters {
 impl Parameters<32> for EqualizerParameters {
     fn parameters(&self) -> [Parameter; 32] {
         let mut p: Vec<Parameter> = Vec::new();
-        p.push(self.low_freq.into());
+        p.push(self.low_freq.into()); //TODO implement parameter specific types so all fields are just .into() in parameters() and from()
         p.push(Parameter(Into::<u8>::into(self.low_gain) as i16));
         p.push(self.mid1_freq.into());
         p.push(Parameter(Into::<u8>::into(self.mid1_gain) as i16));
