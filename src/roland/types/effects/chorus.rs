@@ -77,7 +77,7 @@ impl Validate for ChorusType {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
 pub struct ChorusParameters {
     filter_type: FilterType,
     cutoff_frequency: LogFrequency<200, 8000>,
@@ -93,43 +93,6 @@ pub struct ChorusParameters {
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 11>")]
     #[validate]
     unused_parameters: [Parameter; 11]
-}
-
-impl From<[Parameter; 20]> for ChorusParameters {
-    fn from(value: [Parameter; 20]) -> Self {
-        let mut p = value.into_iter();
-        Self {
-            filter_type: p.next().unwrap().into(),
-            cutoff_frequency: p.next().unwrap().into(),
-            pre_delay: p.next().unwrap().into(),
-            rate_mode: p.next().unwrap().into(),
-            rate_hz: p.next().unwrap().into(),
-            rate_note: p.next().unwrap().into(),
-            depth: p.next().unwrap().into(),
-            phase_degrees: p.next().unwrap().into(),
-            feedback: p.next().unwrap().into(),
-            unused_parameters: p.collect::<Vec<_>>().try_into().unwrap()
-        }
-    }
-}
-
-impl Parameters<20> for ChorusParameters {
-    fn parameters(&self) -> [Parameter; 20] {
-        let mut p: Vec<Parameter> = Vec::new();
-        p.push(self.filter_type.into());
-        p.push(self.cutoff_frequency.into());
-        p.push(self.pre_delay.into());
-        p.push(self.rate_mode.into());
-        p.push(self.rate_hz.into());
-        p.push(self.rate_note.into());
-        p.push(self.depth.into());
-        p.push(self.phase_degrees.into());
-        p.push(self.feedback.into());
-        for unused_parameter in self.unused_parameters.iter() {
-            p.push(*unused_parameter);
-        }
-        p.try_into().unwrap()
-    }
 }
 
 impl Default for ChorusParameters {
@@ -148,7 +111,7 @@ impl Default for ChorusParameters {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
 pub struct DelayParameters {
     delay_left_mode: DelayMode,
     delay_left_ms: LinearMilliseconds<1000>,
@@ -169,53 +132,6 @@ pub struct DelayParameters {
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 6>")]
     #[validate]
     unused_parameters: [Parameter; 6]
-}
-
-impl From<[Parameter; 20]> for DelayParameters {
-    fn from(value: [Parameter; 20]) -> Self {
-        let mut p = value.into_iter();
-        Self {
-            delay_left_mode: p.next().unwrap().into(),
-            delay_left_ms: p.next().unwrap().into(),
-            delay_left_note: p.next().unwrap().into(),
-            delay_right_mode: p.next().unwrap().into(),
-            delay_right_ms: p.next().unwrap().into(),
-            delay_right_note: p.next().unwrap().into(),
-            delay_centre_mode: p.next().unwrap().into(),
-            delay_centre_ms: p.next().unwrap().into(),
-            delay_centre_note: p.next().unwrap().into(),
-            centre_feedback_percent: p.next().unwrap().into(),
-            hf_damp: p.next().unwrap().into(),
-            left_level: p.next().unwrap().into(),
-            right_level: p.next().unwrap().into(),
-            centre_level: p.next().unwrap().into(),
-            unused_parameters: p.collect::<Vec<_>>().try_into().unwrap()
-        }
-    }
-}
-
-impl Parameters<20> for DelayParameters {
-    fn parameters(&self) -> [Parameter; 20] {
-        let mut p: Vec<Parameter> = Vec::new();
-        p.push(self.delay_left_mode.into());
-        p.push(self.delay_left_ms.into());
-        p.push(self.delay_left_note.into());
-        p.push(self.delay_right_mode.into());
-        p.push(self.delay_right_ms.into());
-        p.push(self.delay_right_note.into());
-        p.push(self.delay_centre_mode.into());
-        p.push(self.delay_centre_ms.into());
-        p.push(self.delay_centre_note.into());
-        p.push(self.centre_feedback_percent.into());
-        p.push(self.hf_damp.into());
-        p.push(self.left_level.into());
-        p.push(self.right_level.into());
-        p.push(self.centre_level.into());
-        for unused_parameter in self.unused_parameters.iter() {
-            p.push(*unused_parameter);
-        }
-        p.try_into().unwrap()
-    }
 }
 
 impl Default for DelayParameters {

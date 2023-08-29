@@ -3,51 +3,62 @@ extern crate syn;
 #[macro_use]
 extern crate quote;
 
-use proc_macro::TokenStream;
-use quote::Tokens;
-use syn::{Ident, Body, Field, Ty, ConstExpr, Lit};
+use proc_macro2::TokenStream;
+use quote::TokenStreamExt;
+use syn::{Ident, Field, DeriveInput, Data, Type, DataStruct, Fields, FieldsNamed, TypeArray, Expr, ExprLit, Lit};
 
 #[proc_macro_derive(Parameters)]
-pub fn parameters(input: TokenStream) -> TokenStream {
-    // Construct a string representation of the type definition
-    let s = input.to_string();
-    
-    // Parse the string representation
-    let ast = syn::parse_derive_input(&s).unwrap();
+pub fn parameters(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    // Parse the input tokens into a syntax tree
+    let ast = syn::parse_macro_input!(input as DeriveInput);
 
     // Build the impl
     let name = &ast.ident;
-    if let Body::Struct(syn::VariantData::Struct(fields)) = &ast.body {
-        let from_parameters = impl_from_parameters(name, fields);
-        let parameters = impl_parameters(name, fields);
-
-        let gen = quote! {
+    if let Some(fields) = get_named_fields(&ast.data) {
+        let from_parameters = impl_from_parameters(name, &fields);
+        let parameters = impl_parameters(name, &fields);
+    
+        // Return the generated impls
+        quote! {
             #from_parameters
             #parameters
-        };
-    
-        // Return the generated impl
-        gen.parse().unwrap()
+        }.into()
     } else {
         // Invalid use of macro
         panic!("Parameters can only derive on Structs with fields.");
     }
 }
 
-fn impl_from_parameters(name: &Ident, fields: &Vec<Field>) -> quote::Tokens {
+fn get_named_fields(data: &Data) -> Option<Vec<&Field>> {
+    if let Data::Struct(DataStruct { fields: Fields::Named(FieldsNamed { named, .. }), ..}) = data {
+        Some(named.iter().collect())
+    } else {
+        None
+    }
+}
+
+fn get_array_len(ty: &Type) -> Option<usize> {
+    if let Type::Array(TypeArray { len: Expr::Lit(ExprLit { lit: Lit::Int(lit_int), ..}), .. }) = ty {
+        lit_int.base10_parse().ok()
+    } else {
+        None
+    }
+}
+
+fn impl_from_parameters(name: &Ident, fields: &Vec<&Field>) -> TokenStream {
     let mut size: usize = 0;
-    let mut inner = Tokens::new();
+    let mut inner = TokenStream::new();
     for field in fields {
         let field_name = field.ident.as_ref().unwrap();
-        if let Ty::Array(_, ConstExpr::Lit(Lit::Int(len, _))) = &field.ty {
+        if let Some(len) = get_array_len(&field.ty) {
             // expects an Array of Parameter
-            inner.append(quote! {
+            inner.append_all(quote! {
                 #field_name: p.collect::<Vec<_>>().try_into().unwrap(),
             });
-            size += *len as usize;
+            size += len;
         } else {
             // expects a type which implements From<Parameter>
-            inner.append(quote! {
+            inner.append_all(quote! {
                 #field_name: p.next().unwrap().into(),
             });
             size += 1;
@@ -65,22 +76,22 @@ fn impl_from_parameters(name: &Ident, fields: &Vec<Field>) -> quote::Tokens {
     }
 }
 
-fn impl_parameters(name: &Ident, fields: &Vec<Field>) -> quote::Tokens {
+fn impl_parameters(name: &Ident, fields: &Vec<&Field>) -> TokenStream {
     let mut size: usize = 0;
-    let mut inner = Tokens::new();
+    let mut inner = TokenStream::new();
     for field in fields {
         let field_name = field.ident.as_ref().unwrap();
-        if let Ty::Array(_, ConstExpr::Lit(Lit::Int(len, _))) = &field.ty {
+        if let Some(len) = get_array_len(&field.ty) {
             // expects an Array of Parameter
-            inner.append(quote! {
+            inner.append_all(quote! {
                 for element in self.#field_name.iter() {
                     p.push(*element);
                 }
             });
-            size += *len as usize;
+            size += len;
         } else {
             // expects a type which implements Into<Parameter>
-            inner.append(quote! {
+            inner.append_all(quote! {
                 p.push(self.#field_name.into());
             });
             size += 1;
