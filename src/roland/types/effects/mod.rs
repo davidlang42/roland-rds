@@ -1,8 +1,7 @@
 use super::numeric::Parameter;
-use crate::json::{serialize_default_terminated_array, validation::merge_all_fixed};
-use crate::json::validation::validate_boxed_array;
+use crate::json::serialize_default_terminated_array;
 use schemars::JsonSchema;
-use validator::{Validate, ValidationErrors};
+use validator::Validate;
 
 pub mod discrete;
 pub mod parameters;
@@ -14,40 +13,33 @@ trait Parameters<const N: usize> : Validate + From<[Parameter; N]> + Default {
     fn parameters(&self) -> [Parameter; N];
 }
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct UnusedParameters<const N: usize> {
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
     #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, {N}>")]
-    unused: Box<[Parameter; N]>
+    #[validate]
+    unused: [Parameter; N]
 }
 
 impl<const N: usize> From<[Parameter; N]> for UnusedParameters<N> {
     fn from(value: [Parameter; N]) -> Self {
         Self {
-            unused: Box::new(value)
+            unused: value
         }
     }
 }
 
 impl<const N: usize> Parameters<N> for UnusedParameters<N> {
     fn parameters(&self) -> [Parameter; N] {
-        *self.unused
-    }
-}
-
-impl<const N: usize> Validate for UnusedParameters<N> {
-    fn validate(&self) -> Result<(), ValidationErrors> {
-        let mut r = Ok(());
-        r = merge_all_fixed(r, "unused", validate_boxed_array(&self.unused));
-        r
+        self.unused
     }
 }
 
 impl<const N: usize> Default for UnusedParameters<N> {
     fn default() -> Self {
         Self {
-            unused: Box::new([Default::default(); N])
+            unused: [Default::default(); N]
         }
     }
 }

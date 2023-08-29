@@ -1,8 +1,8 @@
 use schemars::JsonSchema;
-use validator::{Validate, ValidationErrors};
+use validator::Validate;
 
 use crate::json::serialize_default_terminated_array;
-use crate::json::validation::{unused_by_rd300nx_err, validate_boxed_array, valid_boxed_elements, merge_all_fixed};
+use crate::json::validation::unused_by_rd300nx_err;
 
 use crate::roland::types::numeric::Parameter;
 use super::{UnusedParameters, Parameters};
@@ -577,29 +577,21 @@ impl Validate for MfxType {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct OtherMfxParameters {
     #[validate(range(min = 86))]
     mfx_number: u8,
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
     #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 32>")]
-    unknown: Box<[Parameter; 32]>
+    #[validate]
+    unknown: [Parameter; 32]
 }
 
 // similar to Parameters<32> but can't implement from because of the mfx_number
 impl OtherMfxParameters {
     fn parameters(&self) -> [Parameter; 32] {
-        *self.unknown
-    }
-}
-
-impl Validate for OtherMfxParameters {
-    fn validate(&self) -> Result<(), ValidationErrors> {
-        let mut r = Ok(());
-        // technically this should validate that mfx_number is >= 86, but in practise it won't matter
-        r = merge_all_fixed(r, "unknown", validate_boxed_array(&self.unknown));
-        r
+        self.unknown
     }
 }
 
@@ -619,8 +611,8 @@ pub struct EqualizerParameters {
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
     #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 21>")]
-    #[validate(custom = "valid_boxed_elements")]
-    unused_parameters: Box<[Parameter; 21]>
+    #[validate]
+    unused_parameters: [Parameter; 21]
 }
 
 impl From<[Parameter; 32]> for EqualizerParameters {
@@ -638,7 +630,7 @@ impl From<[Parameter; 32]> for EqualizerParameters {
             high_freq: p.next().unwrap().into(),
             high_gain: p.next().unwrap().into(),
             level: p.next().unwrap().into(),
-            unused_parameters: Box::new(p.collect::<Vec<_>>().try_into().unwrap())
+            unused_parameters: p.collect::<Vec<_>>().try_into().unwrap()
         }
     }
 }
@@ -698,8 +690,8 @@ pub struct SpectrumParameters {
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
     #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 22>")]
-    #[validate(custom = "valid_boxed_elements")]
-    unused_parameters: Box<[Parameter; 22]>
+    #[validate]
+    unused_parameters: [Parameter; 22]
 }
 
 impl From<[Parameter; 32]> for SpectrumParameters {
@@ -716,7 +708,7 @@ impl From<[Parameter; 32]> for SpectrumParameters {
             band8_8000hz: p.next().unwrap().into(),
             q: p.next().unwrap().into(),
             level: p.next().unwrap().into(),
-            unused_parameters: Box::new(p.collect::<Vec<_>>().try_into().unwrap())
+            unused_parameters: p.collect::<Vec<_>>().try_into().unwrap()
         }
     }
 }
@@ -774,8 +766,8 @@ pub struct IsolatorParameters {
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
     #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 22>")]
-    #[validate(custom = "valid_boxed_elements")]
-    unused_parameters: Box<[Parameter; 22]>
+    #[validate]
+    unused_parameters: [Parameter; 22]
 }
 
 impl From<[Parameter; 32]> for IsolatorParameters {
@@ -792,7 +784,7 @@ impl From<[Parameter; 32]> for IsolatorParameters {
             low_boost_sw: p.next().unwrap().into(),
             low_boost_level: p.next().unwrap().into(),
             level: p.next().unwrap().into(),
-            unused_parameters: Box::new(p.collect::<Vec<_>>().try_into().unwrap())
+            unused_parameters: p.collect::<Vec<_>>().try_into().unwrap()
         }
     }
 }

@@ -3,7 +3,6 @@ use super::parameters::{FilterType, RateMode, NoteLength, DelayMode, Level, Phas
 use super::super::numeric::Parameter;
 use super::discrete::{LogFrequency, LogMilliseconds, LinearFrequency, LogFrequencyOrByPass, EvenPercent};
 use crate::json::serialize_default_terminated_array;
-use crate::json::validation::valid_boxed_elements;
 use schemars::JsonSchema;
 use validator::Validate;
 
@@ -92,8 +91,8 @@ pub struct ChorusParameters {
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
     #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 11>")]
-    #[validate(custom = "valid_boxed_elements")]
-    unused_parameters: Box<[Parameter; 11]>
+    #[validate]
+    unused_parameters: [Parameter; 11]
 }
 
 impl From<[Parameter; 20]> for ChorusParameters {
@@ -109,7 +108,7 @@ impl From<[Parameter; 20]> for ChorusParameters {
             depth: p.next().unwrap().into(),
             phase_degrees: p.next().unwrap().into(),
             feedback: p.next().unwrap().into(),
-            unused_parameters: Box::new(p.collect::<Vec<_>>().try_into().unwrap())
+            unused_parameters: p.collect::<Vec<_>>().try_into().unwrap()
         }
     }
 }
@@ -168,8 +167,8 @@ pub struct DelayParameters {
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
     #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 6>")]
-    #[validate(custom = "valid_boxed_elements")]
-    unused_parameters: Box<[Parameter; 6]>
+    #[validate]
+    unused_parameters: [Parameter; 6]
 }
 
 impl From<[Parameter; 20]> for DelayParameters {
@@ -190,7 +189,7 @@ impl From<[Parameter; 20]> for DelayParameters {
             left_level: p.next().unwrap().into(),
             right_level: p.next().unwrap().into(),
             centre_level: p.next().unwrap().into(),
-            unused_parameters: Box::new(p.collect::<Vec<_>>().try_into().unwrap())
+            unused_parameters: p.collect::<Vec<_>>().try_into().unwrap()
         }
     }
 }
@@ -253,8 +252,8 @@ pub struct Gm2ChorusParameters {
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
     #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 13>")]
-    #[validate(custom = "valid_boxed_elements")]
-    unused_parameters: Box<[Parameter; 13]>
+    #[validate]
+    unused_parameters: [Parameter; 13]
 }
 
 impl From<[Parameter; 20]> for Gm2ChorusParameters {
@@ -268,7 +267,7 @@ impl From<[Parameter; 20]> for Gm2ChorusParameters {
             rate: p.next().unwrap().into(),
             depth: p.next().unwrap().into(),
             send_to_reverb: p.next().unwrap().into(),
-            unused_parameters: Box::new(p.collect::<Vec<_>>().try_into().unwrap())
+            unused_parameters: p.collect::<Vec<_>>().try_into().unwrap()
         }
     }
 }

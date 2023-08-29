@@ -1,6 +1,6 @@
 use schemars::JsonSchema;
 use validator::Validate;
-use crate::json::{serialize_default_terminated_array, validation::valid_boxed_elements};
+use crate::json::serialize_default_terminated_array;
 
 use crate::roland::types::numeric::Parameter;
 use super::discrete::{LogMilliseconds, DiscreteValues, LogFrequency, LogFrequencyOrByPass};
@@ -106,8 +106,8 @@ pub struct ReverbParameters {
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
     #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 15>")]
-    #[validate(custom = "valid_boxed_elements")]
-    unused_parameters: Box<[Parameter; 15]>
+    #[validate]
+    unused_parameters: [Parameter; 15]
 }
 
 impl From<[Parameter; 20]> for ReverbParameters {
@@ -119,7 +119,7 @@ impl From<[Parameter; 20]> for ReverbParameters {
             hf_damp: p.next().unwrap().into(),
             delay_feedback: p.next().unwrap().into(),
             level: p.next().unwrap().into(),
-            unused_parameters: Box::new(p.collect::<Vec<_>>().try_into().unwrap())
+            unused_parameters: p.collect::<Vec<_>>().try_into().unwrap()
         }
     }
 }
@@ -168,8 +168,8 @@ pub struct CharacterParameters<const DEFAULT_MS: usize, const DEFAULT_TIME: u8> 
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
     #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 9>")]
-    #[validate(custom = "valid_boxed_elements")]
-    unused_parameters: Box<[Parameter; 9]>
+    #[validate]
+    unused_parameters: [Parameter; 9]
 }
 
 impl<const DMS: usize, const DT: u8> From<[Parameter; 20]> for CharacterParameters<DMS, DT> {
@@ -187,7 +187,7 @@ impl<const DMS: usize, const DT: u8> From<[Parameter; 20]> for CharacterParamete
             hf_damp_freq: p.next().unwrap().into(),
             hf_damp_gain: p.next().unwrap().into(),
             level: p.next().unwrap().into(),
-            unused_parameters: Box::new(p.collect::<Vec<_>>().try_into().unwrap())
+            unused_parameters: p.collect::<Vec<_>>().try_into().unwrap()
         }
     }
 }
@@ -242,8 +242,8 @@ pub struct Gm2ReverbParameters {
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
     #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 15>")]
-    #[validate(custom = "valid_boxed_elements")]
-    unused_parameters: Box<[Parameter; 15]>
+    #[validate]
+    unused_parameters: [Parameter; 15]
 }
 
 impl From<[Parameter; 20]> for Gm2ReverbParameters {
@@ -255,7 +255,7 @@ impl From<[Parameter; 20]> for Gm2ReverbParameters {
             level: p.next().unwrap().into(),
             time: p.next().unwrap().into(),
             delay_feedback: p.next().unwrap().into(),
-            unused_parameters: Box::new(p.collect::<Vec<_>>().try_into().unwrap())
+            unused_parameters: p.collect::<Vec<_>>().try_into().unwrap()
         }
     }
 }
@@ -296,8 +296,8 @@ pub struct CathedralParameters {
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
     #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 17>")]
-    #[validate(custom = "valid_boxed_elements")]
-    unused_parameters: Box<[Parameter; 17]>
+    #[validate]
+    unused_parameters: [Parameter; 17]
 }
 
 impl From<[Parameter; 20]> for CathedralParameters {
@@ -307,7 +307,7 @@ impl From<[Parameter; 20]> for CathedralParameters {
             pre_lpf: p.next().unwrap().into(),
             level: p.next().unwrap().into(),
             time: p.next().unwrap().into(),
-            unused_parameters: Box::new(p.collect::<Vec<_>>().try_into().unwrap())
+            unused_parameters: p.collect::<Vec<_>>().try_into().unwrap()
         }
     }
 }
