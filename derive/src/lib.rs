@@ -5,7 +5,7 @@ extern crate quote;
 
 use proc_macro::TokenStream;
 use quote::Tokens;
-use syn::{Ident, Body, Field};
+use syn::{Ident, Body, Field, Ty};
 
 #[proc_macro_derive(Parameters)]
 pub fn parameters(input: TokenStream) -> TokenStream {
@@ -29,6 +29,7 @@ pub fn parameters(input: TokenStream) -> TokenStream {
         // Return the generated impl
         gen.parse().unwrap()
     } else {
+        // Invalid use of macro
         panic!("Parameters can only derive on Structs with fields.");
     }
 }
@@ -38,9 +39,17 @@ fn impl_from_parameters(name: &Ident, fields: &Vec<Field>) -> quote::Tokens {
     let mut inner = Tokens::new();
     for field in fields {
         let field_name = field.ident.as_ref().unwrap();
-        inner.append(quote! {
-            #field_name: p.next().unwrap().into(),
-        });
+        if let Ty::Array(_, _) = &field.ty {
+            // expects an Array of Parameter
+            inner.append(quote! {
+                #field_name: p.collect::<Vec<_>>().try_into().unwrap(),
+            });
+        } else {
+            // expects a type which implements From<Parameter>
+            inner.append(quote! {
+                #field_name: p.next().unwrap().into(),
+            });
+        }
     }
     quote! {
         impl From<[Parameter; #size]> for #name {
@@ -59,9 +68,19 @@ fn impl_parameters(name: &Ident, fields: &Vec<Field>) -> quote::Tokens {
     let mut inner = Tokens::new();
     for field in fields {
         let field_name = field.ident.as_ref().unwrap();
-        inner.append(quote! {
-            p.push(self.#field_name.into());
-        });
+        if let Ty::Array(_, _) = &field.ty {
+            // expects an Array of Parameter
+            inner.append(quote! {
+                for element in self.#field_name.iter() {
+                    p.push(*element);
+                }
+            });
+        } else {
+            // expects a type which implements Into<Parameter>
+            inner.append(quote! {
+                p.push(self.#field_name.into());
+            });
+        }
     }
     quote! {
         impl Parameters<#size> for #name {
@@ -73,36 +92,3 @@ fn impl_parameters(name: &Ident, fields: &Vec<Field>) -> quote::Tokens {
         }
     }
 }
-
-
-// impl Parameters<20> for Gm2ChorusParameters {
-//     fn parameters(&self) -> [Parameter; 20] {
-//         let mut p: Vec<Parameter> = Vec::new();
-//         p.push(self.pre_lpf.into());
-//         p.push(self.level.into());
-//         p.push(self.feedback.into());
-//         p.push(self.delay.into());
-//         p.push(self.rate.into());
-//         p.push(self.depth.into());
-//         p.push(self.send_to_reverb.into());
-//         for unused_parameter in self.unused_parameters.iter() {
-//             p.push(*unused_parameter);
-//         }
-//         p.try_into().unwrap()
-//     }
-// }
-
-// impl Default for Gm2ChorusParameters {
-//     fn default() -> Self {
-//         Self {
-//             pre_lpf: PreLpf(0),
-//             level: Level(64),
-//             feedback: Level(8),
-//             delay: Level(80),
-//             rate: Level(3),
-//             depth: Level(19),
-//             send_to_reverb: Level(0),
-//             unused_parameters: Default::default()
-//         }
-//     }
-// }

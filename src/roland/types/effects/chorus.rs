@@ -313,7 +313,8 @@ pub struct TestParameters {
     delay: Level,
     rate: Level,
     depth: Level,
-    send_to_reverb: Level
+    send_to_reverb: Level,
+    test_array: [Parameter; 10]
 }
 
 impl Default for TestParameters {
@@ -325,7 +326,8 @@ impl Default for TestParameters {
             delay: Level(80),
             rate: Level(3),
             depth: Level(19),
-            send_to_reverb: Level(0)
+            send_to_reverb: Level(0),
+            test_array: [Parameter(0); 10]
         }
     }
 }
