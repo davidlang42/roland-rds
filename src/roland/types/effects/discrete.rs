@@ -30,8 +30,9 @@ pub trait DiscreteValues<T: PartialEq + Display, const OFFSET: i16> {
     }
 }
 
+/// Parameter(0-16) === LogFrequency(200-8000Hz)
 #[derive(Debug, Copy, Clone)]
-pub struct LogFrequency<const MIN: u16, const MAX: u16>(pub u16); // 0-16 (200-8000Hz)
+pub struct LogFrequency<const MIN: u16, const MAX: u16>(pub u16);
 
 impl<const L: u16, const H: u16> LogFrequency<L, H> {
     const PRE_VALUES: [u16; 3] = [20, 25, 32];
@@ -120,8 +121,9 @@ impl<const L: u16, const H: u16> Into<Parameter> for LogFrequency<L, H> {
     }
 }
 
+/// Parameter(0-17) === LogFrequencyOrByPass(200-8000Hz, BYPASS)
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Copy, Clone)]
-pub enum LogFrequencyOrByPass<const MIN: u16, const MAX: u16> { // 0-17 (200-8000Hz, BYPASS)
+pub enum LogFrequencyOrByPass<const MIN: u16, const MAX: u16> {
     Frequency(LogFrequency<MIN, MAX>),
     ByPass
 }
@@ -148,8 +150,9 @@ impl<const L: u16, const H: u16> Into<Parameter> for LogFrequencyOrByPass<L, H> 
     }
 }
 
+/// Parameter(1-200) === LinearFrequency(0.05-10.00 by 0.05)
 #[derive(Debug, Copy, Clone)]
-pub struct LinearFrequency(pub f64); // 1-200 (0.05-10 by 0.05)
+pub struct LinearFrequency(pub f64);
 
 impl DiscreteValues<f64, 1> for LinearFrequency {
     fn values() -> Vec<f64> {
@@ -208,8 +211,9 @@ impl Into<Parameter> for LinearFrequency {
     }
 }
 
+/// Parameter(0-?) === LogMilliseconds(0-5 by 0.1, 5-10 by 0.5, 10-50 by 1, 50-100 by 2)
 #[derive(Debug, Copy, Clone)]
-pub struct LogMilliseconds(pub f64); // 0-? (0-5 by 0.1, 5-10 by 0.5, 10-50 by 1, 50-100 by 2)
+pub struct LogMilliseconds(pub f64);
 
 impl DiscreteValues<f64, 0> for LogMilliseconds {
     fn values() -> Vec<f64> {
@@ -306,8 +310,9 @@ impl Into<Parameter> for LogMilliseconds {
     }
 }
 
+/// Parameter(0-?) === EvenPercent(-98% to 98% by 2)
 #[derive(Debug, Copy, Clone)]
-pub struct EvenPercent(pub i8); // 0-? (-98% to 98% by 2)
+pub struct EvenPercent(pub i8);
 
 impl DiscreteValues<i8, 0> for EvenPercent {
     fn values() -> Vec<i8> {
@@ -366,8 +371,9 @@ impl Into<Parameter> for EvenPercent {
     }
 }
 
+/// Parameter(0-4) === QFactor(0.5, 1.0, 2.0, 4.0, 8.0)
 #[derive(Debug, Copy, Clone)]
-pub struct QFactor(pub f64); // 0-4 (0.5, 1.0, 2.0, 4.0, 8.0)
+pub struct QFactor(pub f64);
 
 impl DiscreteValues<f64, 0> for QFactor {
     fn values() -> Vec<f64> {

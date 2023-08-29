@@ -4,6 +4,7 @@ use strum::IntoEnumIterator;
 
 use super::super::numeric::Parameter;
 
+/// Parameter(0-?)
 #[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, PartialEq, Copy, Clone)]
 pub enum FilterType {
     Off,
@@ -23,6 +24,7 @@ impl Into<Parameter> for FilterType {
     }
 }
 
+/// Parameter(0-?)
 #[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, PartialEq, Copy, Clone)]
 pub enum RateMode {
     Hertz,
@@ -41,6 +43,7 @@ impl Into<Parameter> for RateMode {
     }
 }
 
+/// Parameter(0-?)
 #[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, PartialEq, Copy, Clone)]
 pub enum DelayMode {
     Milliseconds,
@@ -59,6 +62,7 @@ impl Into<Parameter> for DelayMode {
     }
 }
 
+/// Parameter(0-?)
 #[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, PartialEq, Copy, Clone)]
 pub enum NoteLength {
     SixtyFourthNoteTriplet,
@@ -97,6 +101,7 @@ impl Into<Parameter> for NoteLength {
     }
 }
 
+/// Parameter(0-?)
 #[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, PartialEq, Copy, Clone)]
 pub enum ReverbCharacter {
     Room1,
@@ -121,6 +126,7 @@ impl Into<Parameter> for ReverbCharacter {
     }
 }
 
+/// Parameter(0-?)
 #[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, PartialEq, Copy, Clone)]
 pub enum Gm2ReverbCharacter {
     Room1,
@@ -142,5 +148,22 @@ impl From<Parameter> for Gm2ReverbCharacter {
 impl Into<Parameter> for Gm2ReverbCharacter {
     fn into(self) -> Parameter {
         Parameter(Self::iter().position(|s| s == self).unwrap() as i16)
+    }
+}
+
+/// Parameter(0-127) === Level(0-127)
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct Level(pub u8);
+//TODO #[validate(range(max = 127))]
+
+impl Into<Parameter> for Level {
+    fn into(self) -> Parameter {
+        Parameter(self.0 as i16)
+    }
+}
+
+impl From<Parameter> for Level {
+    fn from(value: Parameter) -> Self {
+        Self(value.0 as u8)
     }
 }
