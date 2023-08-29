@@ -205,7 +205,7 @@ impl From<Parameter> for PreLpf {
 /// Parameter(1-?) === LinearMilliseconds(1-MAX)
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct LinearMilliseconds<const MAX: u16>(pub u16);
-//TODO #[validate(range(min = 1, max = 1000)]
+//TODO #[validate(range(min = 1, max = MAX)]
 
 impl<const MAX: u16> Into<Parameter> for LinearMilliseconds<MAX> {
     fn into(self) -> Parameter {
@@ -256,7 +256,7 @@ impl From<Parameter> for Switch {
 /// Parameter(0-?) === Gain(MIN-MAX)
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct Gain<const MIN: i8, const MAX: i8>(pub i8);
-//TODO #[validate(range(max = 127))]
+//TODO #[validate(range(min = MIN, max = MAX)]
 
 impl<const MIN: i8, const MAX: i8> Into<Parameter> for Gain<MIN, MAX> {
     fn into(self) -> Parameter {
