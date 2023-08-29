@@ -183,3 +183,20 @@ impl From<Parameter> for Switch {
         Self(value.0 == 1)
     }
 }
+
+/// Parameter(0-?) === Gain(MIN-MAX)
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct Gain<const MIN: i8, const MAX: i8>(pub i8);
+//TODO #[validate(range(max = 127))]
+
+impl<const MIN: i8, const MAX: i8> Into<Parameter> for Gain<MIN, MAX> {
+    fn into(self) -> Parameter {
+        Parameter((self.0 - MIN) as i16)
+    }
+}
+
+impl<const MIN: i8, const MAX: i8> From<Parameter> for Gain<MIN, MAX> {
+    fn from(value: Parameter) -> Self {
+        Self(value.0 as i8 + MIN)
+    }
+}

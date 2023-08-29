@@ -1,9 +1,13 @@
 use schemars::JsonSchema;
 use validator::{Validate, ValidationErrors};
 
-use crate::{roland::types::numeric::{Parameter, OffsetU8}, json::{validation::{unused_by_rd300nx_err, validate_boxed_array, merge_all_fixed}, serialize_default_terminated_array}};
-use crate::json::validation::valid_boxed_elements;
-use super::{UnusedParameters, Parameters, discrete::{LogFrequency, QFactor}, parameters::{Level, Switch}};
+use crate::json::serialize_default_terminated_array;
+use crate::json::validation::{unused_by_rd300nx_err, validate_boxed_array, valid_boxed_elements, merge_all_fixed};
+
+use crate::roland::types::numeric::Parameter;
+use super::{UnusedParameters, Parameters};
+use super::discrete::{LogFrequency, QFactor};
+use super::parameters::{Level, Switch, Gain};
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
 pub enum MfxType { // 0-255
@@ -602,15 +606,15 @@ impl Validate for OtherMfxParameters {
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct EqualizerParameters {
     low_freq: LogFrequency<20, 400>,
-    low_gain: OffsetU8<15, 0, 30>,
+    low_gain: Gain<-15, 15>,
     mid1_freq: LogFrequency<200, 8000>,
-    mid1_gain: OffsetU8<15, 0, 30>,
+    mid1_gain: Gain<-15, 15>,
     mid1_q: QFactor,
     mid2_freq: LogFrequency<200, 8000>,
-    mid2_gain: OffsetU8<15, 0, 30>,
+    mid2_gain: Gain<-15, 15>,
     mid2_q: QFactor,
     high_freq: LogFrequency<2000, 16000>,
-    high_gain: OffsetU8<15, 0, 30>,
+    high_gain: Gain<-15, 15>,
     level: Level,
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
     #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
@@ -624,15 +628,15 @@ impl From<[Parameter; 32]> for EqualizerParameters {
         let mut p = value.into_iter();
         Self {
             low_freq: p.next().unwrap().into(),
-            low_gain: (p.next().unwrap().0 as u8).into(),
+            low_gain: p.next().unwrap().into(),
             mid1_freq: p.next().unwrap().into(),
-            mid1_gain: (p.next().unwrap().0 as u8).into(),
+            mid1_gain: p.next().unwrap().into(),
             mid1_q: p.next().unwrap().into(),
             mid2_freq: p.next().unwrap().into(),
-            mid2_gain: (p.next().unwrap().0 as u8).into(),
+            mid2_gain: p.next().unwrap().into(),
             mid2_q: p.next().unwrap().into(),
             high_freq: p.next().unwrap().into(),
-            high_gain: (p.next().unwrap().0 as u8).into(),
+            high_gain: p.next().unwrap().into(),
             level: p.next().unwrap().into(),
             unused_parameters: Box::new(p.collect::<Vec<_>>().try_into().unwrap())
         }
@@ -643,15 +647,15 @@ impl Parameters<32> for EqualizerParameters {
     fn parameters(&self) -> [Parameter; 32] {
         let mut p: Vec<Parameter> = Vec::new();
         p.push(self.low_freq.into()); //TODO implement parameter specific types so all fields are just .into() in parameters() and from()
-        p.push(Parameter(Into::<u8>::into(self.low_gain) as i16));
+        p.push(self.low_gain.into());
         p.push(self.mid1_freq.into());
-        p.push(Parameter(Into::<u8>::into(self.mid1_gain) as i16));
+        p.push(self.mid1_gain.into());
         p.push(self.mid1_q.into());
         p.push(self.mid2_freq.into());
-        p.push(Parameter(Into::<u8>::into(self.mid2_gain) as i16));
+        p.push(self.mid2_gain.into());
         p.push(self.mid2_q.into());
         p.push(self.high_freq.into());
-        p.push(Parameter(Into::<u8>::into(self.high_gain) as i16));
+        p.push(self.high_gain.into());
         p.push(self.level.into());
         for unused_parameter in self.unused_parameters.iter() {
             p.push(*unused_parameter);
@@ -664,15 +668,15 @@ impl Default for EqualizerParameters {
     fn default() -> Self {
         Self {
             low_freq: LogFrequency(200),
-            low_gain: OffsetU8::default(),
+            low_gain: Gain(0),
             mid1_freq: LogFrequency(1000),
-            mid1_gain: OffsetU8::default(),
+            mid1_gain: Gain(0),
             mid1_q: QFactor(0.5),
             mid2_freq: LogFrequency(2000),
-            mid2_gain: OffsetU8::default(),
+            mid2_gain: Gain(0),
             mid2_q: QFactor(0.5),
             high_freq: LogFrequency(4000),
-            high_gain: OffsetU8::default(),
+            high_gain: Gain(0),
             level: Level(127),
             unused_parameters: Default::default()
         }
@@ -681,14 +685,14 @@ impl Default for EqualizerParameters {
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct SpectrumParameters {
-    band1_250hz: OffsetU8<15, 0, 30>,
-    band2_500hz: OffsetU8<15, 0, 30>,
-    band3_1000hz: OffsetU8<15, 0, 30>,
-    band4_1250hz: OffsetU8<15, 0, 30>,
-    band5_2000hz: OffsetU8<15, 0, 30>,
-    band6_3150hz: OffsetU8<15, 0, 30>,
-    band7_4000hz: OffsetU8<15, 0, 30>,
-    band8_8000hz: OffsetU8<15, 0, 30>,
+    band1_250hz: Gain<-15, 15>,
+    band2_500hz: Gain<-15, 15>,
+    band3_1000hz: Gain<-15, 15>,
+    band4_1250hz: Gain<-15, 15>,
+    band5_2000hz: Gain<-15, 15>,
+    band6_3150hz: Gain<-15, 15>,
+    band7_4000hz: Gain<-15, 15>,
+    band8_8000hz: Gain<-15, 15>,
     q: QFactor,
     level: Level,
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
@@ -702,14 +706,14 @@ impl From<[Parameter; 32]> for SpectrumParameters {
     fn from(value: [Parameter; 32]) -> Self {
         let mut p = value.into_iter();
         Self {
-            band1_250hz: (p.next().unwrap().0 as u8).into(),
-            band2_500hz: (p.next().unwrap().0 as u8).into(),
-            band3_1000hz: (p.next().unwrap().0 as u8).into(),
-            band4_1250hz: (p.next().unwrap().0 as u8).into(),
-            band5_2000hz: (p.next().unwrap().0 as u8).into(),
-            band6_3150hz: (p.next().unwrap().0 as u8).into(),
-            band7_4000hz: (p.next().unwrap().0 as u8).into(),
-            band8_8000hz: (p.next().unwrap().0 as u8).into(),
+            band1_250hz: p.next().unwrap().into(),
+            band2_500hz: p.next().unwrap().into(),
+            band3_1000hz: p.next().unwrap().into(),
+            band4_1250hz: p.next().unwrap().into(),
+            band5_2000hz: p.next().unwrap().into(),
+            band6_3150hz: p.next().unwrap().into(),
+            band7_4000hz: p.next().unwrap().into(),
+            band8_8000hz: p.next().unwrap().into(),
             q: p.next().unwrap().into(),
             level: p.next().unwrap().into(),
             unused_parameters: Box::new(p.collect::<Vec<_>>().try_into().unwrap())
@@ -720,14 +724,14 @@ impl From<[Parameter; 32]> for SpectrumParameters {
 impl Parameters<32> for SpectrumParameters {
     fn parameters(&self) -> [Parameter; 32] {
         let mut p: Vec<Parameter> = Vec::new();
-        p.push(Parameter(Into::<u8>::into(self.band1_250hz) as i16));
-        p.push(Parameter(Into::<u8>::into(self.band2_500hz) as i16));
-        p.push(Parameter(Into::<u8>::into(self.band3_1000hz) as i16));
-        p.push(Parameter(Into::<u8>::into(self.band4_1250hz) as i16));
-        p.push(Parameter(Into::<u8>::into(self.band5_2000hz) as i16));
-        p.push(Parameter(Into::<u8>::into(self.band6_3150hz) as i16));
-        p.push(Parameter(Into::<u8>::into(self.band7_4000hz) as i16));
-        p.push(Parameter(Into::<u8>::into(self.band8_8000hz) as i16));
+        p.push(self.band1_250hz.into());
+        p.push(self.band2_500hz.into());
+        p.push(self.band3_1000hz.into());
+        p.push(self.band4_1250hz.into());
+        p.push(self.band5_2000hz.into());
+        p.push(self.band6_3150hz.into());
+        p.push(self.band7_4000hz.into());
+        p.push(self.band8_8000hz.into());
         p.push(self.q.into());
         p.push(self.level.into());
         for unused_parameter in self.unused_parameters.iter() {
@@ -740,14 +744,14 @@ impl Parameters<32> for SpectrumParameters {
 impl Default for SpectrumParameters {
     fn default() -> Self {
         Self {
-            band1_250hz: OffsetU8::default(),
-            band2_500hz: OffsetU8::default(),
-            band3_1000hz: OffsetU8::default(),
-            band4_1250hz: OffsetU8::default(),
-            band5_2000hz: OffsetU8::default(),
-            band6_3150hz: OffsetU8::default(),
-            band7_4000hz: OffsetU8::default(),
-            band8_8000hz: OffsetU8::default(),
+            band1_250hz: Gain(0),
+            band2_500hz: Gain(0),
+            band3_1000hz: Gain(0),
+            band4_1250hz: Gain(0),
+            band5_2000hz: Gain(0),
+            band6_3150hz: Gain(0),
+            band7_4000hz: Gain(0),
+            band8_8000hz: Gain(0),
             q: QFactor(0.5),
             level: Level(127),
             unused_parameters: Default::default()
@@ -757,9 +761,9 @@ impl Default for SpectrumParameters {
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct IsolatorParameters {
-    boost_cut_low: OffsetU8<60, 0, 64>,
-    boost_cut_mid: OffsetU8<60, 0, 64>,
-    boost_cut_high: OffsetU8<60, 0, 64>,
+    boost_cut_low: Gain<-60, 4>,
+    boost_cut_mid: Gain<-60, 4>,
+    boost_cut_high: Gain<-60, 4>,
     a_phase_low_sw: Switch,
     a_phase_low_level: Level,
     a_phase_mid_sw: Switch,
@@ -778,9 +782,9 @@ impl From<[Parameter; 32]> for IsolatorParameters {
     fn from(value: [Parameter; 32]) -> Self {
         let mut p = value.into_iter();
         Self {
-            boost_cut_low: (p.next().unwrap().0 as u8).into(),
-            boost_cut_mid: (p.next().unwrap().0 as u8).into(),
-            boost_cut_high: (p.next().unwrap().0 as u8).into(),
+            boost_cut_low: p.next().unwrap().into(),
+            boost_cut_mid: p.next().unwrap().into(),
+            boost_cut_high: p.next().unwrap().into(),
             a_phase_low_sw: p.next().unwrap().into(),
             a_phase_low_level: p.next().unwrap().into(),
             a_phase_mid_sw: p.next().unwrap().into(),
@@ -796,9 +800,9 @@ impl From<[Parameter; 32]> for IsolatorParameters {
 impl Parameters<32> for IsolatorParameters {
     fn parameters(&self) -> [Parameter; 32] {
         let mut p: Vec<Parameter> = Vec::new();
-        p.push(Parameter(Into::<u8>::into(self.boost_cut_low) as i16));
-        p.push(Parameter(Into::<u8>::into(self.boost_cut_mid) as i16));
-        p.push(Parameter(Into::<u8>::into(self.boost_cut_high) as i16));
+        p.push(self.boost_cut_low.into());
+        p.push(self.boost_cut_mid.into());
+        p.push(self.boost_cut_high.into());
         p.push(self.a_phase_low_sw.into());
         p.push(self.a_phase_low_level.into());
         p.push(self.a_phase_mid_sw.into());
@@ -816,9 +820,9 @@ impl Parameters<32> for IsolatorParameters {
 impl Default for IsolatorParameters {
     fn default() -> Self {
         Self {
-            boost_cut_low: OffsetU8::default(),
-            boost_cut_mid: OffsetU8::default(),
-            boost_cut_high: OffsetU8::default(),
+            boost_cut_low: Gain(0),
+            boost_cut_mid: Gain(0),
+            boost_cut_high: Gain(0),
             a_phase_low_sw: Switch(false),
             a_phase_low_level: Level(127),
             a_phase_mid_sw: Switch(false),
