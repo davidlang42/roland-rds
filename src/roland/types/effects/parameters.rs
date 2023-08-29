@@ -23,12 +23,6 @@ impl Into<Parameter> for FilterType {
     }
 }
 
-impl Default for FilterType {
-    fn default() -> Self {
-        Self::from(Parameter::default())
-    }
-}
-
 #[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, PartialEq, Copy, Clone)]
 pub enum RateMode {
     Hertz,
@@ -47,12 +41,6 @@ impl Into<Parameter> for RateMode {
     }
 }
 
-impl Default for RateMode {
-    fn default() -> Self {
-        Self::from(Parameter::default())
-    }
-}
-
 #[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, PartialEq, Copy, Clone)]
 pub enum DelayMode {
     Milliseconds,
@@ -68,12 +56,6 @@ impl From<Parameter> for DelayMode {
 impl Into<Parameter> for DelayMode {
     fn into(self) -> Parameter {
         Parameter(Self::iter().position(|s| s == self).unwrap() as i16)
-    }
-}
-
-impl Default for DelayMode {
-    fn default() -> Self {
-        Self::from(Parameter::default())
     }
 }
 
@@ -139,12 +121,6 @@ impl Into<Parameter> for ReverbCharacter {
     }
 }
 
-impl Default for ReverbCharacter {
-    fn default() -> Self {
-        Self::from(Parameter::default())
-    }
-}
-
 #[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, PartialEq, Copy, Clone)]
 pub enum Gm2ReverbCharacter {
     Room1,
@@ -166,11 +142,5 @@ impl From<Parameter> for Gm2ReverbCharacter {
 impl Into<Parameter> for Gm2ReverbCharacter {
     fn into(self) -> Parameter {
         Parameter(Self::iter().position(|s| s == self).unwrap() as i16)
-    }
-}
-
-impl Default for Gm2ReverbCharacter {
-    fn default() -> Self {
-        Self::from(Parameter::default())
     }
 }

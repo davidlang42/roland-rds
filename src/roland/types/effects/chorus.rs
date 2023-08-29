@@ -139,10 +139,10 @@ impl Parameters<20> for ChorusParameters {
 impl Default for ChorusParameters {
     fn default() -> Self {
         Self {
-            filter_type: Default::default(),
+            filter_type: FilterType::Off,
             cutoff_frequency: LogFrequency(800),
             pre_delay: LogMilliseconds(2.0),
-            rate_mode: Default::default(),
+            rate_mode: RateMode::Hertz,
             rate_hz: LinearFrequency(1.0),
             rate_note: NoteLength::WholeNote,
             depth: 40,
