@@ -1,5 +1,5 @@
 use super::{UnusedParameters, Parameters};
-use super::parameters::{FilterType, RateMode, NoteLength, DelayMode};
+use super::parameters::{FilterType, RateMode, NoteLength, DelayMode, Level, Phase, LinearMilliseconds, PreLpf};
 use super::super::numeric::Parameter;
 use super::discrete::{LogFrequency, LogMilliseconds, LinearFrequency, LogFrequencyOrByPass, EvenPercent};
 use crate::json::serialize_default_terminated_array;
@@ -86,12 +86,9 @@ pub struct ChorusParameters {
     rate_mode: RateMode,
     rate_hz: LinearFrequency,
     rate_note: NoteLength,
-    #[validate(range(max = 127))]
-    depth: u8,
-    #[validate(range(max = 180))]
-    phase_degrees: u8,
-    #[validate(range(max = 127))]
-    feedback: u8,
+    depth: Level,
+    phase_degrees: Phase,
+    feedback: Level,
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
     #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 11>")]
@@ -109,9 +106,9 @@ impl From<[Parameter; 20]> for ChorusParameters {
             rate_mode: p.next().unwrap().into(),
             rate_hz: p.next().unwrap().into(),
             rate_note: p.next().unwrap().into(),
-            depth: p.next().unwrap().0 as u8,
-            phase_degrees: p.next().unwrap().0 as u8,
-            feedback: p.next().unwrap().0 as u8,
+            depth: p.next().unwrap().into(),
+            phase_degrees: p.next().unwrap().into(),
+            feedback: p.next().unwrap().into(),
             unused_parameters: Box::new(p.collect::<Vec<_>>().try_into().unwrap())
         }
     }
@@ -126,9 +123,9 @@ impl Parameters<20> for ChorusParameters {
         p.push(self.rate_mode.into());
         p.push(self.rate_hz.into());
         p.push(self.rate_note.into());
-        p.push(Parameter(self.depth as i16));
-        p.push(Parameter(self.phase_degrees as i16));
-        p.push(Parameter(self.feedback as i16));
+        p.push(self.depth.into());
+        p.push(self.phase_degrees.into());
+        p.push(self.feedback.into());
         for unused_parameter in self.unused_parameters.iter() {
             p.push(*unused_parameter);
         }
@@ -145,9 +142,9 @@ impl Default for ChorusParameters {
             rate_mode: RateMode::Hertz,
             rate_hz: LinearFrequency(1.0),
             rate_note: NoteLength::WholeNote,
-            depth: 40,
-            phase_degrees: 180,
-            feedback: 8,
+            depth: Level(40),
+            phase_degrees: Phase(180),
+            feedback: Level(8),
             unused_parameters: Default::default() }
     }
 }
@@ -155,25 +152,19 @@ impl Default for ChorusParameters {
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct DelayParameters {
     delay_left_mode: DelayMode,
-    #[validate(range(min = 1, max = 1000))]
-    delay_left_ms: u16,
+    delay_left_ms: LinearMilliseconds<1000>,
     delay_left_note: NoteLength,
     delay_right_mode: DelayMode,
-    #[validate(range(min = 1, max = 1000))]
-    delay_right_ms: u16,
+    delay_right_ms: LinearMilliseconds<1000>,
     delay_right_note: NoteLength,
     delay_centre_mode: DelayMode,
-    #[validate(range(min = 1, max = 1000))]
-    delay_centre_ms: u16,
+    delay_centre_ms: LinearMilliseconds<1000>,
     delay_centre_note: NoteLength,
     centre_feedback_percent: EvenPercent,
     hf_damp: LogFrequencyOrByPass<200, 8000>,
-    #[validate(range(max = 127))]
-    left_level: u8,
-    #[validate(range(max = 127))]
-    right_level: u8,
-    #[validate(range(max = 127))]
-    centre_level: u8,
+    left_level: Level,
+    right_level: Level,
+    centre_level: Level,
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
     #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 6>")]
@@ -186,19 +177,19 @@ impl From<[Parameter; 20]> for DelayParameters {
         let mut p = value.into_iter();
         Self {
             delay_left_mode: p.next().unwrap().into(),
-            delay_left_ms: p.next().unwrap().0 as u16,
+            delay_left_ms: p.next().unwrap().into(),
             delay_left_note: p.next().unwrap().into(),
             delay_right_mode: p.next().unwrap().into(),
-            delay_right_ms: p.next().unwrap().0 as u16,
+            delay_right_ms: p.next().unwrap().into(),
             delay_right_note: p.next().unwrap().into(),
             delay_centre_mode: p.next().unwrap().into(),
-            delay_centre_ms: p.next().unwrap().0 as u16,
+            delay_centre_ms: p.next().unwrap().into(),
             delay_centre_note: p.next().unwrap().into(),
             centre_feedback_percent: p.next().unwrap().into(),
             hf_damp: p.next().unwrap().into(),
-            left_level: p.next().unwrap().0 as u8,
-            right_level: p.next().unwrap().0 as u8,
-            centre_level: p.next().unwrap().0 as u8,
+            left_level: p.next().unwrap().into(),
+            right_level: p.next().unwrap().into(),
+            centre_level: p.next().unwrap().into(),
             unused_parameters: Box::new(p.collect::<Vec<_>>().try_into().unwrap())
         }
     }
@@ -208,19 +199,19 @@ impl Parameters<20> for DelayParameters {
     fn parameters(&self) -> [Parameter; 20] {
         let mut p: Vec<Parameter> = Vec::new();
         p.push(self.delay_left_mode.into());
-        p.push(Parameter(self.delay_left_ms as i16));
+        p.push(self.delay_left_ms.into());
         p.push(self.delay_left_note.into());
         p.push(self.delay_right_mode.into());
-        p.push(Parameter(self.delay_right_ms as i16));
+        p.push(self.delay_right_ms.into());
         p.push(self.delay_right_note.into());
         p.push(self.delay_centre_mode.into());
-        p.push(Parameter(self.delay_centre_ms as i16));
+        p.push(self.delay_centre_ms.into());
         p.push(self.delay_centre_note.into());
         p.push(self.centre_feedback_percent.into());
         p.push(self.hf_damp.into());
-        p.push(Parameter(self.left_level as i16));
-        p.push(Parameter(self.right_level as i16));
-        p.push(Parameter(self.centre_level as i16));
+        p.push(self.left_level.into());
+        p.push(self.right_level.into());
+        p.push(self.centre_level.into());
         for unused_parameter in self.unused_parameters.iter() {
             p.push(*unused_parameter);
         }
@@ -232,19 +223,19 @@ impl Default for DelayParameters {
     fn default() -> Self {
         Self {
             delay_left_mode: DelayMode::Note,
-            delay_left_ms: 200,
+            delay_left_ms: LinearMilliseconds(200),
             delay_left_note: NoteLength::EighthNoteTriplet,
             delay_right_mode: DelayMode::Note,
-            delay_right_ms: 400,
+            delay_right_ms: LinearMilliseconds(400),
             delay_right_note: NoteLength::QuarterNoteTriplet,
             delay_centre_mode: DelayMode::Note,
-            delay_centre_ms: 600,
+            delay_centre_ms: LinearMilliseconds(600),
             delay_centre_note: NoteLength::QuarterNote,
             centre_feedback_percent: EvenPercent(20),
             hf_damp: LogFrequencyOrByPass::ByPass,
-            left_level: 127,
-            right_level: 127,
-            centre_level: 127,
+            left_level: Level(127),
+            right_level: Level(127),
+            centre_level: Level(127),
             unused_parameters: Default::default()
         }
     }
@@ -252,20 +243,13 @@ impl Default for DelayParameters {
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct Gm2ChorusParameters {
-    #[validate(range(max = 7))]
-    pre_lpf: u8,
-    #[validate(range(max = 127))]
-    level: u8,
-    #[validate(range(max = 127))]
-    feedback: u8,
-    #[validate(range(max = 127))]
-    delay: u8,
-    #[validate(range(max = 127))]
-    rate: u8,
-    #[validate(range(max = 127))]
-    depth: u8,
-    #[validate(range(max = 127))]
-    send_to_reverb: u8,
+    pre_lpf: PreLpf,
+    level: Level,
+    feedback: Level,
+    delay: Level,
+    rate: Level,
+    depth: Level,
+    send_to_reverb: Level,
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
     #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 13>")]
@@ -277,13 +261,13 @@ impl From<[Parameter; 20]> for Gm2ChorusParameters {
     fn from(value: [Parameter; 20]) -> Self {
         let mut p = value.into_iter();
         Self {
-            pre_lpf: p.next().unwrap().0 as u8,
-            level: p.next().unwrap().0 as u8,
-            feedback: p.next().unwrap().0 as u8,
-            delay: p.next().unwrap().0 as u8,
-            rate: p.next().unwrap().0 as u8,
-            depth: p.next().unwrap().0 as u8,
-            send_to_reverb: p.next().unwrap().0 as u8,
+            pre_lpf: p.next().unwrap().into(),
+            level: p.next().unwrap().into(),
+            feedback: p.next().unwrap().into(),
+            delay: p.next().unwrap().into(),
+            rate: p.next().unwrap().into(),
+            depth: p.next().unwrap().into(),
+            send_to_reverb: p.next().unwrap().into(),
             unused_parameters: Box::new(p.collect::<Vec<_>>().try_into().unwrap())
         }
     }
@@ -292,13 +276,13 @@ impl From<[Parameter; 20]> for Gm2ChorusParameters {
 impl Parameters<20> for Gm2ChorusParameters {
     fn parameters(&self) -> [Parameter; 20] {
         let mut p: Vec<Parameter> = Vec::new();
-        p.push(Parameter(self.pre_lpf as i16));
-        p.push(Parameter(self.level as i16));
-        p.push(Parameter(self.feedback as i16));
-        p.push(Parameter(self.delay as i16));
-        p.push(Parameter(self.rate as i16));
-        p.push(Parameter(self.depth as i16));
-        p.push(Parameter(self.send_to_reverb as i16));
+        p.push(self.pre_lpf.into());
+        p.push(self.level.into());
+        p.push(self.feedback.into());
+        p.push(self.delay.into());
+        p.push(self.rate.into());
+        p.push(self.depth.into());
+        p.push(self.send_to_reverb.into());
         for unused_parameter in self.unused_parameters.iter() {
             p.push(*unused_parameter);
         }
@@ -309,13 +293,13 @@ impl Parameters<20> for Gm2ChorusParameters {
 impl Default for Gm2ChorusParameters {
     fn default() -> Self {
         Self {
-            pre_lpf: Default::default(),
-            level: 64,
-            feedback: 8,
-            delay: 80,
-            rate: 3,
-            depth: 19,
-            send_to_reverb: Default::default(),
+            pre_lpf: PreLpf(0),
+            level: Level(64),
+            feedback: Level(8),
+            delay: Level(80),
+            rate: Level(3),
+            depth: Level(19),
+            send_to_reverb: Level(0),
             unused_parameters: Default::default()
         }
     }

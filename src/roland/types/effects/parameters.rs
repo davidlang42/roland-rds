@@ -168,6 +168,57 @@ impl From<Parameter> for Level {
     }
 }
 
+/// Parameter(0-180) === Phase(0-180)
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct Phase(pub u8);
+//TODO #[validate(range(max = 180))]
+
+impl Into<Parameter> for Phase {
+    fn into(self) -> Parameter {
+        Parameter(self.0 as i16)
+    }
+}
+
+impl From<Parameter> for Phase {
+    fn from(value: Parameter) -> Self {
+        Self(value.0 as u8)
+    }
+}
+
+/// Parameter(0-7) === PreLpf(0-7)
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct PreLpf(pub u8);
+//TODO #[validate(range(max = 7))]
+
+impl Into<Parameter> for PreLpf {
+    fn into(self) -> Parameter {
+        Parameter(self.0 as i16)
+    }
+}
+
+impl From<Parameter> for PreLpf {
+    fn from(value: Parameter) -> Self {
+        Self(value.0 as u8)
+    }
+}
+
+/// Parameter(1-?) === LinearMilliseconds(1-MAX)
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct LinearMilliseconds<const MAX: u16>(pub u16);
+//TODO #[validate(range(min = 1, max = 1000)]
+
+impl<const MAX: u16> Into<Parameter> for LinearMilliseconds<MAX> {
+    fn into(self) -> Parameter {
+        Parameter(self.0 as i16)
+    }
+}
+
+impl<const MAX: u16> From<Parameter> for LinearMilliseconds<MAX> {
+    fn from(value: Parameter) -> Self {
+        Self(value.0 as u16)
+    }
+}
+
 /// Parameter(0-1) === Switch(False, True)
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct Switch(pub bool);
