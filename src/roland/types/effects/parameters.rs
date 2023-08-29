@@ -167,3 +167,19 @@ impl From<Parameter> for Level {
         Self(value.0 as u8)
     }
 }
+
+/// Parameter(0-1) === Switch(False, True)
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct Switch(pub bool);
+
+impl Into<Parameter> for Switch {
+    fn into(self) -> Parameter {
+        Parameter(if self.0 { 1 } else { 0 })
+    }
+}
+
+impl From<Parameter> for Switch {
+    fn from(value: Parameter) -> Self {
+        Self(value.0 == 1)
+    }
+}

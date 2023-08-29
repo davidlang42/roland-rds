@@ -3,7 +3,7 @@ use validator::{Validate, ValidationErrors};
 
 use crate::{roland::types::numeric::{Parameter, OffsetU8}, json::{validation::{unused_by_rd300nx_err, validate_boxed_array, merge_all_fixed}, serialize_default_terminated_array}};
 use crate::json::validation::valid_boxed_elements;
-use super::{UnusedParameters, Parameters, discrete::{LogFrequency, QFactor}, parameters::Level};
+use super::{UnusedParameters, Parameters, discrete::{LogFrequency, QFactor}, parameters::{Level, Switch}};
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
 pub enum MfxType { // 0-255
@@ -760,11 +760,11 @@ pub struct IsolatorParameters {
     boost_cut_low: OffsetU8<60, 0, 64>,
     boost_cut_mid: OffsetU8<60, 0, 64>,
     boost_cut_high: OffsetU8<60, 0, 64>,
-    a_phase_low_sw: bool,
+    a_phase_low_sw: Switch,
     a_phase_low_level: Level,
-    a_phase_mid_sw: bool,
+    a_phase_mid_sw: Switch,
     a_phase_mid_level: Level,
-    low_boost_sw: bool,
+    low_boost_sw: Switch,
     low_boost_level: Level,
     level: Level,
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
@@ -781,11 +781,11 @@ impl From<[Parameter; 32]> for IsolatorParameters {
             boost_cut_low: (p.next().unwrap().0 as u8).into(),
             boost_cut_mid: (p.next().unwrap().0 as u8).into(),
             boost_cut_high: (p.next().unwrap().0 as u8).into(),
-            a_phase_low_sw: p.next().unwrap().0 as u8 == 1,
+            a_phase_low_sw: p.next().unwrap().into(),
             a_phase_low_level: p.next().unwrap().into(),
-            a_phase_mid_sw: p.next().unwrap().0 as u8 == 1,
+            a_phase_mid_sw: p.next().unwrap().into(),
             a_phase_mid_level: p.next().unwrap().into(),
-            low_boost_sw: p.next().unwrap().0 as u8 == 1,
+            low_boost_sw: p.next().unwrap().into(),
             low_boost_level: p.next().unwrap().into(),
             level: p.next().unwrap().into(),
             unused_parameters: Box::new(p.collect::<Vec<_>>().try_into().unwrap())
@@ -799,11 +799,11 @@ impl Parameters<32> for IsolatorParameters {
         p.push(Parameter(Into::<u8>::into(self.boost_cut_low) as i16));
         p.push(Parameter(Into::<u8>::into(self.boost_cut_mid) as i16));
         p.push(Parameter(Into::<u8>::into(self.boost_cut_high) as i16));
-        p.push(Parameter(if self.a_phase_low_sw { 1 } else { 0 }));
+        p.push(self.a_phase_low_sw.into());
         p.push(self.a_phase_low_level.into());
-        p.push(Parameter(if self.a_phase_mid_sw { 1 } else { 0 }));
+        p.push(self.a_phase_mid_sw.into());
         p.push(self.a_phase_mid_level.into());
-        p.push(Parameter(if self.low_boost_sw { 1 } else { 0 }));
+        p.push(self.low_boost_sw.into());
         p.push(self.low_boost_level.into());
         p.push(self.level.into());
         for unused_parameter in self.unused_parameters.iter() {
@@ -819,11 +819,11 @@ impl Default for IsolatorParameters {
             boost_cut_low: OffsetU8::default(),
             boost_cut_mid: OffsetU8::default(),
             boost_cut_high: OffsetU8::default(),
-            a_phase_low_sw: false,
+            a_phase_low_sw: Switch(false),
             a_phase_low_level: Level(127),
-            a_phase_mid_sw: false,
+            a_phase_mid_sw: Switch(false),
             a_phase_mid_level: Level(127),
-            low_boost_sw: false,
+            low_boost_sw: Switch(false),
             low_boost_level: Level(127),
             level: Level(127),
             unused_parameters: Default::default()
