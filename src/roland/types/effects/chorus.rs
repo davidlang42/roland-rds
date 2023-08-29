@@ -304,3 +304,28 @@ impl Default for Gm2ChorusParameters {
         }
     }
 }
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct TestParameters {
+    pre_lpf: PreLpf,
+    level: Level,
+    feedback: Level,
+    delay: Level,
+    rate: Level,
+    depth: Level,
+    send_to_reverb: Level
+}
+
+impl Default for TestParameters {
+    fn default() -> Self {
+        Self {
+            pre_lpf: PreLpf(0),
+            level: Level(64),
+            feedback: Level(8),
+            delay: Level(80),
+            rate: Level(3),
+            depth: Level(19),
+            send_to_reverb: Level(0)
+        }
+    }
+}

@@ -17,7 +17,11 @@ mod roland;
 mod bytes;
 mod json;
 
-#[macro_use] extern crate serde_derive;
+#[macro_use]
+extern crate serde_derive;
+
+#[macro_use]
+extern crate roland_rds_derive;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
