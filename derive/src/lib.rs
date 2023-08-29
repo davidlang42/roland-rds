@@ -5,7 +5,7 @@ extern crate quote;
 
 use proc_macro::TokenStream;
 use quote::Tokens;
-use syn::{Ident, Body, Field, Ty};
+use syn::{Ident, Body, Field, Ty, ConstExpr, Lit};
 
 #[proc_macro_derive(Parameters)]
 pub fn parameters(input: TokenStream) -> TokenStream {
@@ -35,20 +35,22 @@ pub fn parameters(input: TokenStream) -> TokenStream {
 }
 
 fn impl_from_parameters(name: &Ident, fields: &Vec<Field>) -> quote::Tokens {
-    let size = fields.len();
+    let mut size: usize = 0;
     let mut inner = Tokens::new();
     for field in fields {
         let field_name = field.ident.as_ref().unwrap();
-        if let Ty::Array(_, _) = &field.ty {
+        if let Ty::Array(_, ConstExpr::Lit(Lit::Int(len, _))) = &field.ty {
             // expects an Array of Parameter
             inner.append(quote! {
                 #field_name: p.collect::<Vec<_>>().try_into().unwrap(),
             });
+            size += *len as usize;
         } else {
             // expects a type which implements From<Parameter>
             inner.append(quote! {
                 #field_name: p.next().unwrap().into(),
             });
+            size += 1;
         }
     }
     quote! {
@@ -64,22 +66,24 @@ fn impl_from_parameters(name: &Ident, fields: &Vec<Field>) -> quote::Tokens {
 }
 
 fn impl_parameters(name: &Ident, fields: &Vec<Field>) -> quote::Tokens {
-    let size = fields.len();
+    let mut size: usize = 0;
     let mut inner = Tokens::new();
     for field in fields {
         let field_name = field.ident.as_ref().unwrap();
-        if let Ty::Array(_, _) = &field.ty {
+        if let Ty::Array(_, ConstExpr::Lit(Lit::Int(len, _))) = &field.ty {
             // expects an Array of Parameter
             inner.append(quote! {
                 for element in self.#field_name.iter() {
                     p.push(*element);
                 }
             });
+            size += *len as usize;
         } else {
             // expects a type which implements Into<Parameter>
             inner.append(quote! {
                 p.push(self.#field_name.into());
             });
+            size += 1;
         }
     }
     quote! {

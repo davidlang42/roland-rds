@@ -240,7 +240,7 @@ impl Default for DelayParameters {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
 pub struct Gm2ChorusParameters {
     pre_lpf: PreLpf,
     level: Level,
@@ -256,39 +256,6 @@ pub struct Gm2ChorusParameters {
     unused_parameters: [Parameter; 13]
 }
 
-impl From<[Parameter; 20]> for Gm2ChorusParameters {
-    fn from(value: [Parameter; 20]) -> Self {
-        let mut p = value.into_iter();
-        Self {
-            pre_lpf: p.next().unwrap().into(),
-            level: p.next().unwrap().into(),
-            feedback: p.next().unwrap().into(),
-            delay: p.next().unwrap().into(),
-            rate: p.next().unwrap().into(),
-            depth: p.next().unwrap().into(),
-            send_to_reverb: p.next().unwrap().into(),
-            unused_parameters: p.collect::<Vec<_>>().try_into().unwrap()
-        }
-    }
-}
-
-impl Parameters<20> for Gm2ChorusParameters {
-    fn parameters(&self) -> [Parameter; 20] {
-        let mut p: Vec<Parameter> = Vec::new();
-        p.push(self.pre_lpf.into());
-        p.push(self.level.into());
-        p.push(self.feedback.into());
-        p.push(self.delay.into());
-        p.push(self.rate.into());
-        p.push(self.depth.into());
-        p.push(self.send_to_reverb.into());
-        for unused_parameter in self.unused_parameters.iter() {
-            p.push(*unused_parameter);
-        }
-        p.try_into().unwrap()
-    }
-}
-
 impl Default for Gm2ChorusParameters {
     fn default() -> Self {
         Self {
@@ -300,33 +267,6 @@ impl Default for Gm2ChorusParameters {
             depth: Level(19),
             send_to_reverb: Level(0),
             unused_parameters: Default::default()
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
-pub struct TestParameters {
-    pre_lpf: PreLpf,
-    level: Level,
-    feedback: Level,
-    delay: Level,
-    rate: Level,
-    depth: Level,
-    send_to_reverb: Level,
-    test_array: [Parameter; 10]
-}
-
-impl Default for TestParameters {
-    fn default() -> Self {
-        Self {
-            pre_lpf: PreLpf(0),
-            level: Level(64),
-            feedback: Level(8),
-            delay: Level(80),
-            rate: Level(3),
-            depth: Level(19),
-            send_to_reverb: Level(0),
-            test_array: [Parameter(0); 10]
         }
     }
 }
