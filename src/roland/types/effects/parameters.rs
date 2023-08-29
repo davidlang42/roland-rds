@@ -219,6 +219,24 @@ impl<const MAX: u16> From<Parameter> for LinearMilliseconds<MAX> {
     }
 }
 
+//TODO confirm
+/// Parameter(0- MAX-1) === Size(1-MAX)
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct Size(pub u8);
+//TODO #[validate(range(min = 1, max = MAX)]
+
+impl Into<Parameter> for Size {
+    fn into(self) -> Parameter {
+        Parameter((self.0 - 1) as i16)
+    }
+}
+
+impl From<Parameter> for Size {
+    fn from(value: Parameter) -> Self {
+        Self(value.0 as u8 + 1)
+    }
+}
+
 /// Parameter(0-1) === Switch(False, True)
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct Switch(pub bool);

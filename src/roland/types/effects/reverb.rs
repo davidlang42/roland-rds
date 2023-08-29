@@ -1,13 +1,11 @@
 use schemars::JsonSchema;
 use validator::Validate;
+use crate::json::{serialize_default_terminated_array, validation::valid_boxed_elements};
 
-use crate::roland::types::numeric::{OffsetU8, OneIndexedU8};
-use crate::{roland::types::numeric::Parameter, json::serialize_default_terminated_array};
-use crate::json::validation::valid_boxed_elements;
-
-use super::discrete::{LogMilliseconds, DiscreteValues};
-use super::parameters::{ReverbCharacter, Gm2ReverbCharacter};
-use super::{UnusedParameters, Parameters, discrete::{LogFrequency, LogFrequencyOrByPass}};
+use crate::roland::types::numeric::Parameter;
+use super::discrete::{LogMilliseconds, DiscreteValues, LogFrequency, LogFrequencyOrByPass};
+use super::parameters::{ReverbCharacter, Gm2ReverbCharacter, Level, Gain, PreLpf, Size};
+use super::{UnusedParameters, Parameters};
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
 pub enum ReverbType { // 0-6
@@ -101,13 +99,10 @@ impl Validate for ReverbType {
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct ReverbParameters {
     character: ReverbCharacter,
-    #[validate(range(max = 127))]
-    time: u8,
+    time: Level,
     hf_damp: LogFrequencyOrByPass<200, 8000>,
-    #[validate(range(max = 127))]
-    delay_feedback: u8,
-    #[validate(range(max = 127))]
-    level: u8,
+    delay_feedback: Level,
+    level: Level,
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
     #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 15>")]
@@ -120,10 +115,10 @@ impl From<[Parameter; 20]> for ReverbParameters {
         let mut p = value.into_iter();
         Self {
             character: p.next().unwrap().into(),
-            time: p.next().unwrap().0 as u8,
+            time: p.next().unwrap().into(),
             hf_damp: p.next().unwrap().into(),
-            delay_feedback: p.next().unwrap().0 as u8,
-            level: p.next().unwrap().0 as u8,
+            delay_feedback: p.next().unwrap().into(),
+            level: p.next().unwrap().into(),
             unused_parameters: Box::new(p.collect::<Vec<_>>().try_into().unwrap())
         }
     }
@@ -133,10 +128,10 @@ impl Parameters<20> for ReverbParameters {
     fn parameters(&self) -> [Parameter; 20] {
         let mut p: Vec<Parameter> = Vec::new();
         p.push(self.character.into());
-        p.push(Parameter(self.time as i16));
+        p.push(self.time.into());
         p.push(self.hf_damp.into());
-        p.push(Parameter(self.delay_feedback as i16));
-        p.push(Parameter(self.level as i16));
+        p.push(self.delay_feedback.into());
+        p.push(self.level.into());
         for unused_parameter in self.unused_parameters.iter() {
             p.push(*unused_parameter);
         }
@@ -148,10 +143,10 @@ impl Default for ReverbParameters {
     fn default() -> Self {
         Self {
             character: ReverbCharacter::Stage2,
-            time: 84,
+            time: Level(84),
             hf_damp: LogFrequencyOrByPass::Frequency(LogFrequency(8000)),
-            delay_feedback: 0,
-            level: 64,
+            delay_feedback: Level(0),
+            level: Level(64),
             unused_parameters: Default::default()
         }
     }
@@ -160,20 +155,16 @@ impl Default for ReverbParameters {
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct CharacterParameters<const DEFAULT_MS: usize, const DEFAULT_TIME: u8> {
     pre_delay: LogMilliseconds,
-    #[validate(range(max = 127))]
-    time: u8,
-    size: OneIndexedU8<8>,
+    time: Level,
+    size: Size,
     high_cut: LogFrequencyOrByPass<160, 12500>, // technically this mislabels 320 as 315 and 640 as 630, but it really doesn't matter
-    #[validate(range(max = 127))]
-    density: u8,
-    #[validate(range(max = 127))]
-    diffusion: u8,
+    density: Level,
+    diffusion: Level,
     lf_damp_freq: LogFrequency<50, 4000>, // technically this mislabels 64 as 63 and 320 as 315, but it really doesn't matter
-    lf_damp_gain: OffsetU8<36, 0, 36>,
+    lf_damp_gain: Gain<-36, 0>,
     hf_damp_freq: LogFrequency<4000, 12500>, // technically this mislabels 6400 as 6300, but it really doesn't matter
-    hf_damp_gain: OffsetU8<36, 0, 36>,
-    #[validate(range(max = 127))]
-    level: u8,
+    hf_damp_gain: Gain<-36, 0>,
+    level: Level,
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
     #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 9>")]
@@ -186,16 +177,16 @@ impl<const DMS: usize, const DT: u8> From<[Parameter; 20]> for CharacterParamete
         let mut p = value.into_iter();
         Self {
             pre_delay: p.next().unwrap().into(),
-            time: p.next().unwrap().0 as u8,
-            size: (p.next().unwrap().0 as u8).into(),
+            time: p.next().unwrap().into(),
+            size: p.next().unwrap().into(),
             high_cut: p.next().unwrap().into(),
-            density: p.next().unwrap().0 as u8,
-            diffusion: p.next().unwrap().0 as u8,
+            density: p.next().unwrap().into(),
+            diffusion: p.next().unwrap().into(),
             lf_damp_freq: p.next().unwrap().into(),
-            lf_damp_gain: (p.next().unwrap().0 as u8).into(),
+            lf_damp_gain: p.next().unwrap().into(),
             hf_damp_freq: p.next().unwrap().into(),
-            hf_damp_gain: (p.next().unwrap().0 as u8).into(),
-            level: p.next().unwrap().0 as u8,
+            hf_damp_gain: p.next().unwrap().into(),
+            level: p.next().unwrap().into(),
             unused_parameters: Box::new(p.collect::<Vec<_>>().try_into().unwrap())
         }
     }
@@ -205,16 +196,16 @@ impl<const DMS: usize, const DT: u8> Parameters<20> for CharacterParameters<DMS,
     fn parameters(&self) -> [Parameter; 20] {
         let mut p: Vec<Parameter> = Vec::new();
         p.push(self.pre_delay.into());
-        p.push(Parameter(self.time as i16));
-        p.push(Parameter(Into::<u8>::into(self.size) as i16));
+        p.push(self.time.into());
+        p.push(self.size.into());
         p.push(self.high_cut.into());
-        p.push(Parameter(self.density as i16));
-        p.push(Parameter(self.diffusion as i16));
+        p.push(self.density.into());
+        p.push(self.diffusion.into());
         p.push(self.lf_damp_freq.into());
-        p.push(Parameter(Into::<u8>::into(self.lf_damp_gain) as i16));
+        p.push(self.lf_damp_gain.into());
         p.push(self.hf_damp_freq.into());
-        p.push(Parameter(Into::<u8>::into(self.hf_damp_gain) as i16));
-        p.push(Parameter(self.level as i16));
+        p.push(self.hf_damp_gain.into());
+        p.push(self.level.into());
         for unused_parameter in self.unused_parameters.iter() {
             p.push(*unused_parameter);
         }
@@ -226,16 +217,16 @@ impl<const DMS: usize, const DT: u8> Default for CharacterParameters<DMS, DT> {
     fn default() -> Self {
         Self {
             pre_delay: LogMilliseconds(LogMilliseconds::values().into_iter().nth(DMS).unwrap()),
-            time: DT,
-            size: 8.into(),
+            time: Level(DT),
+            size: Size(8),
             high_cut: LogFrequencyOrByPass::Frequency(LogFrequency(12500)),
-            density: 127,
-            diffusion: 127,
+            density: Level(127),
+            diffusion: Level(127),
             lf_damp_freq: LogFrequency(4000),
-            lf_damp_gain: OffsetU8::<36, 0, 36>::ZERO.into(), // 0db
+            lf_damp_gain: Gain(0),
             hf_damp_freq: LogFrequency(4000),
-            hf_damp_gain: OffsetU8::<36, 0, 36>::ZERO.into(), // 0db
-            level: 64,
+            hf_damp_gain: Gain(0),
+            level: Level(64),
             unused_parameters: Default::default()
         }
     }
@@ -244,14 +235,10 @@ impl<const DMS: usize, const DT: u8> Default for CharacterParameters<DMS, DT> {
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct Gm2ReverbParameters {
     character: Gm2ReverbCharacter,
-    #[validate(range(max = 7))]
-    pre_lpf: u8,
-    #[validate(range(max = 127))]
-    level: u8,
-    #[validate(range(max = 127))]
-    time: u8,
-    #[validate(range(max = 127))]
-    delay_feedback: u8,
+    pre_lpf: PreLpf,
+    level: Level,
+    time: Level,
+    delay_feedback: Level,
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
     #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 15>")]
@@ -264,10 +251,10 @@ impl From<[Parameter; 20]> for Gm2ReverbParameters {
         let mut p = value.into_iter();
         Self {
             character: p.next().unwrap().into(),
-            pre_lpf: p.next().unwrap().0 as u8,
-            level: p.next().unwrap().0 as u8,
-            time: p.next().unwrap().0 as u8,
-            delay_feedback: p.next().unwrap().0 as u8,
+            pre_lpf: p.next().unwrap().into(),
+            level: p.next().unwrap().into(),
+            time: p.next().unwrap().into(),
+            delay_feedback: p.next().unwrap().into(),
             unused_parameters: Box::new(p.collect::<Vec<_>>().try_into().unwrap())
         }
     }
@@ -277,10 +264,10 @@ impl Parameters<20> for Gm2ReverbParameters {
     fn parameters(&self) -> [Parameter; 20] {
         let mut p: Vec<Parameter> = Vec::new();
         p.push(self.character.into());
-        p.push(Parameter(self.pre_lpf as i16));
-        p.push(Parameter(self.level as i16));
-        p.push(Parameter(self.time as i16));
-        p.push(Parameter(self.delay_feedback as i16));
+        p.push(self.pre_lpf.into());
+        p.push(self.level.into());
+        p.push(self.time.into());
+        p.push(self.delay_feedback.into());
         for unused_parameter in self.unused_parameters.iter() {
             p.push(*unused_parameter);
         }
@@ -292,10 +279,10 @@ impl Default for Gm2ReverbParameters {
     fn default() -> Self {
         Self {
             character: Gm2ReverbCharacter::Hall2,
-            pre_lpf: 0,
-            level: 64,
-            time: 64,
-            delay_feedback: 0,
+            pre_lpf: PreLpf(0),
+            level: Level(64),
+            time: Level(64),
+            delay_feedback: Level(0),
             unused_parameters: Default::default()
         }
     }
@@ -303,12 +290,9 @@ impl Default for Gm2ReverbParameters {
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct CathedralParameters {
-    #[validate(range(max = 7))]
-    pre_lpf: u8,
-    #[validate(range(max = 127))]
-    level: u8,
-    #[validate(range(max = 127))]
-    time: u8,
+    pre_lpf: PreLpf,
+    level: Level,
+    time: Level,
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
     #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 17>")]
@@ -320,9 +304,9 @@ impl From<[Parameter; 20]> for CathedralParameters {
     fn from(value: [Parameter; 20]) -> Self {
         let mut p = value.into_iter();
         Self {
-            pre_lpf: p.next().unwrap().0 as u8,
-            level: p.next().unwrap().0 as u8,
-            time: p.next().unwrap().0 as u8,
+            pre_lpf: p.next().unwrap().into(),
+            level: p.next().unwrap().into(),
+            time: p.next().unwrap().into(),
             unused_parameters: Box::new(p.collect::<Vec<_>>().try_into().unwrap())
         }
     }
@@ -331,9 +315,9 @@ impl From<[Parameter; 20]> for CathedralParameters {
 impl Parameters<20> for CathedralParameters {
     fn parameters(&self) -> [Parameter; 20] {
         let mut p: Vec<Parameter> = Vec::new();
-        p.push(Parameter(self.pre_lpf as i16));
-        p.push(Parameter(self.level as i16));
-        p.push(Parameter(self.time as i16));
+        p.push(self.pre_lpf.into());
+        p.push(self.level.into());
+        p.push(self.time.into());
         for unused_parameter in self.unused_parameters.iter() {
             p.push(*unused_parameter);
         }
@@ -344,9 +328,9 @@ impl Parameters<20> for CathedralParameters {
 impl Default for CathedralParameters {
     fn default() -> Self {
         Self {
-            pre_lpf: 3,
-            level: 64,
-            time: 54,
+            pre_lpf: PreLpf(3),
+            level: Level(64),
+            time: Level(54),
             unused_parameters: Default::default()
         }
     }
