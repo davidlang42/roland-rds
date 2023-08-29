@@ -595,7 +595,7 @@ impl OtherMfxParameters {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
 pub struct EqualizerParameters {
     low_freq: LogFrequency<20, 400>,
     low_gain: Gain<-15, 15>,
@@ -613,47 +613,6 @@ pub struct EqualizerParameters {
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 21>")]
     #[validate]
     unused_parameters: [Parameter; 21]
-}
-
-impl From<[Parameter; 32]> for EqualizerParameters {
-    fn from(value: [Parameter; 32]) -> Self {
-        let mut p = value.into_iter();
-        Self {
-            low_freq: p.next().unwrap().into(),
-            low_gain: p.next().unwrap().into(),
-            mid1_freq: p.next().unwrap().into(),
-            mid1_gain: p.next().unwrap().into(),
-            mid1_q: p.next().unwrap().into(),
-            mid2_freq: p.next().unwrap().into(),
-            mid2_gain: p.next().unwrap().into(),
-            mid2_q: p.next().unwrap().into(),
-            high_freq: p.next().unwrap().into(),
-            high_gain: p.next().unwrap().into(),
-            level: p.next().unwrap().into(),
-            unused_parameters: p.collect::<Vec<_>>().try_into().unwrap()
-        }
-    }
-}
-
-impl Parameters<32> for EqualizerParameters {
-    fn parameters(&self) -> [Parameter; 32] {
-        let mut p: Vec<Parameter> = Vec::new();
-        p.push(self.low_freq.into());
-        p.push(self.low_gain.into());
-        p.push(self.mid1_freq.into());
-        p.push(self.mid1_gain.into());
-        p.push(self.mid1_q.into());
-        p.push(self.mid2_freq.into());
-        p.push(self.mid2_gain.into());
-        p.push(self.mid2_q.into());
-        p.push(self.high_freq.into());
-        p.push(self.high_gain.into());
-        p.push(self.level.into());
-        for unused_parameter in self.unused_parameters.iter() {
-            p.push(*unused_parameter);
-        }
-        p.try_into().unwrap()
-    }
 }
 
 impl Default for EqualizerParameters {
@@ -675,7 +634,7 @@ impl Default for EqualizerParameters {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
 pub struct SpectrumParameters {
     band1_250hz: Gain<-15, 15>,
     band2_500hz: Gain<-15, 15>,
@@ -692,45 +651,6 @@ pub struct SpectrumParameters {
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 22>")]
     #[validate]
     unused_parameters: [Parameter; 22]
-}
-
-impl From<[Parameter; 32]> for SpectrumParameters {
-    fn from(value: [Parameter; 32]) -> Self {
-        let mut p = value.into_iter();
-        Self {
-            band1_250hz: p.next().unwrap().into(),
-            band2_500hz: p.next().unwrap().into(),
-            band3_1000hz: p.next().unwrap().into(),
-            band4_1250hz: p.next().unwrap().into(),
-            band5_2000hz: p.next().unwrap().into(),
-            band6_3150hz: p.next().unwrap().into(),
-            band7_4000hz: p.next().unwrap().into(),
-            band8_8000hz: p.next().unwrap().into(),
-            q: p.next().unwrap().into(),
-            level: p.next().unwrap().into(),
-            unused_parameters: p.collect::<Vec<_>>().try_into().unwrap()
-        }
-    }
-}
-
-impl Parameters<32> for SpectrumParameters {
-    fn parameters(&self) -> [Parameter; 32] {
-        let mut p: Vec<Parameter> = Vec::new();
-        p.push(self.band1_250hz.into());
-        p.push(self.band2_500hz.into());
-        p.push(self.band3_1000hz.into());
-        p.push(self.band4_1250hz.into());
-        p.push(self.band5_2000hz.into());
-        p.push(self.band6_3150hz.into());
-        p.push(self.band7_4000hz.into());
-        p.push(self.band8_8000hz.into());
-        p.push(self.q.into());
-        p.push(self.level.into());
-        for unused_parameter in self.unused_parameters.iter() {
-            p.push(*unused_parameter);
-        }
-        p.try_into().unwrap()
-    }
 }
 
 impl Default for SpectrumParameters {
@@ -751,7 +671,7 @@ impl Default for SpectrumParameters {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
 pub struct IsolatorParameters {
     boost_cut_low: Gain<-60, 4>,
     boost_cut_mid: Gain<-60, 4>,
@@ -768,45 +688,6 @@ pub struct IsolatorParameters {
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 22>")]
     #[validate]
     unused_parameters: [Parameter; 22]
-}
-
-impl From<[Parameter; 32]> for IsolatorParameters {
-    fn from(value: [Parameter; 32]) -> Self {
-        let mut p = value.into_iter();
-        Self {
-            boost_cut_low: p.next().unwrap().into(),
-            boost_cut_mid: p.next().unwrap().into(),
-            boost_cut_high: p.next().unwrap().into(),
-            a_phase_low_sw: p.next().unwrap().into(),
-            a_phase_low_level: p.next().unwrap().into(),
-            a_phase_mid_sw: p.next().unwrap().into(),
-            a_phase_mid_level: p.next().unwrap().into(),
-            low_boost_sw: p.next().unwrap().into(),
-            low_boost_level: p.next().unwrap().into(),
-            level: p.next().unwrap().into(),
-            unused_parameters: p.collect::<Vec<_>>().try_into().unwrap()
-        }
-    }
-}
-
-impl Parameters<32> for IsolatorParameters {
-    fn parameters(&self) -> [Parameter; 32] {
-        let mut p: Vec<Parameter> = Vec::new();
-        p.push(self.boost_cut_low.into());
-        p.push(self.boost_cut_mid.into());
-        p.push(self.boost_cut_high.into());
-        p.push(self.a_phase_low_sw.into());
-        p.push(self.a_phase_low_level.into());
-        p.push(self.a_phase_mid_sw.into());
-        p.push(self.a_phase_mid_level.into());
-        p.push(self.low_boost_sw.into());
-        p.push(self.low_boost_level.into());
-        p.push(self.level.into());
-        for unused_parameter in self.unused_parameters.iter() {
-            p.push(*unused_parameter);
-        }
-        p.try_into().unwrap()
-    }
 }
 
 impl Default for IsolatorParameters {

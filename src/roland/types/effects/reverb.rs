@@ -96,7 +96,7 @@ impl Validate for ReverbType {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
 pub struct ReverbParameters {
     character: ReverbCharacter,
     time: Level,
@@ -108,35 +108,6 @@ pub struct ReverbParameters {
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 15>")]
     #[validate]
     unused_parameters: [Parameter; 15]
-}
-
-impl From<[Parameter; 20]> for ReverbParameters {
-    fn from(value: [Parameter; 20]) -> Self {
-        let mut p = value.into_iter();
-        Self {
-            character: p.next().unwrap().into(),
-            time: p.next().unwrap().into(),
-            hf_damp: p.next().unwrap().into(),
-            delay_feedback: p.next().unwrap().into(),
-            level: p.next().unwrap().into(),
-            unused_parameters: p.collect::<Vec<_>>().try_into().unwrap()
-        }
-    }
-}
-
-impl Parameters<20> for ReverbParameters {
-    fn parameters(&self) -> [Parameter; 20] {
-        let mut p: Vec<Parameter> = Vec::new();
-        p.push(self.character.into());
-        p.push(self.time.into());
-        p.push(self.hf_damp.into());
-        p.push(self.delay_feedback.into());
-        p.push(self.level.into());
-        for unused_parameter in self.unused_parameters.iter() {
-            p.push(*unused_parameter);
-        }
-        p.try_into().unwrap()
-    }
 }
 
 impl Default for ReverbParameters {
@@ -232,7 +203,7 @@ impl<const DMS: usize, const DT: u8> Default for CharacterParameters<DMS, DT> {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
 pub struct Gm2ReverbParameters {
     character: Gm2ReverbCharacter,
     pre_lpf: PreLpf,
@@ -244,35 +215,6 @@ pub struct Gm2ReverbParameters {
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 15>")]
     #[validate]
     unused_parameters: [Parameter; 15]
-}
-
-impl From<[Parameter; 20]> for Gm2ReverbParameters {
-    fn from(value: [Parameter; 20]) -> Self {
-        let mut p = value.into_iter();
-        Self {
-            character: p.next().unwrap().into(),
-            pre_lpf: p.next().unwrap().into(),
-            level: p.next().unwrap().into(),
-            time: p.next().unwrap().into(),
-            delay_feedback: p.next().unwrap().into(),
-            unused_parameters: p.collect::<Vec<_>>().try_into().unwrap()
-        }
-    }
-}
-
-impl Parameters<20> for Gm2ReverbParameters {
-    fn parameters(&self) -> [Parameter; 20] {
-        let mut p: Vec<Parameter> = Vec::new();
-        p.push(self.character.into());
-        p.push(self.pre_lpf.into());
-        p.push(self.level.into());
-        p.push(self.time.into());
-        p.push(self.delay_feedback.into());
-        for unused_parameter in self.unused_parameters.iter() {
-            p.push(*unused_parameter);
-        }
-        p.try_into().unwrap()
-    }
 }
 
 impl Default for Gm2ReverbParameters {
@@ -288,7 +230,7 @@ impl Default for Gm2ReverbParameters {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
 pub struct CathedralParameters {
     pre_lpf: PreLpf,
     level: Level,
@@ -298,31 +240,6 @@ pub struct CathedralParameters {
     #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 17>")]
     #[validate]
     unused_parameters: [Parameter; 17]
-}
-
-impl From<[Parameter; 20]> for CathedralParameters {
-    fn from(value: [Parameter; 20]) -> Self {
-        let mut p = value.into_iter();
-        Self {
-            pre_lpf: p.next().unwrap().into(),
-            level: p.next().unwrap().into(),
-            time: p.next().unwrap().into(),
-            unused_parameters: p.collect::<Vec<_>>().try_into().unwrap()
-        }
-    }
-}
-
-impl Parameters<20> for CathedralParameters {
-    fn parameters(&self) -> [Parameter; 20] {
-        let mut p: Vec<Parameter> = Vec::new();
-        p.push(self.pre_lpf.into());
-        p.push(self.level.into());
-        p.push(self.time.into());
-        for unused_parameter in self.unused_parameters.iter() {
-            p.push(*unused_parameter);
-        }
-        p.try_into().unwrap()
-    }
 }
 
 impl Default for CathedralParameters {
