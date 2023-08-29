@@ -10,7 +10,7 @@ pub mod chorus;
 pub mod reverb;
 pub mod mfx;
 
-trait Parameters<const N: usize> : Validate + From<[Parameter; N]> {
+trait Parameters<const N: usize> : Validate + From<[Parameter; N]> + Default {
     fn parameters(&self) -> [Parameter; N];
 }
 
@@ -41,5 +41,13 @@ impl<const N: usize> Validate for UnusedParameters<N> {
         let mut r = Ok(());
         r = merge_all_fixed(r, "unused", validate_boxed_array(&self.unused));
         r
+    }
+}
+
+impl<const N: usize> Default for UnusedParameters<N> {
+    fn default() -> Self {
+        Self {
+            unused: Box::new([Default::default(); N])
+        }
     }
 }
