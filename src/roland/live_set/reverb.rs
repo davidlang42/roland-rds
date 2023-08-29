@@ -10,6 +10,7 @@ use crate::roland::types::numeric::Parameter;
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct Reverb {
+    #[validate]
     pub reverb_type: ReverbType,
     #[validate(range(max = 127))]
     depth: u8,
