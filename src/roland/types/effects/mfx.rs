@@ -42,7 +42,7 @@ pub enum MfxType { // 0-255
     StepFlanger(StepFlangerParameters),
     HexaChorus(HexaChorusParameters),
     TremoloChorus(TremoloChorusParameters),
-    SpaceD(UnusedParameters<32>), //TODO implement parameters
+    SpaceD(SpaceDParameters),
     Chorus3D(UnusedParameters<32>), //TODO implement parameters
     Flanger3D(UnusedParameters<32>), //TODO implement parameters
     StepFlanger3D(UnusedParameters<32>), //TODO implement parameters
@@ -1711,6 +1711,43 @@ impl Default for TremoloChorusParameters {
             trem_rate_note: NoteLength::QuarterNote,
             trem_separation: UInt(127),
             trem_phase: UInt(180),
+            balance: Balance(50),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct SpaceDParameters {
+    pre_delay: LogMilliseconds,
+    rate_mode: RateMode,
+    rate_hz: LinearFrequency,
+    rate_note: NoteLength,
+    depth: Level,
+    phase: Phase,
+    low_gain: Gain,
+    high_gain: Gain,
+    balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 22>")]
+    #[validate]
+    unused_parameters: [Parameter; 22]
+}
+
+impl Default for SpaceDParameters {
+    fn default() -> Self {
+        Self { 
+            pre_delay: LogMilliseconds(2.0),
+            rate_mode: RateMode::Hertz,
+            rate_hz: LinearFrequency(0.5),
+            rate_note: NoteLength::WholeNote,
+            depth: UInt(20),
+            phase: UInt(180),
+            low_gain: Int(0),
+            high_gain: Int(6),
             balance: Balance(50),
             level: UInt(127),
             unused_parameters: Default::default()
