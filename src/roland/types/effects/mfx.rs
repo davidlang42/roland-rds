@@ -8,7 +8,7 @@ use crate::roland::types::enums::Pan;
 use crate::roland::types::numeric::Parameter;
 use super::{UnusedParameters, Parameters};
 use super::discrete::{LogFrequency, QFactor, FineFrequency, LinearFrequency, FilterSlope, EvenPercent, StepLinearFrequency, Balance};
-use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode, ModWave, SlicerMode};
+use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode, ModWave, SlicerMode, Speed};
 
 //TODO validate all fields of all Parameters types
 //TODO add tests for default chorus, mfx, reverb
@@ -35,7 +35,7 @@ pub enum MfxType { // 0-255
     AutoPan(TremoloParameters),
     StepPan(StepPanParameters),
     Slicer(SlicerParameters),
-    Rotary(UnusedParameters<32>), //TODO implement parameters
+    Rotary(RotaryParameters),
     VkRotary(UnusedParameters<32>), //TODO implement parameters
     Chorus(UnusedParameters<32>), //TODO implement parameters
     Flanger(UnusedParameters<32>), //TODO implement parameters
@@ -1413,6 +1413,45 @@ impl Default for SlicerParameters {
             input_sync_threshold: UInt(60),
             mode: SlicerMode::Legato,
             shuffle: UInt(0),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct RotaryParameters {
+    speed: Speed,
+    woofer_slow_rate: LinearFrequency,
+    woofer_fast_rate: LinearFrequency,
+    woofer_accel: UInt<0, 15>,
+    woofer_level: Level,
+    tweeter_slow_rate: LinearFrequency,
+    tweeter_fast_rate: LinearFrequency,
+    tweeter_accel: UInt<0, 15>,
+    tweeter_level: Level,
+    separation: Level,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 21>")]
+    #[validate]
+    unused_parameters: [Parameter; 21]
+}
+
+impl Default for RotaryParameters {
+    fn default() -> Self {
+        Self {
+            speed: Speed::Slow,
+            woofer_slow_rate: LinearFrequency(0.6),
+            woofer_fast_rate: LinearFrequency(6.0),
+            woofer_accel: UInt(5),
+            woofer_level: UInt(127),
+            tweeter_slow_rate: LinearFrequency(0.7),
+            tweeter_fast_rate: LinearFrequency(7.0),
+            tweeter_accel: UInt(12),
+            tweeter_level: UInt(120),
+            separation: UInt(80),
             level: UInt(127),
             unused_parameters: Default::default()
         }

@@ -198,6 +198,13 @@ pub enum SlicerMode {
     Slash
 }
 
+/// Parameter(0-1) === Speed(Slow, Fast)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
+pub enum Speed {
+    Slow,
+    Fast
+}
+
 /// Parameter(0-1) === Switch(False, True)
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct Switch(pub bool);
