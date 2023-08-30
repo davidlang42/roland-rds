@@ -8,7 +8,7 @@ use crate::roland::types::enums::Pan;
 use crate::roland::types::numeric::Parameter;
 use super::{UnusedParameters, Parameters};
 use super::discrete::{LogFrequency, QFactor, FineFrequency, LinearFrequency, FilterSlope, EvenPercent, StepLinearFrequency, Balance};
-use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode, ModWave};
+use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode, ModWave, SlicerMode};
 
 //TODO validate all fields of all Parameters types
 //TODO add tests for default chorus, mfx, reverb
@@ -34,7 +34,7 @@ pub enum MfxType { // 0-255
     Tremolo(TremoloParameters),
     AutoPan(TremoloParameters),
     StepPan(StepPanParameters),
-    Slicer(UnusedParameters<32>), //TODO implement parameters
+    Slicer(SlicerParameters),
     Rotary(UnusedParameters<32>), //TODO implement parameters
     VkRotary(UnusedParameters<32>), //TODO implement parameters
     Chorus(UnusedParameters<32>), //TODO implement parameters
@@ -1346,6 +1346,73 @@ impl Default for StepPanParameters {
             attack: UInt(50),
             input_sync_sw: Switch(false),
             input_sync_threshold: UInt(50),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct SlicerParameters {
+    step1: Level,
+    step2: Level,
+    step3: Level,
+    step4: Level,
+    step5: Level,
+    step6: Level,
+    step7: Level,
+    step8: Level,
+    step9: Level,
+    step10: Level,
+    step11: Level,
+    step12: Level,
+    step13: Level,
+    step14: Level,
+    step15: Level,
+    step16: Level,
+    rate_mode: RateMode,
+    rate_hz: LinearFrequency,
+    rate_note: NoteLength,
+    attack: Level,
+    input_sync_sw: Switch,
+    input_sync_threshold: Level,
+    mode: SlicerMode,
+    shuffle: Level,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 7>")]
+    #[validate]
+    unused_parameters: [Parameter; 7]
+}
+
+impl Default for SlicerParameters {
+    fn default() -> Self {
+        Self {
+            step1: UInt(127),
+            step2: UInt(0),
+            step3: UInt(30),
+            step4: UInt(127),
+            step5: UInt(127),
+            step6: UInt(0),
+            step7: UInt(30),
+            step8: UInt(0),
+            step9: UInt(127),
+            step10: UInt(0),
+            step11: UInt(30),
+            step12: UInt(127),
+            step13: UInt(0),
+            step14: UInt(0),
+            step15: UInt(30),
+            step16: UInt(0),
+            rate_mode: RateMode::Note,
+            rate_hz: LinearFrequency(0.5),
+            rate_note: NoteLength::WholeNote,
+            attack: UInt(50),
+            input_sync_sw: Switch(false),
+            input_sync_threshold: UInt(60),
+            mode: SlicerMode::Legato,
+            shuffle: UInt(0),
             level: UInt(127),
             unused_parameters: Default::default()
         }

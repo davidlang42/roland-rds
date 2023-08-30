@@ -191,6 +191,13 @@ pub enum PhaserPolarity {
     Synchro
 }
 
+/// Parameter(0-1) === SlicerMode(Legato, Slash)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
+pub enum SlicerMode {
+    Legato,
+    Slash
+}
+
 /// Parameter(0-1) === Switch(False, True)
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct Switch(pub bool);
