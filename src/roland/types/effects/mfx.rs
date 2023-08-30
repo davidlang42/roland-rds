@@ -44,8 +44,8 @@ pub enum MfxType { // 0-255
     TremoloChorus(TremoloChorusParameters),
     SpaceD(SpaceDParameters),
     Chorus3D(Chorus3DParameters),
-    Flanger3D(UnusedParameters<32>), //TODO implement parameters
-    StepFlanger3D(UnusedParameters<32>), //TODO implement parameters
+    Flanger3D(Flanger3DParameters),
+    StepFlanger3D(StepFlanger3DParameters),
     TwoBandChorus(UnusedParameters<32>), //TODO implement parameters
     TwoBandFlanger(UnusedParameters<32>), //TODO implement parameters
     TwoBandStepFlanger(UnusedParameters<32>), //TODO implement parameters
@@ -1788,6 +1788,102 @@ impl Default for Chorus3DParameters {
             rate_note: NoteLength::WholeNote,
             depth: UInt(20),
             phase: UInt(180),
+            output_mode: OutputMode::Speaker,
+            low_gain: Int(0),
+            high_gain: Int(0),
+            balance: Balance(50),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct Flanger3DParameters {
+    filter_type: FilterType,
+    cutoff_freq: LogFrequency<200, 8000>,
+    pre_delay: LogMilliseconds,
+    rate_mode: RateMode,
+    rate_hz: LinearFrequency,
+    rate_note: NoteLength,
+    depth: Level,
+    phase: Phase,
+    feedback: EvenPercent,
+    output_mode: OutputMode,
+    low_gain: Gain,
+    high_gain: Gain,
+    balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 18>")]
+    #[validate]
+    unused_parameters: [Parameter; 18]
+}
+
+impl Default for Flanger3DParameters {
+    fn default() -> Self {
+        Self {
+            filter_type: FilterType::HighPassFilter,
+            cutoff_freq: LogFrequency(800),
+            pre_delay: LogMilliseconds(2.0),
+            rate_mode: RateMode::Note,
+            rate_hz: LinearFrequency(0.5),
+            rate_note: NoteLength::WholeNote,
+            depth: UInt(40),
+            phase: UInt(180),
+            feedback: EvenPercent(60),
+            output_mode: OutputMode::Speaker,
+            low_gain: Int(0),
+            high_gain: Int(0),
+            balance: Balance(50),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct StepFlanger3DParameters {
+    filter_type: FilterType,
+    cutoff_freq: LogFrequency<200, 8000>,
+    pre_delay: LogMilliseconds,
+    rate_mode: RateMode,
+    rate_hz: LinearFrequency,
+    rate_note: NoteLength,
+    depth: Level,
+    phase: Phase,
+    feedback: EvenPercent,
+    step_rate_mode: RateMode,
+    step_rate_hz: StepLinearFrequency,
+    step_rate_note: NoteLength,
+    output_mode: OutputMode,
+    low_gain: Gain,
+    high_gain: Gain,
+    balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 15>")]
+    #[validate]
+    unused_parameters: [Parameter; 15]
+}
+
+impl Default for StepFlanger3DParameters {
+    fn default() -> Self {
+        Self {
+            filter_type: FilterType::HighPassFilter,
+            cutoff_freq: LogFrequency(800),
+            pre_delay: LogMilliseconds(2.0),
+            rate_mode: RateMode::Note,
+            rate_hz: LinearFrequency(1.5),
+            rate_note: NoteLength::HalfNoteTriplet,
+            depth: UInt(40),
+            phase: UInt(180),
+            feedback: EvenPercent(60),
+            step_rate_mode: RateMode::Note,
+            step_rate_hz: StepLinearFrequency(8.0),
+            step_rate_note: NoteLength::SixteenthNote,
             output_mode: OutputMode::Speaker,
             low_gain: Int(0),
             high_gain: Int(0),
