@@ -46,7 +46,7 @@ pub enum MfxType { // 0-255
     Chorus3D(Chorus3DParameters),
     Flanger3D(Flanger3DParameters),
     StepFlanger3D(StepFlanger3DParameters),
-    TwoBandChorus(UnusedParameters<32>), //TODO implement parameters
+    TwoBandChorus(TwoBandChorusParameters),
     TwoBandFlanger(UnusedParameters<32>), //TODO implement parameters
     TwoBandStepFlanger(UnusedParameters<32>), //TODO implement parameters
     Overdrive(UnusedParameters<32>), //TODO implement parameters
@@ -1887,6 +1887,53 @@ impl Default for StepFlanger3DParameters {
             output_mode: OutputMode::Speaker,
             low_gain: Int(0),
             high_gain: Int(0),
+            balance: Balance(50),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct TwoBandChorusParameters {
+    split_freq: LogFrequency<200, 8000>,
+    low_pre_delay: LogMilliseconds,
+    low_rate_mode: RateMode,
+    low_rate_hz: LinearFrequency,
+    low_rate_note: NoteLength,
+    low_depth: Level,
+    low_phase: Phase,
+    high_pre_delay: LogMilliseconds,
+    high_rate_mode: RateMode,
+    high_rate_hz: LinearFrequency,
+    high_rate_note: NoteLength,
+    high_depth: Level,
+    high_phase: Phase,
+    balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 17>")]
+    #[validate]
+    unused_parameters: [Parameter; 17]
+}
+
+impl Default for TwoBandChorusParameters {
+    fn default() -> Self {
+        Self {
+            split_freq: LogFrequency(800),
+            low_pre_delay: LogMilliseconds(4.0),
+            low_rate_mode: RateMode::Hertz,
+            low_rate_hz: LinearFrequency(0.25),
+            low_rate_note: NoteLength::DoubleNote,
+            low_depth: UInt(20),
+            low_phase: UInt(180),
+            high_pre_delay: LogMilliseconds(1.0),
+            high_rate_mode: RateMode::Hertz,
+            high_rate_hz: LinearFrequency(0.5),
+            high_rate_note: NoteLength::WholeNote,
+            high_depth: UInt(20),
+            high_phase: UInt(180),
             balance: Balance(50),
             level: UInt(127),
             unused_parameters: Default::default()
