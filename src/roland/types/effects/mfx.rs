@@ -7,7 +7,7 @@ use crate::json::validation::unused_by_rd300nx_err;
 use crate::roland::types::numeric::Parameter;
 use super::{UnusedParameters, Parameters};
 use super::discrete::{LogFrequency, QFactor};
-use super::parameters::{Level, Switch, Gain};
+use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain};
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
 pub enum MfxType { // 0-255
@@ -598,15 +598,15 @@ impl OtherMfxParameters {
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
 pub struct EqualizerParameters {
     low_freq: LogFrequency<20, 400>,
-    low_gain: Gain<-15, 15>,
+    low_gain: Gain,
     mid1_freq: LogFrequency<200, 8000>,
-    mid1_gain: Gain<-15, 15>,
+    mid1_gain: Gain,
     mid1_q: QFactor,
     mid2_freq: LogFrequency<200, 8000>,
-    mid2_gain: Gain<-15, 15>,
+    mid2_gain: Gain,
     mid2_q: QFactor,
     high_freq: LogFrequency<2000, 16000>,
-    high_gain: Gain<-15, 15>,
+    high_gain: Gain,
     level: Level,
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
     #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
@@ -619,16 +619,16 @@ impl Default for EqualizerParameters {
     fn default() -> Self {
         Self {
             low_freq: LogFrequency(200),
-            low_gain: Gain(0),
+            low_gain: Int(0),
             mid1_freq: LogFrequency(1000),
-            mid1_gain: Gain(0),
+            mid1_gain: Int(0),
             mid1_q: QFactor(0.5),
             mid2_freq: LogFrequency(2000),
-            mid2_gain: Gain(0),
+            mid2_gain: Int(0),
             mid2_q: QFactor(0.5),
             high_freq: LogFrequency(4000),
-            high_gain: Gain(0),
-            level: Level(127),
+            high_gain: Int(0),
+            level: UInt(127),
             unused_parameters: Default::default()
         }
     }
@@ -636,14 +636,14 @@ impl Default for EqualizerParameters {
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
 pub struct SpectrumParameters {
-    band1_250hz: Gain<-15, 15>,
-    band2_500hz: Gain<-15, 15>,
-    band3_1000hz: Gain<-15, 15>,
-    band4_1250hz: Gain<-15, 15>,
-    band5_2000hz: Gain<-15, 15>,
-    band6_3150hz: Gain<-15, 15>,
-    band7_4000hz: Gain<-15, 15>,
-    band8_8000hz: Gain<-15, 15>,
+    band1_250hz: Gain,
+    band2_500hz: Gain,
+    band3_1000hz: Gain,
+    band4_1250hz: Gain,
+    band5_2000hz: Gain,
+    band6_3150hz: Gain,
+    band7_4000hz: Gain,
+    band8_8000hz: Gain,
     q: QFactor,
     level: Level,
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
@@ -656,16 +656,16 @@ pub struct SpectrumParameters {
 impl Default for SpectrumParameters {
     fn default() -> Self {
         Self {
-            band1_250hz: Gain(0),
-            band2_500hz: Gain(0),
-            band3_1000hz: Gain(0),
-            band4_1250hz: Gain(0),
-            band5_2000hz: Gain(0),
-            band6_3150hz: Gain(0),
-            band7_4000hz: Gain(0),
-            band8_8000hz: Gain(0),
+            band1_250hz: Int(0),
+            band2_500hz: Int(0),
+            band3_1000hz: Int(0),
+            band4_1250hz: Int(0),
+            band5_2000hz: Int(0),
+            band6_3150hz: Int(0),
+            band7_4000hz: Int(0),
+            band8_8000hz: Int(0),
             q: QFactor(0.5),
-            level: Level(127),
+            level: UInt(127),
             unused_parameters: Default::default()
         }
     }
@@ -673,9 +673,9 @@ impl Default for SpectrumParameters {
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
 pub struct IsolatorParameters {
-    boost_cut_low: Gain<-60, 4>,
-    boost_cut_mid: Gain<-60, 4>,
-    boost_cut_high: Gain<-60, 4>,
+    boost_cut_low: BoostGain,
+    boost_cut_mid: BoostGain,
+    boost_cut_high: BoostGain,
     a_phase_low_sw: Switch,
     a_phase_low_level: Level,
     a_phase_mid_sw: Switch,
@@ -693,16 +693,16 @@ pub struct IsolatorParameters {
 impl Default for IsolatorParameters {
     fn default() -> Self {
         Self {
-            boost_cut_low: Gain(0),
-            boost_cut_mid: Gain(0),
-            boost_cut_high: Gain(0),
+            boost_cut_low: Int(0),
+            boost_cut_mid: Int(0),
+            boost_cut_high: Int(0),
             a_phase_low_sw: Switch(false),
-            a_phase_low_level: Level(127),
+            a_phase_low_level: UInt(127),
             a_phase_mid_sw: Switch(false),
-            a_phase_mid_level: Level(127),
+            a_phase_mid_level: UInt(127),
             low_boost_sw: Switch(false),
-            low_boost_level: Level(127),
-            level: Level(127),
+            low_boost_level: UInt(127),
+            level: UInt(127),
             unused_parameters: Default::default()
         }
     }

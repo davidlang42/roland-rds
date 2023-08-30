@@ -1,69 +1,36 @@
 use schemars::JsonSchema;
 use strum_macros::EnumIter;
 use strum::IntoEnumIterator;
+use validator::Validate;
+
+use crate::json::{type_name_pretty, validation::out_of_range_err, schema::{u16_schema, i8_schema}};
 
 use super::super::numeric::Parameter;
 
-/// Parameter(0-?)
-#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, PartialEq, Copy, Clone)]
+/// Parameter(0-2) === FilterType(Off, LowPassFilter, HighPassFilter)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
 pub enum FilterType {
     Off,
     LowPassFilter,
     HighPassFilter
 }
 
-impl From<Parameter> for FilterType {
-    fn from(value: Parameter) -> Self {
-        Self::iter().nth(value.0 as usize).unwrap()
-    }
-}
-
-impl Into<Parameter> for FilterType {
-    fn into(self) -> Parameter {
-        Parameter(Self::iter().position(|s| s == self).unwrap() as i16)
-    }
-}
-
-/// Parameter(0-?)
-#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, PartialEq, Copy, Clone)]
+/// Parameter(0-1) === RateMode(Hertz, Note)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
 pub enum RateMode {
     Hertz,
     Note
 }
 
-impl From<Parameter> for RateMode {
-    fn from(value: Parameter) -> Self {
-        Self::iter().nth(value.0 as usize).unwrap()
-    }
-}
-
-impl Into<Parameter> for RateMode {
-    fn into(self) -> Parameter {
-        Parameter(Self::iter().position(|s| s == self).unwrap() as i16)
-    }
-}
-
-/// Parameter(0-?)
-#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, PartialEq, Copy, Clone)]
+/// Parameter(0-1) === DelayMode(Milliseconds, Note)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
 pub enum DelayMode {
     Milliseconds,
     Note
 }
 
-impl From<Parameter> for DelayMode {
-    fn from(value: Parameter) -> Self {
-        Self::iter().nth(value.0 as usize).unwrap()
-    }
-}
-
-impl Into<Parameter> for DelayMode {
-    fn into(self) -> Parameter {
-        Parameter(Self::iter().position(|s| s == self).unwrap() as i16)
-    }
-}
-
-/// Parameter(0-?)
-#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, PartialEq, Copy, Clone)]
+/// Parameter(0-21) === NoteLength(64th Triplet - Double Note)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
 pub enum NoteLength {
     SixtyFourthNoteTriplet,
     SixtyFourthNote,
@@ -89,20 +56,8 @@ pub enum NoteLength {
     DoubleNote
 }
 
-impl From<Parameter> for NoteLength {
-    fn from(value: Parameter) -> Self {
-        Self::iter().nth(value.0 as usize).unwrap()
-    }
-}
-
-impl Into<Parameter> for NoteLength {
-    fn into(self) -> Parameter {
-        Parameter(Self::iter().position(|s| s == self).unwrap() as i16)
-    }
-}
-
-/// Parameter(0-?)
-#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, PartialEq, Copy, Clone)]
+/// Parameter(0-7) === ReverbCharacter(Room1 - PanDelay)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
 pub enum ReverbCharacter {
     Room1,
     Room2,
@@ -114,20 +69,8 @@ pub enum ReverbCharacter {
     PanDelay
 }
 
-impl From<Parameter> for ReverbCharacter {
-    fn from(value: Parameter) -> Self {
-        Self::iter().nth(value.0 as usize).unwrap()
-    }
-}
-
-impl Into<Parameter> for ReverbCharacter {
-    fn into(self) -> Parameter {
-        Parameter(Self::iter().position(|s| s == self).unwrap() as i16)
-    }
-}
-
-/// Parameter(0-?)
-#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, PartialEq, Copy, Clone)]
+/// Parameter(0-7) === Gm2ReverbCharacter(Room1 - PanDelay)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
 pub enum Gm2ReverbCharacter {
     Room1,
     Room2,
@@ -137,104 +80,6 @@ pub enum Gm2ReverbCharacter {
     Plate,
     Delay,
     PanDelay
-}
-
-impl From<Parameter> for Gm2ReverbCharacter {
-    fn from(value: Parameter) -> Self {
-        Self::iter().nth(value.0 as usize).unwrap()
-    }
-}
-
-impl Into<Parameter> for Gm2ReverbCharacter {
-    fn into(self) -> Parameter {
-        Parameter(Self::iter().position(|s| s == self).unwrap() as i16)
-    }
-}
-
-/// Parameter(0-127) === Level(0-127)
-#[derive(Debug, Copy, Clone, Serialize, Deserialize, JsonSchema)]
-pub struct Level(pub u8);
-//TODO #[validate(range(max = 127))]
-
-impl Into<Parameter> for Level {
-    fn into(self) -> Parameter {
-        Parameter(self.0 as i16)
-    }
-}
-
-impl From<Parameter> for Level {
-    fn from(value: Parameter) -> Self {
-        Self(value.0 as u8)
-    }
-}
-
-/// Parameter(0-180) === Phase(0-180)
-#[derive(Debug, Copy, Clone, Serialize, Deserialize, JsonSchema)]
-pub struct Phase(pub u8);
-//TODO #[validate(range(max = 180))]
-
-impl Into<Parameter> for Phase {
-    fn into(self) -> Parameter {
-        Parameter(self.0 as i16)
-    }
-}
-
-impl From<Parameter> for Phase {
-    fn from(value: Parameter) -> Self {
-        Self(value.0 as u8)
-    }
-}
-
-/// Parameter(0-7) === PreLpf(0-7)
-#[derive(Debug, Copy, Clone, Serialize, Deserialize, JsonSchema)]
-pub struct PreLpf(pub u8);
-//TODO #[validate(range(max = 7))]
-
-impl Into<Parameter> for PreLpf {
-    fn into(self) -> Parameter {
-        Parameter(self.0 as i16)
-    }
-}
-
-impl From<Parameter> for PreLpf {
-    fn from(value: Parameter) -> Self {
-        Self(value.0 as u8)
-    }
-}
-
-/// Parameter(1-?) === LinearMilliseconds(1-MAX)
-#[derive(Debug, Copy, Clone, Serialize, Deserialize, JsonSchema)]
-pub struct LinearMilliseconds<const MAX: u16>(pub u16);
-//TODO #[validate(range(min = 1, max = MAX)]
-
-impl<const MAX: u16> Into<Parameter> for LinearMilliseconds<MAX> {
-    fn into(self) -> Parameter {
-        Parameter(self.0 as i16)
-    }
-}
-
-impl<const MAX: u16> From<Parameter> for LinearMilliseconds<MAX> {
-    fn from(value: Parameter) -> Self {
-        Self(value.0 as u16)
-    }
-}
-
-//TODO confirm
-/// Parameter(0- MAX-1) === Size(1-MAX)
-#[derive(Debug, Copy, Clone, Serialize, Deserialize, JsonSchema)]
-pub struct Size(pub u8);
-//TODO #[validate(range(min = 1, max = MAX)]
-
-impl Into<Parameter> for Size {
-    fn into(self) -> Parameter {
-        Parameter((self.0 - 1) as i16)
-    }
-}
-
-impl From<Parameter> for Size {
-    fn from(value: Parameter) -> Self {
-        Self(value.0 as u8 + 1)
-    }
 }
 
 /// Parameter(0-1) === Switch(False, True)
@@ -249,23 +94,130 @@ impl Into<Parameter> for Switch {
 
 impl From<Parameter> for Switch {
     fn from(value: Parameter) -> Self {
-        Self(value.0 == 1)
+        match value.0 {
+            0 => Self(false),
+            1 => Self(true),
+            v => panic!("Invalid Switch: Parameter({})", v)
+        }
     }
 }
 
-/// Parameter(0-?) === Gain(MIN-MAX)
-#[derive(Debug, Copy, Clone, Serialize, Deserialize, JsonSchema)]
-pub struct Gain<const MIN: i8, const MAX: i8>(pub i8);
-//TODO #[validate(range(min = MIN, max = MAX)]
+/// Parameter(MIN-MAX) === UInt(MIN-MAX)
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+pub struct UInt<const MIN: u16, const MAX: u16>(pub u16);
 
-impl<const MIN: i8, const MAX: i8> Into<Parameter> for Gain<MIN, MAX> {
+impl<const MIN: u16, const MAX: u16> UInt<MIN, MAX> {
+    fn validate_generic_range() -> () {
+        if MIN > Parameter::MAX as u16 {
+            panic!("Invalid UInt range: MIN({}) > {}", MIN, Parameter::MAX);
+        }
+        if MAX > Parameter::MAX as u16 {
+            panic!("Invalid UInt range: MAX({}) > {}", MAX, Parameter::MAX);
+        }
+        if MIN > MAX {
+            panic!("Invalid UInt range: MIN({}) > MAX({})", MIN, MAX);
+        }
+    }
+}
+
+impl<const MIN: u16, const MAX: u16> Into<Parameter> for UInt<MIN, MAX> {
     fn into(self) -> Parameter {
-        Parameter((self.0 - MIN) as i16)
+        Self::validate_generic_range();
+        if self.0 < MIN || self.0 > MAX {
+            panic!("Invalid Parameter: UInt<{},{}>({})", MIN, MAX, self.0);
+        }
+        Parameter(self.0 as i16)
     }
 }
 
-impl<const MIN: i8, const MAX: i8> From<Parameter> for Gain<MIN, MAX> {
+impl<const MIN: u16, const MAX: u16> From<Parameter> for UInt<MIN, MAX> {
     fn from(value: Parameter) -> Self {
-        Self(value.0 as i8 + MIN)
+        Self::validate_generic_range();
+        if value.0 < MIN as i16 || value.0 > MAX as i16 {
+            panic!("Invalid UInt<{},{}>: Parameter({})", MIN, MAX, value.0);
+        }
+        Self(value.0 as u16)
     }
 }
+
+impl<const MIN: u16, const MAX: u16> JsonSchema for UInt<MIN, MAX> {
+    fn schema_name() -> String {
+        type_name_pretty::<Self>().into()
+    }
+
+    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        u16_schema(MIN, MAX)
+    }
+}
+
+impl<const MIN: u16, const MAX: u16> Validate for UInt<MIN, MAX> {
+    fn validate(&self) -> Result<(), validator::ValidationErrors> {
+        if self.0 < MIN || self.0 > MAX {
+            Err(out_of_range_err("0", &MIN, &MAX))
+        } else {
+            Ok(())
+        }
+    }
+}
+
+pub type Level = UInt<0, 127>;
+pub type LinearMilliseconds<const MAX: u16> = UInt<1, MAX>;
+pub type Phase = UInt<0, 180>;
+pub type PreLpf = UInt<0, 7>;
+
+/// Parameter(0-(MAX-MIN)) === Int(MIN-MAX)
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+pub struct Int<const MIN: i8, const MAX: i8>(pub i8);
+
+impl<const MIN: i8, const MAX: i8> Int<MIN, MAX> {
+    fn validate_generic_range() -> () {
+        if MIN > MAX {
+            panic!("Invalid Int range: MIN({}) > MAX({})", MIN, MAX);
+        }
+    }
+}
+
+impl<const MIN: i8, const MAX: i8> Into<Parameter> for Int<MIN, MAX> {
+    fn into(self) -> Parameter {
+        Self::validate_generic_range();
+        if self.0 < MIN || self.0 > MAX {
+            panic!("Invalid Parameter: Int<{},{}>({})", MIN, MAX, self.0);
+        }
+        Parameter(self.0 as i16 - MIN as i16)
+    }
+}
+
+impl<const MIN: i8, const MAX: i8> From<Parameter> for Int<MIN, MAX> {
+    fn from(value: Parameter) -> Self {
+        Self::validate_generic_range();
+        if value.0 < 0 || value.0 > (MAX as i16 - MIN as i16) {
+            panic!("Invalid Int<{},{}>: Parameter({})", MIN, MAX, value.0);
+        }
+        Self((value.0 + MIN as i16) as i8)
+    }
+}
+
+impl<const MIN: i8, const MAX: i8> JsonSchema for Int<MIN, MAX> {
+    fn schema_name() -> String {
+        type_name_pretty::<Self>().into()
+    }
+
+    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        i8_schema(MIN, MAX)
+    }
+}
+
+impl<const MIN: i8, const MAX: i8> Validate for Int<MIN, MAX> {
+    fn validate(&self) -> Result<(), validator::ValidationErrors> {
+        if self.0 < MIN || self.0 > MAX {
+            Err(out_of_range_err("0", &MIN, &MAX))
+        } else {
+            Ok(())
+        }
+    }
+}
+
+pub type Gain = Int<-15, 15>;
+pub type DampGain = Int<-36, 0>;
+pub type BoostGain = Int<-60, 4>;
+pub type Size = Int<1, 8>;

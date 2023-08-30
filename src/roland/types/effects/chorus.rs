@@ -1,5 +1,5 @@
 use super::{UnusedParameters, Parameters};
-use super::parameters::{FilterType, RateMode, NoteLength, DelayMode, Level, Phase, LinearMilliseconds, PreLpf};
+use super::parameters::{FilterType, RateMode, NoteLength, DelayMode, Level, Phase, LinearMilliseconds, PreLpf, UInt};
 use super::super::numeric::Parameter;
 use super::discrete::{LogFrequency, LogMilliseconds, LinearFrequency, LogFrequencyOrByPass, EvenPercent};
 use crate::json::serialize_default_terminated_array;
@@ -104,9 +104,9 @@ impl Default for ChorusParameters {
             rate_mode: RateMode::Hertz,
             rate_hz: LinearFrequency(1.0),
             rate_note: NoteLength::WholeNote,
-            depth: Level(40),
-            phase_degrees: Phase(180),
-            feedback: Level(8),
+            depth: UInt(40),
+            phase_degrees: UInt(180),
+            feedback: UInt(8),
             unused_parameters: Default::default() }
     }
 }
@@ -138,19 +138,19 @@ impl Default for DelayParameters {
     fn default() -> Self {
         Self {
             delay_left_mode: DelayMode::Note,
-            delay_left_ms: LinearMilliseconds(200),
+            delay_left_ms: UInt(200),
             delay_left_note: NoteLength::EighthNoteTriplet,
             delay_right_mode: DelayMode::Note,
-            delay_right_ms: LinearMilliseconds(400),
+            delay_right_ms: UInt(400),
             delay_right_note: NoteLength::QuarterNoteTriplet,
             delay_centre_mode: DelayMode::Note,
-            delay_centre_ms: LinearMilliseconds(600),
+            delay_centre_ms: UInt(600),
             delay_centre_note: NoteLength::QuarterNote,
             centre_feedback_percent: EvenPercent(20),
             hf_damp: LogFrequencyOrByPass::ByPass,
-            left_level: Level(127),
-            right_level: Level(127),
-            centre_level: Level(127),
+            left_level: UInt(127),
+            right_level: UInt(127),
+            centre_level: UInt(127),
             unused_parameters: Default::default()
         }
     }
@@ -175,13 +175,13 @@ pub struct Gm2ChorusParameters {
 impl Default for Gm2ChorusParameters {
     fn default() -> Self {
         Self {
-            pre_lpf: PreLpf(0),
-            level: Level(64),
-            feedback: Level(8),
-            delay: Level(80),
-            rate: Level(3),
-            depth: Level(19),
-            send_to_reverb: Level(0),
+            pre_lpf: UInt(0),
+            level: UInt(64),
+            feedback: UInt(8),
+            delay: UInt(80),
+            rate: UInt(3),
+            depth: UInt(19),
+            send_to_reverb: UInt(0),
             unused_parameters: Default::default()
         }
     }

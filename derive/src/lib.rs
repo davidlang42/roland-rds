@@ -5,7 +5,7 @@ extern crate quote;
 
 use proc_macro2::TokenStream;
 use quote::TokenStreamExt;
-use syn::{Ident, Field, DeriveInput, Data, Type, DataStruct, Fields, FieldsNamed, TypeArray, Expr, ExprLit, Lit};
+use syn::{Ident, Field, DeriveInput, Data, Type, DataStruct, Fields, FieldsNamed, TypeArray, Expr, ExprLit, Lit, Generics};
 
 #[proc_macro_derive(Parameters)]
 pub fn parameters(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -13,10 +13,11 @@ pub fn parameters(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let ast = syn::parse_macro_input!(input as DeriveInput);
 
     // Build the impl
-    let name = &ast.ident;
     if let Some(fields) = get_named_fields(&ast.data) {
-        let from_parameters = impl_from_parameters(name, &fields);
-        let parameters = impl_parameters(name, &fields);
+        let name = &ast.ident;
+
+        let from_parameters = impl_from_parameters(name, &fields, &ast.generics);
+        let parameters = impl_parameters(name, &fields, &ast.generics);
     
         // Return the generated impls
         quote! {
@@ -45,7 +46,8 @@ fn get_array_len(ty: &Type) -> Option<usize> {
     }
 }
 
-fn impl_from_parameters(name: &Ident, fields: &Vec<&Field>) -> TokenStream {
+fn impl_from_parameters(name: &Ident, fields: &Vec<&Field>, generics: &Generics) -> TokenStream {
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
     let mut size: usize = 0;
     let mut inner = TokenStream::new();
     for field in fields {
@@ -65,7 +67,7 @@ fn impl_from_parameters(name: &Ident, fields: &Vec<&Field>) -> TokenStream {
         }
     }
     quote! {
-        impl From<[Parameter; #size]> for #name {
+        impl #impl_generics From<[Parameter; #size]> for #name #ty_generics #where_clause {
             fn from(value: [Parameter; #size]) -> Self {
                 let mut p = value.into_iter();
                 Self {
@@ -76,7 +78,8 @@ fn impl_from_parameters(name: &Ident, fields: &Vec<&Field>) -> TokenStream {
     }
 }
 
-fn impl_parameters(name: &Ident, fields: &Vec<&Field>) -> TokenStream {
+fn impl_parameters(name: &Ident, fields: &Vec<&Field>, generics: &Generics) -> TokenStream {
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
     let mut size: usize = 0;
     let mut inner = TokenStream::new();
     for field in fields {
@@ -98,7 +101,7 @@ fn impl_parameters(name: &Ident, fields: &Vec<&Field>) -> TokenStream {
         }
     }
     quote! {
-        impl Parameters<#size> for #name {
+        impl #impl_generics Parameters<#size> for #name #ty_generics #where_clause {
             fn parameters(&self) -> [Parameter; #size] {
                 let mut p: Vec<Parameter> = Vec::new();
                 #inner
@@ -106,4 +109,27 @@ fn impl_parameters(name: &Ident, fields: &Vec<&Field>) -> TokenStream {
             }
         }
     }
+}
+
+#[proc_macro_derive(EnumParameter)]
+pub fn enum_parameter(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    // Parse the input tokens into a syntax tree
+    let ast = syn::parse_macro_input!(input as DeriveInput);
+
+    // Build the impl
+    let name = &ast.ident;
+    let (impl_generics, ty_generics, where_clause) = ast.generics.split_for_impl();
+    quote! {
+        impl #impl_generics From<Parameter> for #name #ty_generics #where_clause {
+            fn from(value: Parameter) -> Self {
+                Self::iter().nth(value.0 as usize).expect(&format!("Invalid {}: Parameter({})", type_name_pretty::<Self>(), value.0))
+            }
+        }
+        
+        impl #impl_generics Into<Parameter> for #name #ty_generics #where_clause {
+            fn into(self) -> Parameter {
+                Parameter(Self::iter().position(|s| s == self).unwrap() as i16)
+            }
+        }
+    }.into()
 }

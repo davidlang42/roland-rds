@@ -4,7 +4,7 @@ use crate::json::serialize_default_terminated_array;
 
 use crate::roland::types::numeric::Parameter;
 use super::discrete::{LogMilliseconds, DiscreteValues, LogFrequency, LogFrequencyOrByPass};
-use super::parameters::{ReverbCharacter, Gm2ReverbCharacter, Level, Gain, PreLpf, Size};
+use super::parameters::{ReverbCharacter, Gm2ReverbCharacter, Level, PreLpf, Size, UInt, Int, DampGain};
 use super::{UnusedParameters, Parameters};
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
@@ -114,17 +114,17 @@ impl Default for ReverbParameters {
     fn default() -> Self {
         Self {
             character: ReverbCharacter::Stage2,
-            time: Level(84),
+            time: UInt(84),
             hf_damp: LogFrequencyOrByPass::Frequency(LogFrequency(8000)),
-            delay_feedback: Level(0),
-            level: Level(64),
+            delay_feedback: UInt(0),
+            level: UInt(64),
             unused_parameters: Default::default()
         }
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
-pub struct CharacterParameters<const DEFAULT_MS: usize, const DEFAULT_TIME: u8> {
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct CharacterParameters<const DEFAULT_MS: usize, const DEFAULT_TIME: u16> {
     pre_delay: LogMilliseconds,
     time: Level,
     size: Size,
@@ -132,9 +132,9 @@ pub struct CharacterParameters<const DEFAULT_MS: usize, const DEFAULT_TIME: u8> 
     density: Level,
     diffusion: Level,
     lf_damp_freq: LogFrequency<50, 4000>, // technically this mislabels 64 as 63 and 320 as 315, but it really doesn't matter
-    lf_damp_gain: Gain<-36, 0>,
+    lf_damp_gain: DampGain,
     hf_damp_freq: LogFrequency<4000, 12500>, // technically this mislabels 6400 as 6300, but it really doesn't matter
-    hf_damp_gain: Gain<-36, 0>,
+    hf_damp_gain: DampGain,
     level: Level,
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
     #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
@@ -143,61 +143,20 @@ pub struct CharacterParameters<const DEFAULT_MS: usize, const DEFAULT_TIME: u8> 
     unused_parameters: [Parameter; 9]
 }
 
-impl<const DMS: usize, const DT: u8> From<[Parameter; 20]> for CharacterParameters<DMS, DT> {
-    fn from(value: [Parameter; 20]) -> Self {
-        let mut p = value.into_iter();
-        Self {
-            pre_delay: p.next().unwrap().into(),
-            time: p.next().unwrap().into(),
-            size: p.next().unwrap().into(),
-            high_cut: p.next().unwrap().into(),
-            density: p.next().unwrap().into(),
-            diffusion: p.next().unwrap().into(),
-            lf_damp_freq: p.next().unwrap().into(),
-            lf_damp_gain: p.next().unwrap().into(),
-            hf_damp_freq: p.next().unwrap().into(),
-            hf_damp_gain: p.next().unwrap().into(),
-            level: p.next().unwrap().into(),
-            unused_parameters: p.collect::<Vec<_>>().try_into().unwrap()
-        }
-    }
-}
-
-impl<const DMS: usize, const DT: u8> Parameters<20> for CharacterParameters<DMS, DT> {
-    fn parameters(&self) -> [Parameter; 20] {
-        let mut p: Vec<Parameter> = Vec::new();
-        p.push(self.pre_delay.into());
-        p.push(self.time.into());
-        p.push(self.size.into());
-        p.push(self.high_cut.into());
-        p.push(self.density.into());
-        p.push(self.diffusion.into());
-        p.push(self.lf_damp_freq.into());
-        p.push(self.lf_damp_gain.into());
-        p.push(self.hf_damp_freq.into());
-        p.push(self.hf_damp_gain.into());
-        p.push(self.level.into());
-        for unused_parameter in self.unused_parameters.iter() {
-            p.push(*unused_parameter);
-        }
-        p.try_into().unwrap()
-    }
-}
-
-impl<const DMS: usize, const DT: u8> Default for CharacterParameters<DMS, DT> {
+impl<const DMS: usize, const DT: u16> Default for CharacterParameters<DMS, DT> {
     fn default() -> Self {
         Self {
             pre_delay: LogMilliseconds(LogMilliseconds::values().into_iter().nth(DMS).unwrap()),
-            time: Level(DT),
-            size: Size(8),
+            time: UInt(DT),
+            size: Int(8),
             high_cut: LogFrequencyOrByPass::Frequency(LogFrequency(12500)),
-            density: Level(127),
-            diffusion: Level(127),
+            density: UInt(127),
+            diffusion: UInt(127),
             lf_damp_freq: LogFrequency(4000),
-            lf_damp_gain: Gain(0),
+            lf_damp_gain: Int(0),
             hf_damp_freq: LogFrequency(4000),
-            hf_damp_gain: Gain(0),
-            level: Level(64),
+            hf_damp_gain: Int(0),
+            level: UInt(64),
             unused_parameters: Default::default()
         }
     }
@@ -221,10 +180,10 @@ impl Default for Gm2ReverbParameters {
     fn default() -> Self {
         Self {
             character: Gm2ReverbCharacter::Hall2,
-            pre_lpf: PreLpf(0),
-            level: Level(64),
-            time: Level(64),
-            delay_feedback: Level(0),
+            pre_lpf: UInt(0),
+            level: UInt(64),
+            time: UInt(64),
+            delay_feedback: UInt(0),
             unused_parameters: Default::default()
         }
     }
@@ -245,9 +204,9 @@ pub struct CathedralParameters {
 impl Default for CathedralParameters {
     fn default() -> Self {
         Self {
-            pre_lpf: PreLpf(3),
-            level: Level(64),
-            time: Level(54),
+            pre_lpf: UInt(3),
+            level: UInt(64),
+            time: UInt(54),
             unused_parameters: Default::default()
         }
     }

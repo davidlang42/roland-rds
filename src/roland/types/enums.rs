@@ -213,7 +213,7 @@ impl Validate for Pan {
 
 impl JsonSchema for Pan {
     fn schema_name() -> String {
-        type_name_pretty::<Pan>().into()
+        type_name_pretty::<Self>().into()
     }
 
     fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
@@ -444,7 +444,7 @@ impl Validate for KeyTouchVelocity {
 
 impl JsonSchema for KeyTouchVelocity {
     fn schema_name() -> String {
-        type_name_pretty::<KeyTouchVelocity>().into()
+        type_name_pretty::<Self>().into()
     }
 
     fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
@@ -561,7 +561,7 @@ impl Validate for SoundFocusType {
 
 impl JsonSchema for SoundFocusType {
     fn schema_name() -> String {
-        type_name_pretty::<SoundFocusType>().into()
+        type_name_pretty::<Self>().into()
     }
 
     fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
@@ -695,7 +695,7 @@ impl Validate for VoiceReserve {
 
 impl JsonSchema for VoiceReserve {
     fn schema_name() -> String {
-        type_name_pretty::<VoiceReserve>().into()
+        type_name_pretty::<Self>().into()
     }
 
     fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
@@ -895,7 +895,7 @@ impl Default for PedalFunction {
 
 impl JsonSchema for PedalFunction {
     fn schema_name() -> String {
-        type_name_pretty::<PedalFunction>().into()
+        type_name_pretty::<Self>().into()
     }
 
     fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
@@ -986,7 +986,7 @@ impl Validate for SliderFunction {
 
 impl JsonSchema for SliderFunction {
     fn schema_name() -> String {
-        type_name_pretty::<SliderFunction>().into()
+        type_name_pretty::<Self>().into()
     }
 
     fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
