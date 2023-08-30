@@ -8,7 +8,7 @@ use crate::roland::types::enums::Pan;
 use crate::roland::types::numeric::Parameter;
 use super::{UnusedParameters, Parameters};
 use super::discrete::{LogFrequency, QFactor, FineFrequency, LinearFrequency, FilterSlope, EvenPercent, StepLinearFrequency};
-use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity};
+use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode};
 
 //TODO validate all fields of all Parameters types
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
@@ -26,7 +26,7 @@ pub enum MfxType { // 0-255
     SpeakerSimulator(SpeakerSimulatorParameters),
     Phaser(PhaserParameters),
     StepPhaser(StepPhaserParameters),
-    MultiStagePhaser(UnusedParameters<32>), //TODO implement parameters
+    MultiStagePhaser(MultiStagePhaserParameters),
     InfinitePhaser(UnusedParameters<32>), //TODO implement parameters
     RingModulator(UnusedParameters<32>), //TODO implement parameters
     StepRingModulator(UnusedParameters<32>), //TODO implement parameters
@@ -1077,6 +1077,47 @@ impl Default for StepPhaserParameters {
             step_rate_hz: StepLinearFrequency(8.0),
             step_rate_note: NoteLength::SixteenthNote,
             mix: UInt(127),
+            low_gain: Int(0),
+            high_gain: Int(0),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct MultiStagePhaserParameters {
+    mode: MultiPhaserMode,
+    manual: Level,
+    rate_mode: RateMode,
+    rate_hz: LinearFrequency,
+    rate_note: NoteLength,
+    depth: Level,
+    resonance: Level,
+    mix: Level,
+    pan: Pan,
+    low_gain: Gain,
+    high_gain: Gain,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 20>")]
+    #[validate]
+    unused_parameters: [Parameter; 20]
+}
+
+impl Default for MultiStagePhaserParameters {
+    fn default() -> Self {
+        Self {
+            mode: MultiPhaserMode::TwentyFourStage,
+            manual: UInt(60),
+            rate_mode: RateMode::Note,
+            rate_hz: LinearFrequency(0.5),
+            rate_note: NoteLength::DoubleNote,
+            depth: UInt(40),
+            resonance: UInt(40),
+            mix: UInt(127),
+            pan: Pan::Centre,
             low_gain: Int(0),
             high_gain: Int(0),
             level: UInt(127),

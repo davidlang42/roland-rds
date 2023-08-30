@@ -162,6 +162,17 @@ pub enum PhaserMode {
     TwelveStage
 }
 
+/// Parameter(0-5) === MultiPhaserMode(FourStage - TwentyFourStage)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
+pub enum MultiPhaserMode {
+    FourStage,
+    EightStage,
+    TwelveStage,
+    SixteenStage,
+    TwentyStage,
+    TwentyFourStage
+}
+
 /// Parameter(0-1) === PhaserPolarity(Inverse, Synchro)
 #[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
 pub enum PhaserPolarity {
