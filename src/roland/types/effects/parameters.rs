@@ -24,6 +24,13 @@ pub enum SuperFilterType {
     Notch
 }
 
+/// Parameter(0-1) === SimpleFilterType(LowPassFilter, BandPassFilter)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
+pub enum SimpleFilterType {
+    LowPassFilter,
+    BandPassFilter
+}
+
 /// Parameter(0-1) === RateMode(Hertz, Note)
 #[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
 pub enum RateMode {
@@ -107,6 +114,13 @@ pub enum Wave {
     Sine,
     Saw1, // upward
     Saw2 // downward
+}
+
+/// Parameter(0-1) === Direction(Up, Down)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
+pub enum Direction {
+    Up,
+    Down
 }
 
 /// Parameter(0-1) === Switch(False, True)

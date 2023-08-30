@@ -7,7 +7,7 @@ use crate::json::validation::unused_by_rd300nx_err;
 use crate::roland::types::numeric::Parameter;
 use super::{UnusedParameters, Parameters};
 use super::discrete::{LogFrequency, QFactor, FineFrequency, LinearFrequency, FilterSlope};
-use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength};
+use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase};
 
 //TODO validate all fields of all Parameters types
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
@@ -20,7 +20,7 @@ pub enum MfxType { // 0-255
     SuperFilter(SuperFilterParameters),
     StepFilter(StepFilterParameters),
     Enhancer(EnhancerParameters),
-    AutoWah(UnusedParameters<32>), //TODO implement parameters
+    AutoWah(AutoWahParameters),
     Humanizer(UnusedParameters<32>), //TODO implement parameters
     SpeakerSimulator(UnusedParameters<32>), //TODO implement parameters
     Phaser(UnusedParameters<32>), //TODO implement parameters
@@ -871,6 +871,49 @@ impl Default for EnhancerParameters {
             high_gain: Int(0),
             level: UInt(127),
             unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct AutoWahParameters {
+    filter_type: SimpleFilterType,
+    manual: Level,
+    peak: Level,
+    sensitivity: Level,
+    polarity: Direction,
+    rate_mode: RateMode,
+    rate_hz: LinearFrequency,
+    rate_note: NoteLength,
+    depth: Level,
+    phase: Phase,
+    low_gain: Gain,
+    high_gain: Gain,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 19>")]
+    #[validate]
+    unused_parameters: [Parameter; 19]
+}
+
+impl Default for AutoWahParameters {
+    fn default() -> Self {
+        Self {
+            filter_type: SimpleFilterType::BandPassFilter,
+            manual: UInt(60),
+            peak: UInt(40),
+            sensitivity: UInt(0),
+            polarity: Direction::Up,
+            rate_mode: RateMode::Note,
+            rate_hz: LinearFrequency(2.0),
+            rate_note: NoteLength::QuarterNote,
+            depth: UInt(60),
+            phase: UInt(0),
+            low_gain: Int(0),
+            high_gain: Int(0),
+            level: UInt(100),
+            unused_parameters: Default::default(),
         }
     }
 }
