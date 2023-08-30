@@ -60,7 +60,7 @@ pub enum MfxType { // 0-255
     Delay(DelayParameters),
     LongDelay(LongDelayParameters),
     SerialDelay(SerialDelayParameters),
-    ModulationDelay(UnusedParameters<32>), //TODO implement parameters
+    ModulationDelay(ModulationDelayParameters),
     ThreeTapPanDelay(UnusedParameters<32>), //TODO implement parameters
     FourTapPanDelay(UnusedParameters<32>), //TODO implement parameters
     MultiTapDelay(UnusedParameters<32>), //TODO implement parameters
@@ -2355,7 +2355,7 @@ pub struct SerialDelayParameters {
     delay_2_mode: DelayMode,
     delay_2_ms: LinearMilliseconds<1300>,
     delay_2_note: NoteLength,
-    delay_2_feedback_: EvenPercent,
+    delay_2_feedback: EvenPercent,
     delay_2_hf_damp: LogFrequencyOrByPass<200, 8000>,
     pan: Pan,
     low_gain: Gain,
@@ -2380,9 +2380,62 @@ impl Default for SerialDelayParameters {
             delay_2_mode: DelayMode::Note,
             delay_2_ms: UInt(600),
             delay_2_note: NoteLength::QuarterNote,
-            delay_2_feedback_: EvenPercent(40),
+            delay_2_feedback: EvenPercent(40),
             delay_2_hf_damp: LogFrequencyOrByPass::ByPass,
             pan: Pan::Centre,
+            low_gain: Int(0),
+            high_gain: Int(0),
+            balance: Balance(10),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct ModulationDelayParameters {
+    delay_left_mode: DelayMode,
+    delay_left_ms: LinearMilliseconds<1300>,
+    delay_left_note: NoteLength,
+    delay_right_mode: DelayMode,
+    delay_right_ms: LinearMilliseconds<1300>,
+    delay_right_note: NoteLength,
+    feedback_mode: FeedbackMode,
+    feedback_percent: EvenPercent,
+    hf_damp: LogFrequencyOrByPass<200, 8000>,
+    rate_mode: RateMode,
+    rate_hz: LinearFrequency,
+    rate_note: NoteLength,
+    depth: Level,
+    phase: Phase,
+    low_gain: Gain,
+    high_gain: Gain,
+    balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 14>")]
+    #[validate]
+    unused_parameters: [Parameter; 14]
+}
+
+impl Default for ModulationDelayParameters {
+    fn default() -> Self {
+        Self {
+            delay_left_mode: DelayMode::Note,
+            delay_left_ms: UInt(600),
+            delay_left_note: NoteLength::QuarterNote,
+            delay_right_mode: DelayMode::Note,
+            delay_right_ms: UInt(600),
+            delay_right_note: NoteLength::QuarterNote,
+            feedback_mode: FeedbackMode::Normal,
+            feedback_percent: EvenPercent(20),
+            hf_damp: LogFrequencyOrByPass::ByPass,
+            rate_mode: RateMode::Hertz,
+            rate_hz: LinearFrequency(0.5),
+            rate_note: NoteLength::WholeNote,
+            depth: UInt(20),
+            phase: UInt(180),
             low_gain: Int(0),
             high_gain: Int(0),
             balance: Balance(10),
