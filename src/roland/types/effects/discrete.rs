@@ -183,7 +183,6 @@ impl Into<Parameter> for FineFrequency {
     }
 }
 
-
 /// Parameter(0-2) === FilterSlope(-12, -24, -36)
 #[derive(Debug, Copy, Clone)]
 pub struct FilterSlope(pub i8);
@@ -240,6 +239,67 @@ impl From<Parameter> for FilterSlope {
 }
 
 impl Into<Parameter> for FilterSlope {
+    fn into(self) -> Parameter {
+        Self::into_parameter(self.0)
+    }
+}
+
+/// Parameter(0-100) === Balance(D100:0W to D0:100W)
+#[derive(Debug, Copy, Clone)]
+pub struct Balance(pub u8); // value is the EFFECT (W) percentage
+
+impl DiscreteValues<u8, 0> for Balance {
+    fn values() -> Vec<u8> {
+        enumerate(0, 100, 1)
+    }
+
+    fn format(value: u8) -> String {
+        format!("D{}:{}W", value, 100-value)
+    }
+}
+
+impl JsonSchema for Balance {
+    fn schema_name() -> String {
+        type_name_pretty::<Self>().into()
+    }
+
+    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        enum_schema(Self::values().into_iter().map(Self::format).collect())
+    }
+}
+
+impl Serialize for Balance {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where S: serde::Serializer {
+        Self::format(self.0).serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for Balance {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where D: serde::Deserializer<'de> {
+        let value: Value = Deserialize::deserialize(deserializer)?;
+        match value {
+            Value::String(s) => {
+                for v in Self::values().into_iter() {
+                    if s == Self::format(v) {
+                        return Ok(Self(v));
+                    }
+                }
+                Err(de::Error::custom(format!("String is not a valid discrete value: {}", s)))
+            }
+            _ => Err(de::Error::custom(format!("Expected string")))
+        }
+    }
+}
+
+impl From<Parameter> for Balance {
+    fn from(parameter: Parameter) -> Self {
+        Self(Self::value_from(parameter))
+    }
+}
+
+impl Into<Parameter> for Balance {
     fn into(self) -> Parameter {
         Self::into_parameter(self.0)
     }

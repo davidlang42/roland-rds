@@ -7,7 +7,7 @@ use crate::json::validation::unused_by_rd300nx_err;
 use crate::roland::types::enums::Pan;
 use crate::roland::types::numeric::Parameter;
 use super::{UnusedParameters, Parameters};
-use super::discrete::{LogFrequency, QFactor, FineFrequency, LinearFrequency, FilterSlope, EvenPercent, StepLinearFrequency};
+use super::discrete::{LogFrequency, QFactor, FineFrequency, LinearFrequency, FilterSlope, EvenPercent, StepLinearFrequency, Balance};
 use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode};
 
 //TODO validate all fields of all Parameters types
@@ -28,7 +28,7 @@ pub enum MfxType { // 0-255
     StepPhaser(StepPhaserParameters),
     MultiStagePhaser(MultiStagePhaserParameters),
     InfinitePhaser(InfinitePhaserParameters),
-    RingModulator(UnusedParameters<32>), //TODO implement parameters
+    RingModulator(RingModulatorParameters),
     StepRingModulator(UnusedParameters<32>), //TODO implement parameters
     Tremolo(UnusedParameters<32>), //TODO implement parameters
     AutoPan(UnusedParameters<32>), //TODO implement parameters
@@ -1153,6 +1153,37 @@ impl Default for InfinitePhaserParameters {
             pan: Pan::Centre,
             low_gain: Int(0),
             high_gain: Int(0),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct RingModulatorParameters {
+    frequency: Level,
+    sensitivity: Level,
+    polarity: Direction,
+    low_gain: Gain,
+    high_gain: Gain,
+    balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 25>")]
+    #[validate]
+    unused_parameters: [Parameter; 25]
+}
+
+impl Default for RingModulatorParameters {
+    fn default() -> Self {
+        Self {
+            frequency: UInt(60),
+            sensitivity: UInt(0),
+            polarity: Direction::Up,
+            low_gain: Int(0),
+            high_gain: Int(0),
+            balance: Balance(50),
             level: UInt(127),
             unused_parameters: Default::default()
         }
