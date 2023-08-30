@@ -54,7 +54,7 @@ pub enum MfxType { // 0-255
     VsOverdrive(VsDriveParameters<0>), // 0=AmpType::Small
     VsDistortion(VsDriveParameters<3>), // 3=AmpType::ThreeStack
     GuitarAmpSimulator(GuitarAmpSimulatorParameters),
-    Compressor(UnusedParameters<32>), //TODO implement parameters
+    Compressor(CompressorParameters),
     Limiter(UnusedParameters<32>), //TODO implement parameters
     Gate(UnusedParameters<32>), //TODO implement parameters
     Delay(UnusedParameters<32>), //TODO implement parameters
@@ -2162,6 +2162,35 @@ impl Default for GuitarAmpSimulatorParameters {
             mic_level: UInt(127),
             direct_level: UInt(0),
             pan: Pan::Centre,
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct CompressorParameters {
+    attack: Level,
+    threshold: Level,
+    post_gain: Int<0, 18>,
+    low_gain: Gain,
+    high_gain: Gain,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 26>")]
+    #[validate]
+    unused_parameters: [Parameter; 26]
+}
+
+impl Default for CompressorParameters {
+    fn default() -> Self {
+        Self {
+            attack: UInt(20),
+            threshold: UInt(64),
+            post_gain: Int(6),
+            low_gain: Int(0),
+            high_gain: Int(0),
             level: UInt(127),
             unused_parameters: Default::default()
         }
