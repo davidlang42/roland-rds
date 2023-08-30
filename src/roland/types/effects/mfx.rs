@@ -18,7 +18,7 @@ pub enum MfxType { // 0-255
     Isolator(IsolatorParameters),
     LowBoost(LowBoostParameters),
     SuperFilter(SuperFilterParameters),
-    StepFilter(UnusedParameters<32>), //TODO implement parameters
+    StepFilter(StepFilterParameters),
     Enhancer(UnusedParameters<32>), //TODO implement parameters
     AutoWah(UnusedParameters<32>), //TODO implement parameters
     Humanizer(UnusedParameters<32>), //TODO implement parameters
@@ -776,6 +776,73 @@ impl Default for SuperFilterParameters {
             depth: UInt(40),
             attack: UInt(50),
             level: UInt(127), //TODO confirm on keyboard
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct StepFilterParameters {
+    step1: Level,
+    step2: Level,
+    step3: Level,
+    step4: Level,
+    step5: Level,
+    step6: Level,
+    step7: Level,
+    step8: Level,
+    step9: Level,
+    step10: Level,
+    step11: Level,
+    step12: Level,
+    step13: Level,
+    step14: Level,
+    step15: Level,
+    step16: Level,
+    rate_mode: RateMode,
+    rate_hz: LinearFrequency,
+    rate_note: NoteLength,
+    attack: Level,
+    filter_type: SuperFilterType,
+    filter_slope: FilterSlope,
+    filter_resonance: Level,
+    filter_gain: Int<0, 12>,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 7>")]
+    #[validate]
+    unused_parameters: [Parameter; 7]
+}
+
+impl Default for StepFilterParameters {
+    fn default() -> Self {
+        Self {
+            step1: UInt(60),
+            step2: UInt(30),
+            step3: UInt(60),
+            step4: UInt(30),
+            step5: UInt(60),
+            step6: UInt(30),
+            step7: UInt(60),
+            step8: UInt(30),
+            step9: UInt(60),
+            step10: UInt(60),
+            step11: UInt(30),
+            step12: UInt(60),
+            step13: UInt(60),
+            step14: UInt(30),
+            step15: UInt(60),
+            step16: UInt(30),
+            rate_mode: RateMode::Note,
+            rate_hz: LinearFrequency(0.5),
+            rate_note: NoteLength::WholeNote,
+            attack: UInt(50),
+            filter_type: SuperFilterType::HighPassFilter,
+            filter_slope: FilterSlope(-36),
+            filter_resonance: UInt(40),
+            filter_gain: Int(0),
+            level: UInt(127),
             unused_parameters: Default::default()
         }
     }
