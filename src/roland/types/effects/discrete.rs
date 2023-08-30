@@ -335,6 +335,67 @@ impl Into<Parameter> for LinearFrequency {
     }
 }
 
+/// Parameter(1-200) === StepLinearFrequency(0.1-20.0 by 0.1)
+#[derive(Debug, Copy, Clone)]
+pub struct StepLinearFrequency(pub f64);
+
+impl DiscreteValues<f64, 1> for StepLinearFrequency {
+    fn values() -> Vec<f64> {
+        enumerate_f64(0.1, 20.0, 0.1)
+    }
+
+    fn format(value: f64) -> String {
+        format!("{:.1}ms", value)
+    }
+}
+
+impl JsonSchema for StepLinearFrequency {
+    fn schema_name() -> String {
+        type_name_pretty::<Self>().into()
+    }
+
+    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        enum_schema(Self::values().into_iter().map(Self::format).collect())
+    }
+}
+
+impl Serialize for StepLinearFrequency {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where S: serde::Serializer {
+        Self::format(self.0).serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for StepLinearFrequency {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where D: serde::Deserializer<'de> {
+        let value: Value = Deserialize::deserialize(deserializer)?;
+        match value {
+            Value::String(s) => {
+                for v in Self::values().into_iter() {
+                    if s == Self::format(v) {
+                        return Ok(Self(v));
+                    }
+                }
+                Err(de::Error::custom(format!("String is not a valid discrete value: {}", s)))
+            }
+            _ => Err(de::Error::custom(format!("Expected string")))
+        }
+    }
+}
+
+impl From<Parameter> for StepLinearFrequency {
+    fn from(parameter: Parameter) -> Self {
+        Self(Self::value_from(parameter))
+    }
+}
+
+impl Into<Parameter> for StepLinearFrequency {
+    fn into(self) -> Parameter {
+        Self::into_parameter(self.0)
+    }
+}
+
 /// Parameter(0-?) === LogMilliseconds(0-5 by 0.1, 5-10 by 0.5, 10-50 by 1, 50-100 by 2)
 #[derive(Debug, Copy, Clone)]
 pub struct LogMilliseconds(pub f64);
