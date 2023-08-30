@@ -29,7 +29,7 @@ pub enum MfxType { // 0-255
     MultiStagePhaser(MultiStagePhaserParameters),
     InfinitePhaser(InfinitePhaserParameters),
     RingModulator(RingModulatorParameters),
-    StepRingModulator(UnusedParameters<32>), //TODO implement parameters
+    StepRingModulator(StepRingModulatorParameters),
     Tremolo(UnusedParameters<32>), //TODO implement parameters
     AutoPan(UnusedParameters<32>), //TODO implement parameters
     StepPan(UnusedParameters<32>), //TODO implement parameters
@@ -1181,6 +1181,71 @@ impl Default for RingModulatorParameters {
             frequency: UInt(60),
             sensitivity: UInt(0),
             polarity: Direction::Up,
+            low_gain: Int(0),
+            high_gain: Int(0),
+            balance: Balance(50),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct StepRingModulatorParameters {
+    step1: Level,
+    step2: Level,
+    step3: Level,
+    step4: Level,
+    step5: Level,
+    step6: Level,
+    step7: Level,
+    step8: Level,
+    step9: Level,
+    step10: Level,
+    step11: Level,
+    step12: Level,
+    step13: Level,
+    step14: Level,
+    step15: Level,
+    step16: Level,
+    rate_mode: RateMode,
+    rate_hz: LinearFrequency,
+    rate_note: NoteLength,
+    attack: Level,
+    low_gain: Gain,
+    high_gain: Gain,
+    balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 8>")]
+    #[validate]
+    unused_parameters: [Parameter; 8]
+}
+
+impl Default for StepRingModulatorParameters {
+    fn default() -> Self {
+        Self {
+            step1: UInt(120),
+            step2: UInt(60),
+            step3: UInt(120),
+            step4: UInt(60),
+            step5: UInt(90),
+            step6: UInt(90),
+            step7: UInt(60),
+            step8: UInt(90),
+            step9: UInt(60),
+            step10: UInt(90),
+            step11: UInt(60),
+            step12: UInt(90),
+            step13: UInt(60),
+            step14: UInt(60),
+            step15: UInt(90),
+            step16: UInt(60),
+            rate_mode: RateMode::Note,
+            rate_hz: LinearFrequency(0.5),
+            rate_note: NoteLength::DoubleNote,
+            attack: UInt(127),
             low_gain: Int(0),
             high_gain: Int(0),
             balance: Balance(50),
