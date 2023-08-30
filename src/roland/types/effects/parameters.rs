@@ -116,6 +116,17 @@ pub enum Wave {
     Saw2 // downward
 }
 
+/// Parameter(0-5) === ModWave(Triange - Trapezoidal)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
+pub enum ModWave {
+    Triangle,
+    Square,
+    Sine,
+    Saw1, // upward
+    Saw2, // downward
+    Trapezoidal
+}
+
 /// Parameter(0-1) === Direction(Up, Down)
 #[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
 pub enum Direction {

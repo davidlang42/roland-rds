@@ -8,7 +8,7 @@ use crate::roland::types::enums::Pan;
 use crate::roland::types::numeric::Parameter;
 use super::{UnusedParameters, Parameters};
 use super::discrete::{LogFrequency, QFactor, FineFrequency, LinearFrequency, FilterSlope, EvenPercent, StepLinearFrequency, Balance};
-use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode};
+use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode, ModWave};
 
 //TODO validate all fields of all Parameters types
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
@@ -30,7 +30,7 @@ pub enum MfxType { // 0-255
     InfinitePhaser(InfinitePhaserParameters),
     RingModulator(RingModulatorParameters),
     StepRingModulator(StepRingModulatorParameters),
-    Tremolo(UnusedParameters<32>), //TODO implement parameters
+    Tremolo(TremoloParameters),
     AutoPan(UnusedParameters<32>), //TODO implement parameters
     StepPan(UnusedParameters<32>), //TODO implement parameters
     Slicer(UnusedParameters<32>), //TODO implement parameters
@@ -1249,6 +1249,39 @@ impl Default for StepRingModulatorParameters {
             low_gain: Int(0),
             high_gain: Int(0),
             balance: Balance(50),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct TremoloParameters {
+    mod_wave: ModWave,
+    rate_mode: RateMode,
+    rate_hz: LinearFrequency,
+    rate_note: NoteLength,
+    depth: Level,
+    low_gain: Gain,
+    high_gain: Gain,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 24>")]
+    #[validate]
+    unused_parameters: [Parameter; 24]
+}
+
+impl Default for TremoloParameters {
+    fn default() -> Self {
+        Self {
+            mod_wave: ModWave::Triangle,
+            rate_mode: RateMode::Note,
+            rate_hz: LinearFrequency(4.0),
+            rate_note: NoteLength::QuarterNote,
+            depth: UInt(96),
+            low_gain: Int(0),
+            high_gain: Int(0),
             level: UInt(127),
             unused_parameters: Default::default()
         }
