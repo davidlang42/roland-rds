@@ -40,7 +40,7 @@ pub enum MfxType { // 0-255
     Chorus(ChorusParameters),
     Flanger(FlangerParameters),
     StepFlanger(StepFlangerParameters),
-    HexaChorus(UnusedParameters<32>), //TODO implement parameters
+    HexaChorus(HexaChorusParameters),
     TremoloChorus(UnusedParameters<32>), //TODO implement parameters
     SpaceD(UnusedParameters<32>), //TODO implement parameters
     Chorus3D(UnusedParameters<32>), //TODO implement parameters
@@ -1633,6 +1633,43 @@ impl Default for StepFlangerParameters {
             step_rate_note: NoteLength::SixteenthNote,
             low_gain: Int(0),
             high_gain: Int(0),
+            balance: Balance(50),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct HexaChorusParameters {
+    pre_delay: LogMilliseconds,
+    rate_mode: RateMode,
+    rate_hz: LinearFrequency,
+    rate_note: NoteLength,
+    depth: Level,
+    pre_delay_deviation: UInt<0, 20>,
+    depth_deviation: Int<-20, 20>,
+    pan_deviation: UInt<0, 20>,
+    balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 22>")]
+    #[validate]
+    unused_parameters: [Parameter; 22]
+}
+
+impl Default for HexaChorusParameters {
+    fn default() -> Self {
+        Self {
+            pre_delay: LogMilliseconds(2.0),
+            rate_mode: RateMode::Hertz,
+            rate_hz: LinearFrequency(0.5),
+            rate_note: NoteLength::WholeNote,
+            depth: UInt(20),
+            pre_delay_deviation: UInt(0),
+            depth_deviation: Int(0),
+            pan_deviation: UInt(20),
             balance: Balance(50),
             level: UInt(127),
             unused_parameters: Default::default()
