@@ -15,6 +15,15 @@ pub enum FilterType {
     HighPassFilter
 }
 
+/// Parameter(0-2) === SuperFilterType(LowPassFilter - Notch)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
+pub enum SuperFilterType {
+    LowPassFilter,
+    BandPassFilter,
+    HighPassFilter,
+    Notch
+}
+
 /// Parameter(0-1) === RateMode(Hertz, Note)
 #[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
 pub enum RateMode {
@@ -88,6 +97,16 @@ pub enum BoostWidth {
     Wide,
     Mid,
     Narrow
+}
+
+/// Parameter(0-4) === Wave(Triange - Saw2)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
+pub enum Wave {
+    Triangle,
+    Square,
+    Sine,
+    Saw1, // upward
+    Saw2 // downward
 }
 
 /// Parameter(0-1) === Switch(False, True)

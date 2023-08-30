@@ -6,8 +6,8 @@ use crate::json::validation::unused_by_rd300nx_err;
 
 use crate::roland::types::numeric::Parameter;
 use super::{UnusedParameters, Parameters};
-use super::discrete::{LogFrequency, QFactor, FineFrequency};
-use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth};
+use super::discrete::{LogFrequency, QFactor, FineFrequency, LinearFrequency, FilterSlope};
+use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength};
 
 //TODO validate all fields of all Parameters types
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
@@ -17,7 +17,7 @@ pub enum MfxType { // 0-255
     Spectrum(SpectrumParameters),
     Isolator(IsolatorParameters),
     LowBoost(LowBoostParameters),
-    SuperFilter(UnusedParameters<32>), //TODO implement parameters
+    SuperFilter(SuperFilterParameters),
     StepFilter(UnusedParameters<32>), //TODO implement parameters
     Enhancer(UnusedParameters<32>), //TODO implement parameters
     AutoWah(UnusedParameters<32>), //TODO implement parameters
@@ -733,6 +733,49 @@ impl Default for LowBoostParameters {
             low_gain: Int(0),
             high_gain: Int(0),
             level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct SuperFilterParameters {
+    filter_type: SuperFilterType,
+    filter_slope: FilterSlope,
+    filter_cutoff: Level,
+    filter_resonance: Level,
+    filter_gain: Int<0, 12>,
+    modulation_sw: Switch,
+    modulation_wave: Wave,
+    rate_mode: RateMode,
+    rate_hz: LinearFrequency,
+    rate_note: NoteLength,
+    depth: Level,
+    attack: Level,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 19>")]
+    #[validate]
+    unused_parameters: [Parameter; 19]
+}
+
+impl Default for SuperFilterParameters {
+    fn default() -> Self {
+        Self {
+            filter_type: SuperFilterType::HighPassFilter,
+            filter_slope: FilterSlope(-36),
+            filter_cutoff: UInt(30),
+            filter_resonance: UInt(40),
+            filter_gain: Int(0),
+            modulation_sw: Switch(false),
+            modulation_wave: Wave::Triangle,
+            rate_mode: RateMode::Note,
+            rate_hz: LinearFrequency(0.5),
+            rate_note: NoteLength::WholeNote,
+            depth: UInt(40),
+            attack: UInt(50),
+            level: UInt(127), //TODO confirm on keyboard
             unused_parameters: Default::default()
         }
     }
