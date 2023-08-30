@@ -8,7 +8,7 @@ use crate::roland::types::enums::Pan;
 use crate::roland::types::numeric::Parameter;
 use super::{UnusedParameters, Parameters};
 use super::discrete::{LogFrequency, QFactor, FineFrequency, LinearFrequency, FilterSlope, EvenPercent, StepLinearFrequency, Balance, LogMilliseconds};
-use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode, ModWave, SlicerMode, Speed, FilterType, OutputMode, AmpType, MicSetting, PreAmpType, PreAmpGain, CompressionRatio, PostGain};
+use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode, ModWave, SlicerMode, Speed, FilterType, OutputMode, AmpType, MicSetting, PreAmpType, PreAmpGain, CompressionRatio, PostGain, GateMode};
 
 //TODO validate all fields of all Parameters types
 //TODO add tests for default chorus, mfx, reverb
@@ -56,7 +56,7 @@ pub enum MfxType { // 0-255
     GuitarAmpSimulator(GuitarAmpSimulatorParameters),
     Compressor(CompressorParameters),
     Limiter(LimiterParameters),
-    Gate(UnusedParameters<32>), //TODO implement parameters
+    Gate(GateParameters),
     Delay(UnusedParameters<32>), //TODO implement parameters
     LongDelay(UnusedParameters<32>), //TODO implement parameters
     SerialDelay(UnusedParameters<32>), //TODO implement parameters
@@ -2222,6 +2222,37 @@ impl Default for LimiterParameters {
             post_gain: Int(6),
             low_gain: Int(0),
             high_gain: Int(0),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct GateParameters {
+    threshold: Level,
+    mode: GateMode,
+    attack: Level,
+    hold: Level,
+    release: Level,
+    balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 25>")]
+    #[validate]
+    unused_parameters: [Parameter; 25]
+}
+
+impl Default for GateParameters {
+    fn default() -> Self {
+        Self {
+            threshold: UInt(70),
+            mode: GateMode::Gate,
+            attack: UInt(8),
+            hold: UInt(0),
+            release: UInt(16),
+            balance: Balance(100),
             level: UInt(127),
             unused_parameters: Default::default()
         }

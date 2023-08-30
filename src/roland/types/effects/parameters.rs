@@ -168,19 +168,28 @@ pub enum SpeakerType {
 /// Parameter(0-2) === PhaserMode(FourStage - TwelveStage)
 #[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
 pub enum PhaserMode {
+    #[serde(rename = "4-Stage")]
     FourStage,
+    #[serde(rename = "8-Stage")]
     EightStage,
+    #[serde(rename = "12-Stage")]
     TwelveStage
 }
 
 /// Parameter(0-5) === MultiPhaserMode(FourStage - TwentyFourStage)
 #[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
 pub enum MultiPhaserMode {
+    #[serde(rename = "4-Stage")]
     FourStage,
+    #[serde(rename = "8-Stage")]
     EightStage,
+    #[serde(rename = "12-Stage")]
     TwelveStage,
+    #[serde(rename = "16-Stage")]
     SixteenStage,
+    #[serde(rename = "20-Stage")]
     TwentyStage,
+    #[serde(rename = "24-Stage")]
     TwentyFourStage
 }
 
@@ -259,6 +268,13 @@ pub enum CompressionRatio {
     FourToOne,
     #[serde(rename = "100:1")]
     OneHundredToOne
+}
+
+/// Parameter(0-1) === GateMode(Gate, Duck)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
+pub enum GateMode {
+    Gate,
+    Duck
 }
 
 /// Parameter(0-1) === Switch(False, True)
