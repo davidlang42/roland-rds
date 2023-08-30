@@ -27,7 +27,7 @@ pub enum MfxType { // 0-255
     Phaser(PhaserParameters),
     StepPhaser(StepPhaserParameters),
     MultiStagePhaser(MultiStagePhaserParameters),
-    InfinitePhaser(UnusedParameters<32>), //TODO implement parameters
+    InfinitePhaser(InfinitePhaserParameters),
     RingModulator(UnusedParameters<32>), //TODO implement parameters
     StepRingModulator(UnusedParameters<32>), //TODO implement parameters
     Tremolo(UnusedParameters<32>), //TODO implement parameters
@@ -1116,6 +1116,39 @@ impl Default for MultiStagePhaserParameters {
             rate_note: NoteLength::DoubleNote,
             depth: UInt(40),
             resonance: UInt(40),
+            mix: UInt(127),
+            pan: Pan::Centre,
+            low_gain: Int(0),
+            high_gain: Int(0),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct InfinitePhaserParameters {
+    mode: Int<1, 4>,
+    speed: Int<-100, 100>,
+    resonance: Level,
+    mix: Level,
+    pan: Pan,
+    low_gain: Gain,
+    high_gain: Gain,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 24>")]
+    #[validate]
+    unused_parameters: [Parameter; 24]
+}
+
+impl Default for InfinitePhaserParameters {
+    fn default() -> Self {
+        Self {
+            mode: Int(4),
+            speed: Int(40),
+            resonance: UInt(80),
             mix: UInt(127),
             pan: Pan::Centre,
             low_gain: Int(0),
