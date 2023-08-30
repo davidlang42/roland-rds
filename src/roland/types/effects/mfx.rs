@@ -38,7 +38,7 @@ pub enum MfxType { // 0-255
     Rotary(RotaryParameters),
     VkRotary(VkRotaryParameters),
     Chorus(ChorusParameters),
-    Flanger(UnusedParameters<32>), //TODO implement parameters
+    Flanger(FlangerParameters),
     StepFlanger(UnusedParameters<32>), //TODO implement parameters
     HexaChorus(UnusedParameters<32>), //TODO implement parameters
     TremoloChorus(UnusedParameters<32>), //TODO implement parameters
@@ -1539,6 +1539,49 @@ impl Default for ChorusParameters {
             rate_note: NoteLength::WholeNote,
             depth: UInt(20),
             phase: UInt(180),
+            low_gain: Int(0),
+            high_gain: Int(0),
+            balance: Balance(50),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct FlangerParameters {
+    filter_type: FilterType,
+    cutoff_freq: LogFrequency<200, 8000>,
+    pre_delay: LogMilliseconds,
+    rate_mode: RateMode,
+    rate_hz: LinearFrequency,
+    rate_note: NoteLength,
+    depth: Level,
+    phase: Phase,
+    feedback: EvenPercent,
+    low_gain: Gain,
+    high_gain: Gain,
+    balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 19>")]
+    #[validate]
+    unused_parameters: [Parameter; 19]
+}
+
+impl Default for FlangerParameters {
+    fn default() -> Self {
+        Self {
+            filter_type: FilterType::HighPassFilter,
+            cutoff_freq: LogFrequency(800),
+            pre_delay: LogMilliseconds(2.0),
+            rate_mode: RateMode::Note,
+            rate_hz: LinearFrequency(0.5),
+            rate_note: NoteLength::WholeNote,
+            depth: UInt(40),
+            phase: UInt(180),
+            feedback: EvenPercent(60),
             low_gain: Int(0),
             high_gain: Int(0),
             balance: Balance(50),
