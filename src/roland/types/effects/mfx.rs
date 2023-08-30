@@ -19,7 +19,7 @@ pub enum MfxType { // 0-255
     LowBoost(LowBoostParameters),
     SuperFilter(SuperFilterParameters),
     StepFilter(StepFilterParameters),
-    Enhancer(UnusedParameters<32>), //TODO implement parameters
+    Enhancer(EnhancerParameters),
     AutoWah(UnusedParameters<32>), //TODO implement parameters
     Humanizer(UnusedParameters<32>), //TODO implement parameters
     SpeakerSimulator(UnusedParameters<32>), //TODO implement parameters
@@ -842,6 +842,33 @@ impl Default for StepFilterParameters {
             filter_slope: FilterSlope(-36),
             filter_resonance: UInt(40),
             filter_gain: Int(0),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct EnhancerParameters {
+    sensitivity: Level,
+    mix: Level,
+    low_gain: Gain,
+    high_gain: Gain,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 27>")]
+    #[validate]
+    unused_parameters: [Parameter; 27]
+}
+
+impl Default for EnhancerParameters {
+    fn default() -> Self {
+        Self {
+            sensitivity: UInt(64),
+            mix: UInt(64),
+            low_gain: Int(0),
+            high_gain: Int(0),
             level: UInt(127),
             unused_parameters: Default::default()
         }
