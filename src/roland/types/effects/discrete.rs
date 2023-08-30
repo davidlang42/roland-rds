@@ -6,6 +6,7 @@ use crate::json::{schema::enum_schema, type_name_pretty};
 use super::super::numeric::Parameter;
 use serde::{Serialize, Deserialize, de};
 
+//TODO refactor DiscreteValues to make use of derive macros
 pub trait DiscreteValues<T: PartialEq + Display, const OFFSET: i16> {
     const OFFSET: i16 = OFFSET;
 
@@ -116,6 +117,67 @@ impl<const L: u16, const H: u16> From<Parameter> for LogFrequency<L, H> {
 }
 
 impl<const L: u16, const H: u16> Into<Parameter> for LogFrequency<L, H> {
+    fn into(self) -> Parameter {
+        Self::into_parameter(self.0)
+    }
+}
+
+/// Parameter(0-8) === FineFrequency(50-125Hz)
+#[derive(Debug, Copy, Clone)]
+pub struct FineFrequency(pub u8);
+
+impl DiscreteValues<u8, 0> for FineFrequency {
+    fn values() -> Vec<u8> {
+        vec![50, 56, 63, 71, 80, 90, 100, 112, 125]
+    }
+
+    fn format(value: u8) -> String {
+        format!("{}Hz", value)
+    }
+}
+
+impl JsonSchema for FineFrequency {
+    fn schema_name() -> String {
+        type_name_pretty::<Self>().into()
+    }
+
+    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        enum_schema(Self::values().into_iter().map(Self::format).collect())
+    }
+}
+
+impl Serialize for FineFrequency {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where S: serde::Serializer {
+        Self::format(self.0).serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for FineFrequency {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where D: serde::Deserializer<'de> {
+        let value: Value = Deserialize::deserialize(deserializer)?;
+        match value {
+            Value::String(s) => {
+                for v in Self::values().into_iter() {
+                    if s == Self::format(v) {
+                        return Ok(Self(v));
+                    }
+                }
+                Err(de::Error::custom(format!("String is not a valid discrete value: {}", s)))
+            }
+            _ => Err(de::Error::custom(format!("Expected string")))
+        }
+    }
+}
+
+impl From<Parameter> for FineFrequency {
+    fn from(parameter: Parameter) -> Self {
+        Self(Self::value_from(parameter))
+    }
+}
+
+impl Into<Parameter> for FineFrequency {
     fn into(self) -> Parameter {
         Self::into_parameter(self.0)
     }

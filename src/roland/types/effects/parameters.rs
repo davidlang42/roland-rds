@@ -82,6 +82,14 @@ pub enum Gm2ReverbCharacter {
     PanDelay
 }
 
+/// Parameter(0-2) === BoostWidth(Wide, Mid, Narrow)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
+pub enum BoostWidth {
+    Wide,
+    Mid,
+    Narrow
+}
+
 /// Parameter(0-1) === Switch(False, True)
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct Switch(pub bool);

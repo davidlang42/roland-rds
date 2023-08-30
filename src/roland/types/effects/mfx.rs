@@ -6,16 +6,17 @@ use crate::json::validation::unused_by_rd300nx_err;
 
 use crate::roland::types::numeric::Parameter;
 use super::{UnusedParameters, Parameters};
-use super::discrete::{LogFrequency, QFactor};
-use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain};
+use super::discrete::{LogFrequency, QFactor, FineFrequency};
+use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth};
 
+//TODO validate all fields of all Parameters types
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
 pub enum MfxType { // 0-255
     Thru(UnusedParameters<32>),
     Equalizer(EqualizerParameters),
     Spectrum(SpectrumParameters),
     Isolator(IsolatorParameters),
-    LowBoost(UnusedParameters<32>), //TODO implement parameters
+    LowBoost(LowBoostParameters),
     SuperFilter(UnusedParameters<32>), //TODO implement parameters
     StepFilter(UnusedParameters<32>), //TODO implement parameters
     Enhancer(UnusedParameters<32>), //TODO implement parameters
@@ -702,6 +703,35 @@ impl Default for IsolatorParameters {
             a_phase_mid_level: UInt(127),
             low_boost_sw: Switch(false),
             low_boost_level: UInt(127),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct LowBoostParameters {
+    boost_freq: FineFrequency,
+    boost_gain: Int<0, 12>,
+    boost_width: BoostWidth,
+    low_gain: Gain,
+    high_gain: Gain,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 26>")]
+    #[validate]
+    unused_parameters: [Parameter; 26]
+}
+
+impl Default for LowBoostParameters {
+    fn default() -> Self {
+        Self {
+            boost_freq: FineFrequency(80),
+            boost_gain: Int(6),
+            boost_width: BoostWidth::Wide,
+            low_gain: Int(0),
+            high_gain: Int(0),
             level: UInt(127),
             unused_parameters: Default::default()
         }
