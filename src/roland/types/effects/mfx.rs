@@ -58,7 +58,7 @@ pub enum MfxType { // 0-255
     Limiter(LimiterParameters),
     Gate(GateParameters),
     Delay(DelayParameters),
-    LongDelay(UnusedParameters<32>), //TODO implement parameters
+    LongDelay(LongDelayParameters),
     SerialDelay(UnusedParameters<32>), //TODO implement parameters
     ModulationDelay(UnusedParameters<32>), //TODO implement parameters
     ThreeTapPanDelay(UnusedParameters<32>), //TODO implement parameters
@@ -2297,6 +2297,45 @@ impl Default for DelayParameters {
             feedback_mode: FeedbackMode::Normal,
             feedback_percent: EvenPercent(20),
             hf_damp: LogFrequencyOrByPass::ByPass,
+            low_gain: Int(0),
+            high_gain: Int(0),
+            balance: Balance(10),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct LongDelayParameters {
+    delay_mode: DelayMode,
+    delay_ms: LinearMilliseconds<2600>,
+    delay_note: NoteLength,
+    phase_type: PhaseType,
+    feedback_percent: EvenPercent,
+    hf_damp: LogFrequencyOrByPass<200, 8000>,
+    pan: Pan,
+    low_gain: Gain,
+    high_gain: Gain,
+    balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 21>")]
+    #[validate]
+    unused_parameters: [Parameter; 21]
+}
+
+impl Default for LongDelayParameters {
+    fn default() -> Self {
+        Self { 
+            delay_mode: DelayMode::Note,
+            delay_ms: UInt(1200),
+            delay_note: NoteLength::HalfNote,
+            phase_type: PhaseType::Normal,
+            feedback_percent: EvenPercent(20),
+            hf_damp: LogFrequencyOrByPass::ByPass,
+            pan: Pan::Centre,
             low_gain: Int(0),
             high_gain: Int(0),
             balance: Balance(10),
