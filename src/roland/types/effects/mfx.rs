@@ -49,10 +49,10 @@ pub enum MfxType { // 0-255
     TwoBandChorus(TwoBandChorusParameters),
     TwoBandFlanger(TwoBandFlangerParameters),
     TwoBandStepFlanger(TwoBandStepFlangerParameters),
-    Overdrive(DriveParameters<0>), // 0=AmpType::Small
-    Distortion(DriveParameters<3>), // 3=AmpType::ThreeStack
-    VsOverdrive(UnusedParameters<32>), //TODO implement parameters
-    VsDistortion(UnusedParameters<32>), //TODO implement parameters
+    Overdrive(DriveParameters<0, 70>), // 0=AmpType::Small
+    Distortion(DriveParameters<3, 50>), // 3=AmpType::ThreeStack
+    VsOverdrive(VsDriveParameters<0>), // 0=AmpType::Small
+    VsDistortion(VsDriveParameters<3>), // 3=AmpType::ThreeStack
     GuitarAmpSimulator(UnusedParameters<32>), //TODO implement parameters
     Compressor(UnusedParameters<32>), //TODO implement parameters
     Limiter(UnusedParameters<32>), //TODO implement parameters
@@ -2056,7 +2056,7 @@ impl Default for TwoBandStepFlangerParameters {
 }
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
-pub struct DriveParameters<const DEFAULT_AMP_INDEX: i16> {
+pub struct DriveParameters<const DEFAULT_AMP_INDEX: i16, const DEFAULT_LEVEL: u16> {
     drive: Level,
     amp_type: AmpType,
     low_gain: Gain,
@@ -2070,7 +2070,7 @@ pub struct DriveParameters<const DEFAULT_AMP_INDEX: i16> {
     unused_parameters: [Parameter; 26]
 }
 
-impl<const DAI: i16> Default for DriveParameters<DAI> {
+impl<const DAI: i16, const DL: u16> Default for DriveParameters<DAI, DL> {
     fn default() -> Self {
         Self {
             drive: UInt(127),
@@ -2078,7 +2078,40 @@ impl<const DAI: i16> Default for DriveParameters<DAI> {
             low_gain: Int(0),
             high_gain: Int(0),
             pan: Pan::Centre,
-            level: UInt(70),
+            level: UInt(DL),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct VsDriveParameters<const DEFAULT_AMP_INDEX: i16> {
+    drive: Level,
+    tone: Level,
+    amp_sw: Switch,
+    amp_type: AmpType,
+    low_gain: Gain,
+    high_gain: Gain,
+    pan: Pan,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 24>")]
+    #[validate]
+    unused_parameters: [Parameter; 24]
+}
+
+impl<const DAI: i16> Default for VsDriveParameters<DAI> {
+    fn default() -> Self {
+        Self {
+            drive: UInt(127),
+            tone: UInt(50),
+            amp_sw: Switch(true),
+            amp_type: AmpType::from(Parameter(DAI)),
+            low_gain: Int(0),
+            high_gain: Int(0),
+            pan: Pan::Centre,
+            level: UInt(127),
             unused_parameters: Default::default()
         }
     }
