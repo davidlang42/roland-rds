@@ -7,8 +7,8 @@ use crate::json::validation::unused_by_rd300nx_err;
 use crate::roland::types::enums::Pan;
 use crate::roland::types::numeric::Parameter;
 use super::{UnusedParameters, Parameters};
-use super::discrete::{LogFrequency, QFactor, FineFrequency, LinearFrequency, FilterSlope, EvenPercent, StepLinearFrequency, Balance};
-use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode, ModWave, SlicerMode, Speed};
+use super::discrete::{LogFrequency, QFactor, FineFrequency, LinearFrequency, FilterSlope, EvenPercent, StepLinearFrequency, Balance, LogMilliseconds};
+use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode, ModWave, SlicerMode, Speed, FilterType};
 
 //TODO validate all fields of all Parameters types
 //TODO add tests for default chorus, mfx, reverb
@@ -37,7 +37,7 @@ pub enum MfxType { // 0-255
     Slicer(SlicerParameters),
     Rotary(RotaryParameters),
     VkRotary(VkRotaryParameters),
-    Chorus(UnusedParameters<32>), //TODO implement parameters
+    Chorus(ChorusParameters),
     Flanger(UnusedParameters<32>), //TODO implement parameters
     StepFlanger(UnusedParameters<32>), //TODO implement parameters
     HexaChorus(UnusedParameters<32>), //TODO implement parameters
@@ -1501,6 +1501,47 @@ impl Default for VkRotaryParameters {
             spread: UInt(10),
             low_gain: Int(0),
             high_gain: Int(6),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct ChorusParameters {
+    filter_type: FilterType,
+    cutoff_freq: LogFrequency<200, 8000>,
+    pre_delay: LogMilliseconds,
+    rate_mode: RateMode,
+    rate_hz: LinearFrequency,
+    rate_note: NoteLength,
+    depth: Level,
+    phase: Phase,
+    low_gain: Gain,
+    high_gain: Gain,
+    balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 20>")]
+    #[validate]
+    unused_parameters: [Parameter; 20]
+}
+
+impl Default for ChorusParameters {
+    fn default() -> Self {
+        Self {
+            filter_type: FilterType::HighPassFilter,
+            cutoff_freq: LogFrequency(800),
+            pre_delay: LogMilliseconds(2.0),
+            rate_mode: RateMode::Hertz,
+            rate_hz: LinearFrequency(0.5),
+            rate_note: NoteLength::WholeNote,
+            depth: UInt(20),
+            phase: UInt(180),
+            low_gain: Int(0),
+            high_gain: Int(0),
+            balance: Balance(50),
             level: UInt(127),
             unused_parameters: Default::default()
         }
