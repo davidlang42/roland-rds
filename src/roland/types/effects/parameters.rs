@@ -133,6 +133,27 @@ pub enum Vowel {
     U
 }
 
+/// Parameter(0-15) === SpeakerType(Small1 - ThreeStack)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
+pub enum SpeakerType {
+    Small1,
+    Small2,
+    Middle,
+    Jc120,
+    BuiltIn1,
+    BuiltIn2,
+    BuiltIn3,
+    BuiltIn4,
+    BuiltIn5,
+    BgStack1,
+    BgStack2,
+    MsStack1,
+    MsStack2,
+    MetalStack,
+    TwoStack,
+    ThreeStack
+}
+
 /// Parameter(0-1) === Switch(False, True)
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct Switch(pub bool);

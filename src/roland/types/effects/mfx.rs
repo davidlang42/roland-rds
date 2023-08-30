@@ -8,7 +8,7 @@ use crate::roland::types::enums::Pan;
 use crate::roland::types::numeric::Parameter;
 use super::{UnusedParameters, Parameters};
 use super::discrete::{LogFrequency, QFactor, FineFrequency, LinearFrequency, FilterSlope};
-use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel};
+use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType};
 
 //TODO validate all fields of all Parameters types
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
@@ -23,7 +23,7 @@ pub enum MfxType { // 0-255
     Enhancer(EnhancerParameters),
     AutoWah(AutoWahParameters),
     Humanizer(HumanizerParameters),
-    SpeakerSimulator(UnusedParameters<32>), //TODO implement parameters
+    SpeakerSimulator(SpeakerSimulatorParameters),
     Phaser(UnusedParameters<32>), //TODO implement parameters
     StepPhaser(UnusedParameters<32>), //TODO implement parameters
     MultiStagePhaser(UnusedParameters<32>), //TODO implement parameters
@@ -961,6 +961,33 @@ impl Default for HumanizerParameters {
             high_gain: Int(0),
             pan: Pan::Centre,
             level: UInt(100),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct SpeakerSimulatorParameters {
+    speaker: SpeakerType,
+    mic_setting: Int<1, 3>,
+    mic_level: Level,
+    direct_level: Level,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 27>")]
+    #[validate]
+    unused_parameters: [Parameter; 27]
+}
+
+impl Default for SpeakerSimulatorParameters {
+    fn default() -> Self {
+        Self {
+            speaker: SpeakerType::BuiltIn2,
+            mic_setting: Int(2),
+            mic_level: UInt(127),
+            direct_level: UInt(0),
+            level: UInt(127),
             unused_parameters: Default::default()
         }
     }
