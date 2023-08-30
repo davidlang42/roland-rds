@@ -7,8 +7,8 @@ use crate::json::validation::unused_by_rd300nx_err;
 use crate::roland::types::enums::Pan;
 use crate::roland::types::numeric::Parameter;
 use super::{UnusedParameters, Parameters};
-use super::discrete::{LogFrequency, QFactor, FineFrequency, LinearFrequency, FilterSlope, EvenPercent, StepLinearFrequency, Balance, LogMilliseconds};
-use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode, ModWave, SlicerMode, Speed, FilterType, OutputMode, AmpType, MicSetting, PreAmpType, PreAmpGain, CompressionRatio, PostGain, GateMode};
+use super::discrete::{LogFrequency, QFactor, FineFrequency, LinearFrequency, FilterSlope, EvenPercent, StepLinearFrequency, Balance, LogMilliseconds, LogFrequencyOrByPass};
+use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode, ModWave, SlicerMode, Speed, FilterType, OutputMode, AmpType, MicSetting, PreAmpType, PreAmpGain, CompressionRatio, PostGain, GateMode, DelayMode, LinearMilliseconds, PhaseType, FeedbackMode};
 
 //TODO validate all fields of all Parameters types
 //TODO add tests for default chorus, mfx, reverb
@@ -57,7 +57,7 @@ pub enum MfxType { // 0-255
     Compressor(CompressorParameters),
     Limiter(LimiterParameters),
     Gate(GateParameters),
-    Delay(UnusedParameters<32>), //TODO implement parameters
+    Delay(DelayParameters),
     LongDelay(UnusedParameters<32>), //TODO implement parameters
     SerialDelay(UnusedParameters<32>), //TODO implement parameters
     ModulationDelay(UnusedParameters<32>), //TODO implement parameters
@@ -2253,6 +2253,53 @@ impl Default for GateParameters {
             hold: UInt(0),
             release: UInt(16),
             balance: Balance(100),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct DelayParameters {
+    delay_left_mode: DelayMode,
+    delay_left_ms: LinearMilliseconds<1300>,
+    delay_left_note: NoteLength,
+    delay_right_mode: DelayMode,
+    delay_right_ms: LinearMilliseconds<1300>,
+    delay_right_note: NoteLength,
+    phase_left: PhaseType,
+    phase_right: PhaseType,
+    feedback_mode: FeedbackMode,
+    feedback_percent: EvenPercent,
+    hf_damp: LogFrequencyOrByPass<200, 8000>,
+    low_gain: Gain,
+    high_gain: Gain,
+    balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 17>")]
+    #[validate]
+    unused_parameters: [Parameter; 17]
+}
+
+impl Default for DelayParameters {
+    fn default() -> Self {
+        Self {
+            delay_left_mode: DelayMode::Note,
+            delay_left_ms: UInt(600),
+            delay_left_note: NoteLength::QuarterNote,
+            delay_right_mode: DelayMode::Note,
+            delay_right_ms: UInt(600),
+            delay_right_note: NoteLength::QuarterNote,
+            phase_left: PhaseType::Normal,
+            phase_right: PhaseType::Normal,
+            feedback_mode: FeedbackMode::Normal,
+            feedback_percent: EvenPercent(20),
+            hf_damp: LogFrequencyOrByPass::ByPass,
+            low_gain: Int(0),
+            high_gain: Int(0),
+            balance: Balance(10),
             level: UInt(127),
             unused_parameters: Default::default()
         }

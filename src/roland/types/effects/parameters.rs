@@ -277,6 +277,20 @@ pub enum GateMode {
     Duck
 }
 
+/// Parameter(0-1) === PhaseType(Normal, Inverse)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
+pub enum PhaseType {
+    Normal,
+    Inverse
+}
+
+/// Parameter(0-1) === FeedbackMode(Normal, Cross)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
+pub enum FeedbackMode {
+    Normal,
+    Cross
+}
+
 /// Parameter(0-1) === Switch(False, True)
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct Switch(pub bool);
