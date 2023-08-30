@@ -59,7 +59,7 @@ pub enum MfxType { // 0-255
     Gate(GateParameters),
     Delay(DelayParameters),
     LongDelay(LongDelayParameters),
-    SerialDelay(UnusedParameters<32>), //TODO implement parameters
+    SerialDelay(SerialDelayParameters),
     ModulationDelay(UnusedParameters<32>), //TODO implement parameters
     ThreeTapPanDelay(UnusedParameters<32>), //TODO implement parameters
     FourTapPanDelay(UnusedParameters<32>), //TODO implement parameters
@@ -2335,6 +2335,53 @@ impl Default for LongDelayParameters {
             phase_type: PhaseType::Normal,
             feedback_percent: EvenPercent(20),
             hf_damp: LogFrequencyOrByPass::ByPass,
+            pan: Pan::Centre,
+            low_gain: Int(0),
+            high_gain: Int(0),
+            balance: Balance(10),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct SerialDelayParameters {
+    delay_1_mode: DelayMode,
+    delay_1_ms: LinearMilliseconds<1300>,
+    delay_1_note: NoteLength,
+    delay_1_feedback: EvenPercent,
+    delay_1_hf_damp: LogFrequencyOrByPass<200, 8000>,
+    delay_2_mode: DelayMode,
+    delay_2_ms: LinearMilliseconds<1300>,
+    delay_2_note: NoteLength,
+    delay_2_feedback_: EvenPercent,
+    delay_2_hf_damp: LogFrequencyOrByPass<200, 8000>,
+    pan: Pan,
+    low_gain: Gain,
+    high_gain: Gain,
+    balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 17>")]
+    #[validate]
+    unused_parameters: [Parameter; 17]
+}
+
+impl Default for SerialDelayParameters {
+    fn default() -> Self {
+        Self { 
+            delay_1_mode: DelayMode::Note,
+            delay_1_ms: UInt(150),
+            delay_1_note: NoteLength::SixteenthNote,
+            delay_1_feedback: EvenPercent(40),
+            delay_1_hf_damp: LogFrequencyOrByPass::ByPass,
+            delay_2_mode: DelayMode::Note,
+            delay_2_ms: UInt(600),
+            delay_2_note: NoteLength::QuarterNote,
+            delay_2_feedback_: EvenPercent(40),
+            delay_2_hf_damp: LogFrequencyOrByPass::ByPass,
             pan: Pan::Centre,
             low_gain: Int(0),
             high_gain: Int(0),
