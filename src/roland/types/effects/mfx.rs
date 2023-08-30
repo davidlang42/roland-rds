@@ -47,8 +47,8 @@ pub enum MfxType { // 0-255
     Flanger3D(Flanger3DParameters),
     StepFlanger3D(StepFlanger3DParameters),
     TwoBandChorus(TwoBandChorusParameters),
-    TwoBandFlanger(UnusedParameters<32>), //TODO implement parameters
-    TwoBandStepFlanger(UnusedParameters<32>), //TODO implement parameters
+    TwoBandFlanger(TwoBandFlangerParameters),
+    TwoBandStepFlanger(TwoBandStepFlangerParameters),
     Overdrive(UnusedParameters<32>), //TODO implement parameters
     Distortion(UnusedParameters<32>), //TODO implement parameters
     VsOverdrive(UnusedParameters<32>), //TODO implement parameters
@@ -1934,6 +1934,120 @@ impl Default for TwoBandChorusParameters {
             high_rate_note: NoteLength::WholeNote,
             high_depth: UInt(20),
             high_phase: UInt(180),
+            balance: Balance(50),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct TwoBandFlangerParameters {
+    split_freq: LogFrequency<200, 8000>,
+    low_pre_delay: LogMilliseconds,
+    low_rate_mode: RateMode,
+    low_rate_hz: LinearFrequency,
+    low_rate_note: NoteLength,
+    low_depth: Level,
+    low_phase: Phase,
+    low_feedback: EvenPercent,
+    high_pre_delay: LogMilliseconds,
+    high_rate_mode: RateMode,
+    high_rate_hz: LinearFrequency,
+    high_rate_note: NoteLength,
+    high_depth: Level,
+    high_phase: Phase,
+    high_feedback: EvenPercent,
+    balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 15>")]
+    #[validate]
+    unused_parameters: [Parameter; 15]
+}
+
+impl Default for TwoBandFlangerParameters {
+    fn default() -> Self {
+        Self {
+            split_freq: LogFrequency(800),
+            low_pre_delay: LogMilliseconds(4.0),
+            low_rate_mode: RateMode::Note,
+            low_rate_hz: LinearFrequency(0.25),
+            low_rate_note: NoteLength::DoubleNote,
+            low_depth: UInt(40),
+            low_phase: UInt(180),
+            low_feedback: EvenPercent(60),
+            high_pre_delay: LogMilliseconds(1.0),
+            high_rate_mode: RateMode::Note,
+            high_rate_hz: LinearFrequency(0.5),
+            high_rate_note: NoteLength::WholeNote,
+            high_depth: UInt(40),
+            high_phase: UInt(180),
+            high_feedback: EvenPercent(40),
+            balance: Balance(50),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct TwoBandStepFlangerParameters {
+    split_freq: LogFrequency<200, 8000>,
+    low_pre_delay: LogMilliseconds,
+    low_rate_mode: RateMode,
+    low_rate_hz: LinearFrequency,
+    low_rate_note: NoteLength,
+    low_depth: Level,
+    low_phase: Phase,
+    low_feedback: EvenPercent,
+    low_step_rate_mode: RateMode,
+    low_step_rate_hz: StepLinearFrequency,
+    low_step_rate_note: NoteLength,
+    high_pre_delay: LogMilliseconds,
+    high_rate_mode: RateMode,
+    high_rate_hz: LinearFrequency,
+    high_rate_note: NoteLength,
+    high_depth: Level,
+    high_phase: Phase,
+    high_feedback: EvenPercent,
+    high_step_rate_mode: RateMode,
+    high_step_rate_hz: StepLinearFrequency,
+    high_step_rate_note: NoteLength,
+    balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 9>")]
+    #[validate]
+    unused_parameters: [Parameter; 9]
+}
+
+impl Default for TwoBandStepFlangerParameters {
+    fn default() -> Self {
+        Self {
+            split_freq: LogFrequency(800),
+            low_pre_delay: LogMilliseconds(4.0),
+            low_rate_mode: RateMode::Note,
+            low_rate_hz: LinearFrequency(3.0),
+            low_rate_note: NoteLength::QuarterNoteTriplet,
+            low_depth: UInt(40),
+            low_phase: UInt(180),
+            low_feedback: EvenPercent(60),
+            low_step_rate_mode: RateMode::Note,
+            low_step_rate_hz: StepLinearFrequency(4.0),
+            low_step_rate_note: NoteLength::QuarterNote,
+            high_pre_delay: LogMilliseconds(1.0),
+            high_rate_mode: RateMode::Note,
+            high_rate_hz: LinearFrequency(1.5),
+            high_rate_note: NoteLength::HalfNoteTriplet,
+            high_depth: UInt(40),
+            high_phase: UInt(180),
+            high_feedback: EvenPercent(40),
+            high_step_rate_mode: RateMode::Note,
+            high_step_rate_hz: StepLinearFrequency(8.0),
+            high_step_rate_note: NoteLength::SixteenthNote,
             balance: Balance(50),
             level: UInt(127),
             unused_parameters: Default::default()
