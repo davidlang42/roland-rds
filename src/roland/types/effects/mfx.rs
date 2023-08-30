@@ -7,8 +7,8 @@ use crate::json::validation::unused_by_rd300nx_err;
 use crate::roland::types::enums::Pan;
 use crate::roland::types::numeric::Parameter;
 use super::{UnusedParameters, Parameters};
-use super::discrete::{LogFrequency, QFactor, FineFrequency, LinearFrequency, FilterSlope};
-use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType};
+use super::discrete::{LogFrequency, QFactor, FineFrequency, LinearFrequency, FilterSlope, EvenPercent};
+use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity};
 
 //TODO validate all fields of all Parameters types
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
@@ -24,7 +24,7 @@ pub enum MfxType { // 0-255
     AutoWah(AutoWahParameters),
     Humanizer(HumanizerParameters),
     SpeakerSimulator(SpeakerSimulatorParameters),
-    Phaser(UnusedParameters<32>), //TODO implement parameters
+    Phaser(PhaserParameters),
     StepPhaser(UnusedParameters<32>), //TODO implement parameters
     MultiStagePhaser(UnusedParameters<32>), //TODO implement parameters
     InfinitePhaser(UnusedParameters<32>), //TODO implement parameters
@@ -987,6 +987,49 @@ impl Default for SpeakerSimulatorParameters {
             mic_setting: Int(2),
             mic_level: UInt(127),
             direct_level: UInt(0),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct PhaserParameters {
+    mode: PhaserMode,
+    manual: Level,
+    rate_mode: RateMode,
+    rate_hz: LinearFrequency,
+    rate_note: NoteLength,
+    depth: Level,
+    polarity: PhaserPolarity,
+    resonance: Level,
+    cross_feedback: EvenPercent,
+    mix: Level,
+    low_gain: Gain,
+    high_gain: Gain,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 19>")]
+    #[validate]
+    unused_parameters: [Parameter; 19]
+}
+
+impl Default for PhaserParameters {
+    fn default() -> Self {
+        Self {
+            mode: PhaserMode::TwelveStage,
+            manual: UInt(64),
+            rate_mode: RateMode::Note,
+            rate_hz: LinearFrequency(0.5),
+            rate_note: NoteLength::DoubleNote,
+            depth: UInt(40),
+            polarity: PhaserPolarity::Synchro,
+            resonance: UInt(40),
+            cross_feedback: EvenPercent(0),
+            mix: UInt(127),
+            low_gain: Int(0),
+            high_gain: Int(0),
             level: UInt(127),
             unused_parameters: Default::default()
         }

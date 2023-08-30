@@ -154,6 +154,21 @@ pub enum SpeakerType {
     ThreeStack
 }
 
+/// Parameter(0-2) === PhaserMode(FourStage - TwelveStage)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
+pub enum PhaserMode {
+    FourStage,
+    EightStage,
+    TwelveStage
+}
+
+/// Parameter(0-1) === PhaserPolarity(Inverse, Synchro)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
+pub enum PhaserPolarity {
+    Inverse,
+    Synchro
+}
+
 /// Parameter(0-1) === Switch(False, True)
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct Switch(pub bool);
