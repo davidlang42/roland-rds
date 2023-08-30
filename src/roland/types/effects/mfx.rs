@@ -8,7 +8,7 @@ use crate::roland::types::enums::Pan;
 use crate::roland::types::numeric::Parameter;
 use super::{UnusedParameters, Parameters};
 use super::discrete::{LogFrequency, QFactor, FineFrequency, LinearFrequency, FilterSlope, EvenPercent, StepLinearFrequency, Balance, LogMilliseconds};
-use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode, ModWave, SlicerMode, Speed, FilterType, OutputMode, AmpType, MicSetting, PreAmpType, PreAmpGain};
+use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode, ModWave, SlicerMode, Speed, FilterType, OutputMode, AmpType, MicSetting, PreAmpType, PreAmpGain, CompressionRatio, PostGain};
 
 //TODO validate all fields of all Parameters types
 //TODO add tests for default chorus, mfx, reverb
@@ -55,7 +55,7 @@ pub enum MfxType { // 0-255
     VsDistortion(VsDriveParameters<3>), // 3=AmpType::ThreeStack
     GuitarAmpSimulator(GuitarAmpSimulatorParameters),
     Compressor(CompressorParameters),
-    Limiter(UnusedParameters<32>), //TODO implement parameters
+    Limiter(LimiterParameters),
     Gate(UnusedParameters<32>), //TODO implement parameters
     Delay(UnusedParameters<32>), //TODO implement parameters
     LongDelay(UnusedParameters<32>), //TODO implement parameters
@@ -2172,7 +2172,7 @@ impl Default for GuitarAmpSimulatorParameters {
 pub struct CompressorParameters {
     attack: Level,
     threshold: Level,
-    post_gain: Int<0, 18>,
+    post_gain: PostGain,
     low_gain: Gain,
     high_gain: Gain,
     level: Level,
@@ -2188,6 +2188,37 @@ impl Default for CompressorParameters {
         Self {
             attack: UInt(20),
             threshold: UInt(64),
+            post_gain: Int(6),
+            low_gain: Int(0),
+            high_gain: Int(0),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct LimiterParameters {
+    release: Level,
+    threshold: Level,
+    ratio: CompressionRatio,
+    post_gain: PostGain,
+    low_gain: Gain,
+    high_gain: Gain,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 25>")]
+    #[validate]
+    unused_parameters: [Parameter; 25]
+}
+
+impl Default for LimiterParameters {
+    fn default() -> Self {
+        Self {
+            release: UInt(32),
+            threshold: UInt(64),
+            ratio: CompressionRatio::FourToOne,
             post_gain: Int(6),
             low_gain: Int(0),
             high_gain: Int(0),

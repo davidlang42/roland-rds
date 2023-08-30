@@ -248,6 +248,19 @@ pub enum PreAmpGain {
     High
 }
 
+/// Parameter(0-3) === CompressionRatio(1.5:1 - 100:1)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
+pub enum CompressionRatio {
+    #[serde(rename = "1.5:1")]
+    OnePointFiveToOne,
+    #[serde(rename = "2:1")]
+    TwoToOne,
+    #[serde(rename = "4:1")]
+    FourToOne,
+    #[serde(rename = "100:1")]
+    OneHundredToOne
+}
+
 /// Parameter(0-1) === Switch(False, True)
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct Switch(pub bool);
@@ -386,6 +399,7 @@ impl<const MIN: i8, const MAX: i8> Validate for Int<MIN, MAX> {
 pub type Gain = Int<-15, 15>;
 pub type DampGain = Int<-36, 0>;
 pub type BoostGain = Int<-60, 4>;
+pub type PostGain = Int<0, 18>;
 pub type Size = Int<1, 8>;
 pub type MicSetting = Int<1, 3>;
 
