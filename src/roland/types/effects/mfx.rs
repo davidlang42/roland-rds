@@ -41,7 +41,7 @@ pub enum MfxType { // 0-255
     Flanger(FlangerParameters),
     StepFlanger(StepFlangerParameters),
     HexaChorus(HexaChorusParameters),
-    TremoloChorus(UnusedParameters<32>), //TODO implement parameters
+    TremoloChorus(TremoloChorusParameters),
     SpaceD(UnusedParameters<32>), //TODO implement parameters
     Chorus3D(UnusedParameters<32>), //TODO implement parameters
     Flanger3D(UnusedParameters<32>), //TODO implement parameters
@@ -1670,6 +1670,47 @@ impl Default for HexaChorusParameters {
             pre_delay_deviation: UInt(0),
             depth_deviation: Int(0),
             pan_deviation: UInt(20),
+            balance: Balance(50),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct TremoloChorusParameters {
+    pre_delay: LogMilliseconds,
+    cho_rate_mode: RateMode,
+    cho_rate_hz: LinearFrequency,
+    cho_rate_note: NoteLength,
+    cho_depth: Level,
+    trem_rate_mode: RateMode,
+    trem_rate_hz: LinearFrequency,
+    trem_rate_note: NoteLength,
+    trem_separation: Level,
+    trem_phase: Phase,
+    balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 20>")]
+    #[validate]
+    unused_parameters: [Parameter; 20]
+}
+
+impl Default for TremoloChorusParameters {
+    fn default() -> Self {
+        Self {
+            pre_delay: LogMilliseconds(2.0),
+            cho_rate_mode: RateMode::Hertz,
+            cho_rate_hz: LinearFrequency(0.5),
+            cho_rate_note: NoteLength::WholeNote,
+            cho_depth: UInt(50),
+            trem_rate_mode: RateMode::Hertz,
+            trem_rate_hz: LinearFrequency(2.0),
+            trem_rate_note: NoteLength::QuarterNote,
+            trem_separation: UInt(127),
+            trem_phase: UInt(180),
             balance: Balance(50),
             level: UInt(127),
             unused_parameters: Default::default()
