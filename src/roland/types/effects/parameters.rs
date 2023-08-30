@@ -212,6 +212,15 @@ pub enum OutputMode {
     Phones
 }
 
+/// Parameter(0-3) === AmpType(Small - ThreeStack)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
+pub enum AmpType {
+    Small,
+    BuiltIn,
+    TwoStack,
+    ThreeStack
+}
+
 /// Parameter(0-1) === Switch(False, True)
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct Switch(pub bool);

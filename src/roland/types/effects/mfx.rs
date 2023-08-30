@@ -8,7 +8,7 @@ use crate::roland::types::enums::Pan;
 use crate::roland::types::numeric::Parameter;
 use super::{UnusedParameters, Parameters};
 use super::discrete::{LogFrequency, QFactor, FineFrequency, LinearFrequency, FilterSlope, EvenPercent, StepLinearFrequency, Balance, LogMilliseconds};
-use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode, ModWave, SlicerMode, Speed, FilterType, OutputMode};
+use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode, ModWave, SlicerMode, Speed, FilterType, OutputMode, AmpType};
 
 //TODO validate all fields of all Parameters types
 //TODO add tests for default chorus, mfx, reverb
@@ -49,8 +49,8 @@ pub enum MfxType { // 0-255
     TwoBandChorus(TwoBandChorusParameters),
     TwoBandFlanger(TwoBandFlangerParameters),
     TwoBandStepFlanger(TwoBandStepFlangerParameters),
-    Overdrive(UnusedParameters<32>), //TODO implement parameters
-    Distortion(UnusedParameters<32>), //TODO implement parameters
+    Overdrive(DriveParameters<0>), // 0=AmpType::Small
+    Distortion(DriveParameters<3>), // 3=AmpType::ThreeStack
     VsOverdrive(UnusedParameters<32>), //TODO implement parameters
     VsDistortion(UnusedParameters<32>), //TODO implement parameters
     GuitarAmpSimulator(UnusedParameters<32>), //TODO implement parameters
@@ -2050,6 +2050,35 @@ impl Default for TwoBandStepFlangerParameters {
             high_step_rate_note: NoteLength::SixteenthNote,
             balance: Balance(50),
             level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct DriveParameters<const DEFAULT_AMP_INDEX: i16> {
+    drive: Level,
+    amp_type: AmpType,
+    low_gain: Gain,
+    high_gain: Gain,
+    pan: Pan,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 26>")]
+    #[validate]
+    unused_parameters: [Parameter; 26]
+}
+
+impl<const DAI: i16> Default for DriveParameters<DAI> {
+    fn default() -> Self {
+        Self {
+            drive: UInt(127),
+            amp_type: AmpType::from(Parameter(DAI)),
+            low_gain: Int(0),
+            high_gain: Int(0),
+            pan: Pan::Centre,
+            level: UInt(70),
             unused_parameters: Default::default()
         }
     }
