@@ -205,6 +205,13 @@ pub enum Speed {
     Fast
 }
 
+/// Parameter(0-1) === OutputMode(Speaker, Phones)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
+pub enum OutputMode {
+    Speaker,
+    Phones
+}
+
 /// Parameter(0-1) === Switch(False, True)
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct Switch(pub bool);
