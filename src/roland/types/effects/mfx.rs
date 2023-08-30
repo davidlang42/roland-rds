@@ -4,10 +4,11 @@ use validator::Validate;
 use crate::json::serialize_default_terminated_array;
 use crate::json::validation::unused_by_rd300nx_err;
 
+use crate::roland::types::enums::Pan;
 use crate::roland::types::numeric::Parameter;
 use super::{UnusedParameters, Parameters};
 use super::discrete::{LogFrequency, QFactor, FineFrequency, LinearFrequency, FilterSlope};
-use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase};
+use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel};
 
 //TODO validate all fields of all Parameters types
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
@@ -21,7 +22,7 @@ pub enum MfxType { // 0-255
     StepFilter(StepFilterParameters),
     Enhancer(EnhancerParameters),
     AutoWah(AutoWahParameters),
-    Humanizer(UnusedParameters<32>), //TODO implement parameters
+    Humanizer(HumanizerParameters),
     SpeakerSimulator(UnusedParameters<32>), //TODO implement parameters
     Phaser(UnusedParameters<32>), //TODO implement parameters
     StepPhaser(UnusedParameters<32>), //TODO implement parameters
@@ -914,6 +915,53 @@ impl Default for AutoWahParameters {
             high_gain: Int(0),
             level: UInt(100),
             unused_parameters: Default::default(),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct HumanizerParameters {
+    drive_sw: Switch,
+    drive: Level,
+    vowel1: Vowel,
+    vowel2: Vowel,
+    rate_mode: RateMode,
+    rate_hz: LinearFrequency,
+    rate_note: NoteLength,
+    depth: Level,
+    input_sync_sw: Switch,
+    input_sync_threshold: Level,
+    manual: Level,
+    low_gain: Gain,
+    high_gain: Gain,
+    pan: Pan,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 17>")]
+    #[validate]
+    unused_parameters: [Parameter; 17]
+}
+
+impl Default for HumanizerParameters {
+    fn default() -> Self {
+        Self {
+            drive_sw: Switch(true),
+            drive: UInt(127),
+            vowel1: Vowel::U,
+            vowel2: Vowel::A,
+            rate_mode: RateMode::Note,
+            rate_hz: LinearFrequency(0.5),
+            rate_note: NoteLength::HalfNote,
+            depth: UInt(127),
+            input_sync_sw: Switch(false),
+            input_sync_threshold: UInt(60),
+            manual: UInt(50),
+            low_gain: Int(0),
+            high_gain: Int(0),
+            pan: Pan::Centre,
+            level: UInt(100),
+            unused_parameters: Default::default()
         }
     }
 }

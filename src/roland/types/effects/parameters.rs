@@ -3,7 +3,7 @@ use strum_macros::EnumIter;
 use strum::IntoEnumIterator;
 use validator::Validate;
 
-use crate::json::{type_name_pretty, validation::out_of_range_err, schema::{u16_schema, i8_schema}};
+use crate::{json::{type_name_pretty, validation::out_of_range_err, schema::{u16_schema, i8_schema}}, roland::types::enums::Pan};
 
 use super::super::numeric::Parameter;
 
@@ -121,6 +121,16 @@ pub enum Wave {
 pub enum Direction {
     Up,
     Down
+}
+
+/// Parameter(0-4) === Vowel(A, E, I, O, U)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
+pub enum Vowel {
+    A,
+    E,
+    I,
+    O,
+    U
 }
 
 /// Parameter(0-1) === Switch(False, True)
@@ -262,3 +272,23 @@ pub type Gain = Int<-15, 15>;
 pub type DampGain = Int<-36, 0>;
 pub type BoostGain = Int<-60, 4>;
 pub type Size = Int<1, 8>;
+
+// Parameter(0-127) === Pan(L64-63R)
+impl Into<Parameter> for Pan {
+    fn into(self) -> Parameter {
+        let v: u8 = self.into();
+        if v > 127 {
+            panic!("Invalid Parameter: {:?}", self);
+        }
+        Parameter(v as i16)
+    }
+}
+
+impl From<Parameter> for Pan {
+    fn from(value: Parameter) -> Self {
+        if value.0 < 0 || value.0 > 127 {
+            panic!("Invalid Pan: Parameter({})", value.0);
+        }
+        (value.0 as u8).into()
+    }
+}
