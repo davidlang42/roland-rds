@@ -11,6 +11,7 @@ use super::discrete::{LogFrequency, QFactor, FineFrequency, LinearFrequency, Fil
 use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode, ModWave};
 
 //TODO validate all fields of all Parameters types
+//TODO add tests for default chorus, mfx, reverb
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
 pub enum MfxType { // 0-255
     Thru(UnusedParameters<32>),
@@ -31,8 +32,8 @@ pub enum MfxType { // 0-255
     RingModulator(RingModulatorParameters),
     StepRingModulator(StepRingModulatorParameters),
     Tremolo(TremoloParameters),
-    AutoPan(UnusedParameters<32>), //TODO implement parameters
-    StepPan(UnusedParameters<32>), //TODO implement parameters
+    AutoPan(TremoloParameters),
+    StepPan(StepPanParameters),
     Slicer(UnusedParameters<32>), //TODO implement parameters
     Rotary(UnusedParameters<32>), //TODO implement parameters
     VkRotary(UnusedParameters<32>), //TODO implement parameters
@@ -1022,7 +1023,7 @@ impl Default for PhaserParameters {
             manual: UInt(64),
             rate_mode: RateMode::Note,
             rate_hz: LinearFrequency(0.5),
-            rate_note: NoteLength::DoubleNote,
+            rate_note: NoteLength::WholeNote,
             depth: UInt(40),
             polarity: PhaserPolarity::Synchro,
             resonance: UInt(40),
@@ -1068,7 +1069,7 @@ impl Default for StepPhaserParameters {
             manual: UInt(64),
             rate_mode: RateMode::Note,
             rate_hz: LinearFrequency(1.5),
-            rate_note: NoteLength::DoubleNoteTriplet,
+            rate_note: NoteLength::HalfNoteTriplet,
             depth: UInt(40),
             polarity: PhaserPolarity::Synchro,
             resonance: UInt(40),
@@ -1113,7 +1114,7 @@ impl Default for MultiStagePhaserParameters {
             manual: UInt(60),
             rate_mode: RateMode::Note,
             rate_hz: LinearFrequency(0.5),
-            rate_note: NoteLength::DoubleNote,
+            rate_note: NoteLength::WholeNote,
             depth: UInt(40),
             resonance: UInt(40),
             mix: UInt(127),
@@ -1244,7 +1245,7 @@ impl Default for StepRingModulatorParameters {
             step16: UInt(60),
             rate_mode: RateMode::Note,
             rate_hz: LinearFrequency(0.5),
-            rate_note: NoteLength::DoubleNote,
+            rate_note: NoteLength::WholeNote,
             attack: UInt(127),
             low_gain: Int(0),
             high_gain: Int(0),
@@ -1256,7 +1257,7 @@ impl Default for StepRingModulatorParameters {
 }
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
-pub struct TremoloParameters {
+pub struct TremoloParameters { //TODO rename
     mod_wave: ModWave,
     rate_mode: RateMode,
     rate_hz: LinearFrequency,
@@ -1282,6 +1283,69 @@ impl Default for TremoloParameters {
             depth: UInt(96),
             low_gain: Int(0),
             high_gain: Int(0),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct StepPanParameters {
+    step1: Pan,
+    step2: Pan,
+    step3: Pan,
+    step4: Pan,
+    step5: Pan,
+    step6: Pan,
+    step7: Pan,
+    step8: Pan,
+    step9: Pan,
+    step10: Pan,
+    step11: Pan,
+    step12: Pan,
+    step13: Pan,
+    step14: Pan,
+    step15: Pan,
+    step16: Pan,
+    rate_mode: RateMode,
+    rate_hz: LinearFrequency,
+    rate_note: NoteLength,
+    attack: Level,
+    input_sync_sw: Switch,
+    input_sync_threshold: Level,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 9>")]
+    #[validate]
+    unused_parameters: [Parameter; 9]
+}
+
+impl Default for StepPanParameters {
+    fn default() -> Self {
+        Self {
+            step1: Pan::Centre,
+            step2: Pan::Left(64),
+            step3: Pan::Centre,
+            step4: Pan::Left(64),
+            step5: Pan::Centre,
+            step6: Pan::Right(63),
+            step7: Pan::Centre,
+            step8: Pan::Right(63),
+            step9: Pan::Centre,
+            step10: Pan::Left(64),
+            step11: Pan::Right(63),
+            step12: Pan::Left(64),
+            step13: Pan::Centre,
+            step14: Pan::Right(63),
+            step15: Pan::Left(64),
+            step16: Pan::Right(63),
+            rate_mode: RateMode::Note,
+            rate_hz: LinearFrequency(0.25),
+            rate_note: NoteLength::DoubleNote,
+            attack: UInt(50),
+            input_sync_sw: Switch(false),
+            input_sync_threshold: UInt(50),
             level: UInt(127),
             unused_parameters: Default::default()
         }
