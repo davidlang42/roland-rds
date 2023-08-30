@@ -36,7 +36,7 @@ pub enum MfxType { // 0-255
     StepPan(StepPanParameters),
     Slicer(SlicerParameters),
     Rotary(RotaryParameters),
-    VkRotary(UnusedParameters<32>), //TODO implement parameters
+    VkRotary(VkRotaryParameters),
     Chorus(UnusedParameters<32>), //TODO implement parameters
     Flanger(UnusedParameters<32>), //TODO implement parameters
     StepFlanger(UnusedParameters<32>), //TODO implement parameters
@@ -1452,6 +1452,55 @@ impl Default for RotaryParameters {
             tweeter_accel: UInt(12),
             tweeter_level: UInt(120),
             separation: UInt(80),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct VkRotaryParameters {
+    speed: Speed,
+    brake: Switch,
+    woofer_slow_rate: LinearFrequency,
+    woofer_fast_rate: LinearFrequency,
+    woofer_trans_up: Level,
+    woofer_trans_down: Level,
+    woofer_level: Level,
+    tweeter_slow_rate: LinearFrequency,
+    tweeter_fast_rate: LinearFrequency,
+    tweeter_trans_up: Level,
+    tweeter_trans_down: Level,
+    tweeter_level: Level,
+    spread: UInt<0, 10>,
+    low_gain: Gain,
+    high_gain: Gain,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 16>")]
+    #[validate]
+    unused_parameters: [Parameter; 16]
+}
+
+impl Default for VkRotaryParameters {
+    fn default() -> Self {
+        Self {
+            speed: Speed::Slow,
+            brake: Switch(false),
+            woofer_slow_rate: LinearFrequency(0.6),
+            woofer_fast_rate: LinearFrequency(6.0),
+            woofer_trans_up: UInt(67),
+            woofer_trans_down: UInt(67),
+            woofer_level: UInt(127),
+            tweeter_slow_rate: LinearFrequency(0.7),
+            tweeter_fast_rate: LinearFrequency(7.0),
+            tweeter_trans_up: UInt(97),
+            tweeter_trans_down: UInt(97),
+            tweeter_level: UInt(127),
+            spread: UInt(10),
+            low_gain: Int(0),
+            high_gain: Int(6),
             level: UInt(127),
             unused_parameters: Default::default()
         }
