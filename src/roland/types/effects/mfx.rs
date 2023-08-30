@@ -8,7 +8,7 @@ use crate::roland::types::enums::Pan;
 use crate::roland::types::numeric::Parameter;
 use super::{UnusedParameters, Parameters};
 use super::discrete::{LogFrequency, QFactor, FineFrequency, LinearFrequency, FilterSlope, EvenPercent, StepLinearFrequency, Balance, LogMilliseconds};
-use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode, ModWave, SlicerMode, Speed, FilterType, OutputMode, AmpType};
+use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode, ModWave, SlicerMode, Speed, FilterType, OutputMode, AmpType, MicSetting, PreAmpType, PreAmpGain};
 
 //TODO validate all fields of all Parameters types
 //TODO add tests for default chorus, mfx, reverb
@@ -53,7 +53,7 @@ pub enum MfxType { // 0-255
     Distortion(DriveParameters<3, 50>), // 3=AmpType::ThreeStack
     VsOverdrive(VsDriveParameters<0>), // 0=AmpType::Small
     VsDistortion(VsDriveParameters<3>), // 3=AmpType::ThreeStack
-    GuitarAmpSimulator(UnusedParameters<32>), //TODO implement parameters
+    GuitarAmpSimulator(GuitarAmpSimulatorParameters),
     Compressor(UnusedParameters<32>), //TODO implement parameters
     Limiter(UnusedParameters<32>), //TODO implement parameters
     Gate(UnusedParameters<32>), //TODO implement parameters
@@ -970,7 +970,7 @@ impl Default for HumanizerParameters {
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
 pub struct SpeakerSimulatorParameters {
     speaker: SpeakerType,
-    mic_setting: Int<1, 3>,
+    mic_setting: MicSetting,
     mic_level: Level,
     direct_level: Level,
     level: Level,
@@ -2110,6 +2110,57 @@ impl<const DAI: i16> Default for VsDriveParameters<DAI> {
             amp_type: AmpType::from(Parameter(DAI)),
             low_gain: Int(0),
             high_gain: Int(0),
+            pan: Pan::Centre,
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct GuitarAmpSimulatorParameters {
+    pre_amp_sw: Switch,
+    pre_amp_type: PreAmpType,
+    pre_amp_volume: Level,
+    pre_amp_master: Level,
+    pre_amp_gain: PreAmpGain,
+    pre_amp_bass: Level,
+    pre_amp_middle: Level,
+    pre_amp_treble: Level,
+    pre_amp_presence: Level,
+    pre_amp_bright: Switch,
+    speaker_sw: Switch,
+    speaker_type: SpeakerType,
+    mic_setting: MicSetting,
+    mic_level: Level,
+    direct_level: Level,
+    pan: Pan,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 15>")]
+    #[validate]
+    unused_parameters: [Parameter; 15]
+}
+
+impl Default for GuitarAmpSimulatorParameters {
+    fn default() -> Self {
+        Self { 
+            pre_amp_sw: Switch(true),
+            pre_amp_type: PreAmpType::CleanTwin,
+            pre_amp_volume: UInt(80),
+            pre_amp_master: UInt(100),
+            pre_amp_gain: PreAmpGain::Middle,
+            pre_amp_bass: UInt(64),
+            pre_amp_middle: UInt(64),
+            pre_amp_treble: UInt(64),
+            pre_amp_presence: UInt(0),
+            pre_amp_bright: Switch(false),
+            speaker_sw: Switch(true),
+            speaker_type: SpeakerType::BuiltIn1,
+            mic_setting: Int(2),
+            mic_level: UInt(127),
+            direct_level: UInt(0),
             pan: Pan::Centre,
             level: UInt(127),
             unused_parameters: Default::default()

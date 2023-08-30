@@ -221,6 +221,33 @@ pub enum AmpType {
     ThreeStack
 }
 
+/// Parameter(0-13) === PreAmpType(Jc120 - Fuzz)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
+pub enum PreAmpType {
+    Jc120,
+    CleanTwin,
+    MatchDrive,
+    BgLead,
+    Ms19591,
+    Ms19592,
+    Ms19591_2,
+    SldnLead,
+    Metal5150,
+    MetalLead,
+    Od1,
+    Od2Turbo,
+    Distortion,
+    Fuzz
+}
+
+/// Parameter(0-2) === PreAmpGain(Low, Middle, High)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
+pub enum PreAmpGain {
+    Low,
+    Middle,
+    High
+}
+
 /// Parameter(0-1) === Switch(False, True)
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct Switch(pub bool);
@@ -360,6 +387,7 @@ pub type Gain = Int<-15, 15>;
 pub type DampGain = Int<-36, 0>;
 pub type BoostGain = Int<-60, 4>;
 pub type Size = Int<1, 8>;
+pub type MicSetting = Int<1, 3>;
 
 // Parameter(0-127) === Pan(L64-63R)
 impl Into<Parameter> for Pan {
