@@ -10,6 +10,7 @@ use validator::Validate;
 #[test_case("examples/rd300nx/BLANK.RDS")]
 #[test_case("examples/rd300nx/BMC-1.RDS")]
 #[test_case("examples/rd300nx/BMC-2.RDS")]
+#[test_case("examples/rd300nx/C1-MAX.RDS")]
 #[test_case("examples/rd300nx/CGS-2014.RDS")]
 #[test_case("examples/rd300nx/CGS-2017-v1.RDS")]
 #[test_case("examples/rd300nx/CGS-20170704.RDS")]
