@@ -1,12 +1,12 @@
 use std::fmt::Debug;
 
-use schemars::{schema::{Schema, SchemaObject, InstanceType, NumberValidation, SubschemaValidation, ObjectValidation}, Set, Map};
+use schemars::{schema::{Schema, SchemaObject, InstanceType, NumberValidation, SubschemaValidation, ObjectValidation, Metadata}, Set, Map, JsonSchema};
 use serde_json::Value;
+use serde::Serialize;
 use strum::IntoEnumIterator;
 
 pub fn one_of_schema(sub_schemas: Vec<Schema>) -> Schema {
     SchemaObject {
-        instance_type: Some(InstanceType::Null.into()),
         subschemas: Some(Box::new(SubschemaValidation {
             one_of: Some(sub_schemas),
             ..Default::default()
@@ -68,7 +68,18 @@ pub fn enum_schema(strings: Vec<String>) -> Schema {
     }.into()
 }
 
+pub fn single_property_schema_of<T: Default + Serialize + JsonSchema>(property: &str, gen: &mut schemars::gen::SchemaGenerator) -> Schema {
+    let mut map = serde_json::Map::new();
+    map.insert(property.to_string(), serde_json::to_value(T::default()).unwrap());
+    let value = Value::Object(map);
+    _single_property_schema(property, gen.subschema_for::<T>(), Some(value))
+}
+
 pub fn single_property_schema(property: &str, schema: Schema) -> Schema {
+    _single_property_schema(property, schema, None)
+}
+
+fn _single_property_schema(property: &str, schema: Schema, default: Option<Value>) -> Schema {
     let mut required = Set::new();
     required.insert(property.into());
     let mut properties = Map::new();
@@ -78,6 +89,11 @@ pub fn single_property_schema(property: &str, schema: Schema) -> Schema {
         object: Some(Box::new(ObjectValidation {
             required,
             properties,
+            additional_properties: Some(Box::new(Schema::Bool(false))),
+            ..Default::default()
+        })),
+        metadata: Some(Box::new(Metadata {
+            default,
             ..Default::default()
         })),
         ..Default::default()
