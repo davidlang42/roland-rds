@@ -63,7 +63,7 @@ pub enum MfxType { // 0-255
     ModulationDelay(ModulationDelayParameters),
     ThreeTapPanDelay(ThreeTapPanDelayParameters),
     FourTapPanDelay(FourTapPanDelayParameters),
-    MultiTapDelay(UnusedParameters<32>), //TODO implement parameters
+    MultiTapDelay(MultiTapDelayParameters),
     ReverseDelay(UnusedParameters<32>), //TODO implement parameters
     ShuffleDelay(UnusedParameters<32>), //TODO implement parameters
     Delay3D(UnusedParameters<32>), //TODO implement parameters
@@ -2546,6 +2546,75 @@ impl Default for FourTapPanDelayParameters {
             delay_4_note: NoteLength::EighthNote,
             delay_1_feedback: EvenPercent(20),
             hf_damp: LogFrequencyOrByPass::ByPass,
+            delay_1_level: UInt(127),
+            delay_2_level: UInt(127),
+            delay_3_level: UInt(127),
+            delay_4_level: UInt(127),
+            low_gain: Int(0),
+            high_gain: Int(0),
+            balance: Balance(10),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct MultiTapDelayParameters {
+    delay_1_mode: DelayMode,
+    delay_1_ms: LinearMilliseconds<2600>,
+    delay_1_note: NoteLength,
+    delay_2_mode: DelayMode,
+    delay_2_ms: LinearMilliseconds<2600>,
+    delay_2_note: NoteLength,
+    delay_3_mode: DelayMode,
+    delay_3_ms: LinearMilliseconds<2600>,
+    delay_3_note: NoteLength,
+    delay_4_mode: DelayMode,
+    delay_4_ms: LinearMilliseconds<2600>,
+    delay_4_note: NoteLength,
+    delay_1_feedback: EvenPercent,
+    hf_damp: LogFrequencyOrByPass<200, 8000>,
+    delay_1_pan: Pan,
+    delay_2_pan: Pan,
+    delay_3_pan: Pan,
+    delay_4_pan: Pan,
+    delay_1_level: Level,
+    delay_2_level: Level,
+    delay_3_level: Level,
+    delay_4_level: Level,
+    low_gain: Gain,
+    high_gain: Gain,
+    balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 6>")]
+    #[validate]
+    unused_parameters: [Parameter; 6]
+}
+
+impl Default for MultiTapDelayParameters {
+    fn default() -> Self {
+        Self {
+            delay_1_mode: DelayMode::Note,
+            delay_1_ms: UInt(1200),
+            delay_1_note: NoteLength::HalfNote,
+            delay_2_mode: DelayMode::Note,
+            delay_2_ms: UInt(900),
+            delay_2_note: NoteLength::DottedQuarterNote,
+            delay_3_mode: DelayMode::Note,
+            delay_3_ms: UInt(600),
+            delay_3_note: NoteLength::QuarterNote,
+            delay_4_mode: DelayMode::Note,
+            delay_4_ms: UInt(300),
+            delay_4_note: NoteLength::EighthNote,
+            delay_1_feedback: EvenPercent(20),
+            hf_damp: LogFrequencyOrByPass::ByPass,
+            delay_1_pan: Pan::Left(64),
+            delay_2_pan: Pan::Right(63),
+            delay_3_pan: Pan::Left(32),
+            delay_4_pan: Pan::Right(32),
             delay_1_level: UInt(127),
             delay_2_level: UInt(127),
             delay_3_level: UInt(127),
