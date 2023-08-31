@@ -1,4 +1,3 @@
-
 use proc_macro2::Span;
 use syn::{Field, Data, Type, DataStruct, Fields, FieldsNamed, TypeArray, Expr, ExprLit, Lit, Generics, GenericParam, LifetimeParam, Lifetime};
 

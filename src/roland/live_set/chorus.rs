@@ -17,6 +17,7 @@ pub struct Chorus {
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<2>::zero")]
     unused1: Bits<2>,
     output_select: OutputSelect,
+    // [Parameter; 20]
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<1>::zero")]
     unused: Bits<1>
 }

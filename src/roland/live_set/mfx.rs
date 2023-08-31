@@ -25,6 +25,7 @@ pub struct Mfx {
     padding4: Bits<14>,
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<26>::zero")]
     unused2: Bits<26>, // this contains the MFX control choice (which depends on type, so should probably be part of mfx_type)
+    // [Parameter; 32]
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<3>::zero")]
     unused3: Bits<3>
 }
