@@ -22,20 +22,18 @@ pub trait DiscreteValues<T: PartialEq + Display, const OFFSET: i16> {
 #[derive(Debug, Copy, Clone, DiscreteValuesSerialization)]
 pub struct LogFrequency<const MIN: u16, const MAX: u16>(pub u16);
 
-impl<const L: u16, const H: u16> LogFrequency<L, H> {
+impl<const MIN: u16, const MAX: u16> LogFrequency<MIN, MAX> {
     const PRE_VALUES: [u16; 4] = [16, 20, 25, 32];
     const BASE_VALUES: [u16; 10] = [40, 50, 63, 80, 100, 125, 160, 200, 250, 315];
-    const MIN: u16 = L;
-    const MAX: u16 = H;
 }
 
-impl<const L: u16, const H: u16> DiscreteValues<u16, 0> for LogFrequency<L, H> {
+impl<const MIN: u16, const MAX: u16> DiscreteValues<u16, 0> for LogFrequency<MIN, MAX> {
     fn values() -> Vec<u16> {
         let mut factor = 1;
         let mut v = Vec::new();
         for pre_value in Self::PRE_VALUES {
-            if pre_value >= Self::MIN {
-                if pre_value <= Self::MAX {
+            if pre_value >= MIN {
+                if pre_value <= MAX {
                     v.push(pre_value);
                 } else {
                     break;
@@ -45,8 +43,8 @@ impl<const L: u16, const H: u16> DiscreteValues<u16, 0> for LogFrequency<L, H> {
         loop {
             for base_value in Self::BASE_VALUES {
                 let current = base_value * factor;
-                if current >= Self::MIN {
-                    if current <= Self::MAX {
+                if current >= MIN {
+                    if current <= MAX {
                         v.push(current);
                     } else {
                         return v;
