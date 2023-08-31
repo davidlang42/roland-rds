@@ -31,8 +31,8 @@ pub enum MfxType { // 0-255
     InfinitePhaser(InfinitePhaserParameters),
     RingModulator(RingModulatorParameters),
     StepRingModulator(StepRingModulatorParameters),
-    Tremolo(TremoloParameters),
-    AutoPan(TremoloParameters),
+    Tremolo(CyclicalParameters),
+    AutoPan(CyclicalParameters),
     StepPan(StepPanParameters),
     Slicer(SlicerParameters),
     Rotary(RotaryParameters),
@@ -1257,7 +1257,7 @@ impl Default for StepRingModulatorParameters {
 }
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
-pub struct TremoloParameters { //TODO rename
+pub struct CyclicalParameters {
     mod_wave: ModWave,
     rate_mode: RateMode,
     rate_hz: LinearFrequency,
@@ -1273,7 +1273,7 @@ pub struct TremoloParameters { //TODO rename
     unused_parameters: [Parameter; 24]
 }
 
-impl Default for TremoloParameters {
+impl Default for CyclicalParameters {
     fn default() -> Self {
         Self {
             mod_wave: ModWave::Triangle,
