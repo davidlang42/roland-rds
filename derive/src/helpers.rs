@@ -1,5 +1,6 @@
 
-use syn::{Field, Data, Type, DataStruct, Fields, FieldsNamed, TypeArray, Expr, ExprLit, Lit};
+use proc_macro2::Span;
+use syn::{Field, Data, Type, DataStruct, Fields, FieldsNamed, TypeArray, Expr, ExprLit, Lit, Generics, GenericParam, LifetimeParam, Lifetime};
 
 pub fn get_named_fields(data: &Data) -> Option<Vec<&Field>> {
     if let Data::Struct(DataStruct { fields: Fields::Named(FieldsNamed { named, .. }), ..}) = data {
@@ -15,4 +16,10 @@ pub fn get_array_len(ty: &Type) -> Option<usize> {
     } else {
         None
     }
+}
+
+pub fn insert_lifetime_param(original: &Generics, symbol: &str) -> Generics {
+    let mut generics = original.clone();
+    generics.params.insert(0, GenericParam::Lifetime(LifetimeParam::new(Lifetime::new(symbol, Span::call_site()))));
+    generics
 }

@@ -6,7 +6,6 @@ use crate::json::{schema::enum_schema, type_name_pretty};
 use super::super::numeric::Parameter;
 use serde::{Serialize, Deserialize, de};
 
-//TODO refactor DiscreteValues to make use of derive macros
 pub trait DiscreteValues<T: PartialEq + Display, const OFFSET: i16> {
     const OFFSET: i16 = OFFSET;
 
@@ -36,7 +35,7 @@ pub trait DiscreteValues<T: PartialEq + Display, const OFFSET: i16> {
 }
 
 /// Parameter(0-16) === LogFrequency(200-8000Hz)
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, DiscreteValuesSerialization)]
 pub struct LogFrequency<const MIN: u16, const MAX: u16>(pub u16);
 
 impl<const L: u16, const H: u16> LogFrequency<L, H> {
@@ -76,53 +75,6 @@ impl<const L: u16, const H: u16> DiscreteValues<u16, 0> for LogFrequency<L, H> {
 
     fn format(value: u16) -> String {
         format!("{}Hz", value)
-    }
-}
-
-impl<const L: u16, const H: u16> JsonSchema for LogFrequency<L, H> {
-    fn schema_name() -> String {
-        type_name_pretty::<Self>().into()
-    }
-
-    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-        enum_schema(Self::values().into_iter().map(Self::format).collect())
-    }
-}
-
-impl<const L: u16, const H: u16> Serialize for LogFrequency<L, H> {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where S: serde::Serializer {
-        Self::format(self.0).serialize(serializer)
-    }
-}
-
-impl<'de, const L: u16, const H: u16> Deserialize<'de> for LogFrequency<L, H> {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where D: serde::Deserializer<'de> {
-        let value: Value = Deserialize::deserialize(deserializer)?;
-        match value {
-            Value::String(s) => {
-                for v in Self::values().into_iter() {
-                    if s == Self::format(v) {
-                        return Ok(Self(v));
-                    }
-                }
-                Err(de::Error::custom(format!("String is not a valid discrete value: {}", s)))
-            }
-            _ => Err(de::Error::custom(format!("Expected string")))
-        }
-    }
-}
-
-impl<const L: u16, const H: u16> From<Parameter> for LogFrequency<L, H> {
-    fn from(parameter: Parameter) -> Self {
-        Self(Self::value_from(parameter))
-    }
-}
-
-impl<const L: u16, const H: u16> Into<Parameter> for LogFrequency<L, H> {
-    fn into(self) -> Parameter {
-        Self::into_parameter(self.0)
     }
 }
 
