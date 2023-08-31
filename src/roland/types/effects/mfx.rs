@@ -91,7 +91,7 @@ pub enum MfxType { // 0-255
     EnhancerDelay(EnhancerDelayParameters),
     ChorusDelay(ChorusDelayParameters),
     FlangerDelay(FlangerDelayParameters),
-    ChorusFlanger(UnusedParameters<32>), //TODO implement parameters
+    ChorusFlanger(ChorusFlangerParameters),
     UnusedVrChorus(UnusedParameters<32>), //RD700NX only
     UnusedVrTremolo(UnusedParameters<32>), //RD700NX only
     UnusedVrAutoWah(UnusedParameters<32>), //RD700NX only
@@ -3638,6 +3638,51 @@ impl Default for FlangerDelayParameters {
             delay_feedback: EvenPercent(20),
             delay_hf_damp: LogFrequencyOrByPass::ByPass,
             delay_balance: Balance(10),
+            level: UInt(100),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct ChorusFlangerParameters {
+    chorus_pre_delay: LogMilliseconds,
+    chorus_rate_mode: RateMode,
+    chorus_rate_hz: LinearFrequency,
+    chorus_rate_note: NoteLength,
+    chorus_depth: Level,
+    chorus_balance: Balance,
+    flanger_pre_delay: LogMilliseconds,
+    flanger_rate_mode: RateMode,
+    flanger_rate_hz: LinearFrequency,
+    flanger_rate_note: NoteLength,
+    flanger_depth: Level,
+    flanger_feedback: Feedback,
+    flanger_balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 18>")]
+    #[validate]
+    unused_parameters: [Parameter; 18]
+}
+
+impl Default for ChorusFlangerParameters {
+    fn default() -> Self {
+        Self {
+            chorus_pre_delay: LogMilliseconds(2.0),
+            chorus_rate_mode: RateMode::Hertz,
+            chorus_rate_hz: LinearFrequency(0.5),
+            chorus_rate_note: NoteLength::WholeNote,
+            chorus_depth: UInt(20),
+            chorus_balance: Balance(50),
+            flanger_pre_delay: LogMilliseconds(2.0),
+            flanger_rate_mode: RateMode::Note,
+            flanger_rate_hz: LinearFrequency(0.5),
+            flanger_rate_note: NoteLength::WholeNote,
+            flanger_depth: UInt(40),
+            flanger_feedback: EvenPercent(60),
+            flanger_balance: Balance(50),
             level: UInt(100),
             unused_parameters: Default::default()
         }
