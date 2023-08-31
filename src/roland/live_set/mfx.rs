@@ -4,9 +4,8 @@ use schemars::JsonSchema;
 use validator::Validate;
 
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
-use crate::json::{Json, StructuredJson, StructuredJsonError, serialize_default_terminated_array};
-use crate::json::validation::valid_boxed_elements;
-use crate::roland::types::enums::MfxType;
+use crate::json::{Json, StructuredJson, StructuredJsonError};
+use crate::roland::types::effects::mfx::MfxType;
 use crate::roland::types::numeric::Parameter;
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
@@ -15,7 +14,7 @@ pub struct Mfx {
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<8>::zero")]
     unused1: Bits<8>,
     #[validate]
-    mfx_type: MfxType,
+    pub mfx_type: MfxType,
     #[serde(skip_serializing_if="Bits::is_unit", default="Bits::<8>::unit")]
     padding1: Bits<8>,
     #[serde(skip_serializing_if="Bits::is_unit", default="Bits::<14>::unit")]
@@ -25,12 +24,8 @@ pub struct Mfx {
     #[serde(skip_serializing_if="Bits::is_unit", default="Bits::<14>::unit")]
     padding4: Bits<14>,
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<26>::zero")]
-    unused2: Bits<26>,
-    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
-    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
-    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 32>")]
-    #[validate(custom = "valid_boxed_elements")]
-    parameters: Box<[Parameter; 32]>,
+    unused2: Bits<26>, // this contains the MFX control choice (which depends on type, so should probably be part of mfx_type)
+    // [Parameter; 32]
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<3>::zero")]
     unused3: Bits<3>
 }
@@ -40,14 +35,14 @@ impl Bytes<76> for Mfx {
         BitStream::write_fixed(|bs| {
             bs.set_bool(self.enable);
             bs.set_bits(&self.unused1);
-            bs.set_u8::<8>(self.mfx_type.into(), 0, 255)?;
+            bs.set_u8::<8>(self.mfx_type.number(), 0, 255)?;
             bs.set_bits(&self.padding1);
             bs.set_bits(&self.padding2);
             bs.set_bits(&self.padding3);
             bs.set_bits(&self.padding4);
             bs.set_bits(&self.unused2);
-            for i in 0..self.parameters.len() {
-                bs.set_u16::<16>(self.parameters[i].into(), 12768, 52768)?;
+            for p in self.mfx_type.parameters() {
+                bs.set_u16::<16>(p.into(), 12768, 52768)?;
             }
             bs.set_bits(&self.unused3);
             Ok(())
@@ -58,7 +53,7 @@ impl Bytes<76> for Mfx {
         BitStream::read_fixed(bytes, |bs| {
             let enable = bs.get_bool();
             let unused1 = bs.get_bits();
-            let mfx_type = bs.get_u8::<8>(0, 255)?.into();
+            let type_number = bs.get_u8::<8>(0, 255)?.into();
             let padding1 = bs.get_bits();
             let padding2 = bs.get_bits();
             let padding3 = bs.get_bits();
@@ -71,13 +66,12 @@ impl Bytes<76> for Mfx {
             Ok(Self {
                 enable,
                 unused1,
-                mfx_type,
+                mfx_type: MfxType::from(type_number, parameters),
                 padding1,
                 padding2,
                 padding3,
                 padding4,
                 unused2,
-                parameters: Box::new(parameters),
                 unused3: bs.get_bits()
             })
         })
@@ -104,7 +98,7 @@ impl Json for Mfx {
 
 impl Mfx {
     fn active(&self) -> bool {
-        self.enable && self.mfx_type != MfxType::Thru
+        self.enable && !self.mfx_type.is_off()
     }
 }
 
@@ -113,15 +107,15 @@ impl Mfx {
         if !a_layer0_active {
             None // if layer0 wasn't on to begin with then mfx can't affect any tone which needs remaining
         } else if a.active() && !b.active() {
-            Some(format!("Mfx ({:?}) turns OFF", a.mfx_type))
+            Some(format!("Mfx ({}) turns OFF", a.mfx_type.name()))
         } else if !a.active() && b.active() {
-            Some(format!("Mfx ({:?}) turns ON", b.mfx_type))
+            Some(format!("Mfx ({}) turns ON", b.mfx_type.name()))
         } else if !a.active() && !b.active() {
             None // other changes to Mfx are irrelevant if Mfx is off 
-        } else if a.mfx_type != b.mfx_type {
-            Some(format!("Mfx ({:?}) changes to {:?}", a.mfx_type, b.mfx_type))
-        } else if a.parameters != b.parameters {
-            Some(format!("Mfx ({:?}) parameters change", a.mfx_type))
+        } else if a.mfx_type.number() != b.mfx_type.number() {
+            Some(format!("Mfx ({}) changes to {}", a.mfx_type.name(), b.mfx_type.name()))
+        } else if a.mfx_type.parameters() != b.mfx_type.parameters() {
+            Some(format!("Mfx ({}) parameters change", a.mfx_type.name()))
         } else {
             None
         }

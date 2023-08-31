@@ -213,7 +213,7 @@ impl Validate for Pan {
 
 impl JsonSchema for Pan {
     fn schema_name() -> String {
-        type_name_pretty::<Pan>().into()
+        type_name_pretty::<Self>().into()
     }
 
     fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
@@ -444,7 +444,7 @@ impl Validate for KeyTouchVelocity {
 
 impl JsonSchema for KeyTouchVelocity {
     fn schema_name() -> String {
-        type_name_pretty::<KeyTouchVelocity>().into()
+        type_name_pretty::<Self>().into()
     }
 
     fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
@@ -561,7 +561,7 @@ impl Validate for SoundFocusType {
 
 impl JsonSchema for SoundFocusType {
     fn schema_name() -> String {
-        type_name_pretty::<SoundFocusType>().into()
+        type_name_pretty::<Self>().into()
     }
 
     fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
@@ -569,138 +569,6 @@ impl JsonSchema for SoundFocusType {
             enum_except_one_schema::<SoundFocusType>("Other"),
             single_property_schema("Other", u8_schema(Self::MIN_OTHER, Self::MAX_OTHER))
         ])
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, EnumIter, JsonSchema)]
-pub enum MfxType { // 0-255
-    Thru,
-    Equalizer,
-    Spectrum,
-    Isolator,
-    LowBoost,
-    SuperFilter,
-    StepFilter,
-    Enhancer,
-    AutoWah,
-    Humanizer,
-    SpeakerSimulator,
-    Phaser,
-    StepPhaser,
-    MultiStagePhaser,
-    InfinitePhaser,
-    RingModulator,
-    StepRingModulator,
-    Tremolo,
-    AutoPan,
-    StepPan,
-    Slicer,
-    Rotary,
-    VkRotary,
-    Chorus,
-    Flanger,
-    StepFlanger,
-    HexaChorus,
-    TremoloChorus,
-    SpaceD,
-    Chorus3D,
-    Flanger3D,
-    StepFlanger3D,
-    TwoBandChorus,
-    TwoBandFlanger,
-    TwoBandStepFlanger,
-    Overdrive,
-    Distortion,
-    VsOverdrive,
-    VsDistortion,
-    GuitarAmpSimulator,
-    Compressor,
-    Limiter,
-    Gate,
-    Delay,
-    LongDelay,
-    SerialDelay,
-    ModulationDelay,
-    ThreeTapPanDelay,
-    FourTapPanDelay,
-    MultiTapDelay,
-    ReverseDelay,
-    ShuffleDelay,
-    Delay3D,
-    TimeCtrlDelay,
-    LongTimeCtrlDelay,
-    TapeEcho,
-    LofiNoise,
-    LofiCompress,
-    LofiRadio,
-    Telephone,
-    Photograph,
-    PitchShifter,
-    TwoVoicePitchShifter,
-    StepPitchShifter,
-    Reverb,
-    GatedReverb,
-    ChorusOverdrive,
-    OverdriveFlanger,
-    OverdriveDelay,
-    DistortionChorus,
-    DistortionFlanger,
-    DistortionDelay,
-    EnhancerChorus,
-    EnhancerFlanger,
-    EnhancerDelay,
-    ChorusDelay,
-    FlangerDelay,
-    ChorusFlanger,
-    UnusedVrChorus, //RD700NX only
-    UnusedVrTremolo, //RD700NX only
-    UnusedVrAutoWah, //RD700NX only
-    UnusedVrPhaser, //RD700NX only
-    UnusedOrganMulti, //RD700NX only
-    UnusedLinedrive, //RD700NX only
-    UnusedSmallPhaser, //RD700NX only
-    SympatheticResonance, //RD300NX only
-    Other(u8)
-}
-
-impl From<u8> for MfxType {
-    fn from(value: u8) -> Self {
-        if value <= 85 {
-            Self::iter().nth(value as usize).unwrap()
-        } else {
-            Self::Other(value)
-        }
-    }
-}
-
-impl Into<u8> for MfxType {
-    fn into(self) -> u8 {
-        if let Self::Other(value) = self {
-            value
-        } else {
-            Self::iter().position(|s| s == self).unwrap() as u8
-        }
-    }
-}
-
-impl Default for MfxType {
-    fn default() -> Self {
-        Self::from(0)
-    }
-}
-
-impl Validate for MfxType {
-    fn validate(&self) -> Result<(), validator::ValidationErrors> {
-        match self {
-            Self::UnusedVrChorus => Err(unused_by_rd300nx_err("0", self)),
-            Self::UnusedVrTremolo => Err(unused_by_rd300nx_err("0", self)),
-            Self::UnusedVrAutoWah => Err(unused_by_rd300nx_err("0", self)),
-            Self::UnusedVrPhaser => Err(unused_by_rd300nx_err("0", self)),
-            Self::UnusedOrganMulti => Err(unused_by_rd300nx_err("0", self)),
-            Self::UnusedLinedrive => Err(unused_by_rd300nx_err("0", self)),
-            Self::UnusedSmallPhaser => Err(unused_by_rd300nx_err("0", self)),
-            _ => Ok(())
-        }
     }
 }
 
@@ -827,7 +695,7 @@ impl Validate for VoiceReserve {
 
 impl JsonSchema for VoiceReserve {
     fn schema_name() -> String {
-        type_name_pretty::<VoiceReserve>().into()
+        type_name_pretty::<Self>().into()
     }
 
     fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
@@ -1027,7 +895,7 @@ impl Default for PedalFunction {
 
 impl JsonSchema for PedalFunction {
     fn schema_name() -> String {
-        type_name_pretty::<PedalFunction>().into()
+        type_name_pretty::<Self>().into()
     }
 
     fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
@@ -1118,7 +986,7 @@ impl Validate for SliderFunction {
 
 impl JsonSchema for SliderFunction {
     fn schema_name() -> String {
-        type_name_pretty::<SliderFunction>().into()
+        type_name_pretty::<Self>().into()
     }
 
     fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {

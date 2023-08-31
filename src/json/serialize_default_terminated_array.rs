@@ -4,7 +4,7 @@ use serde::{de, Serialize, Deserialize};
 
 use super::type_name_pretty;
 
-pub fn deserialize<'de, D, T: Deserialize<'de> + Debug + Default, const N: usize>(deserializer: D) -> Result<Box<[T; N]>, D::Error> 
+pub fn deserialize<'de, D, T: Deserialize<'de> + Debug + Default, const N: usize>(deserializer: D) -> Result<[T; N], D::Error> 
 where D: serde::Deserializer<'de>
 {
     let mut vec = Vec::<T>::deserialize(deserializer)?;
@@ -14,11 +14,11 @@ where D: serde::Deserializer<'de>
         while vec.len() < N {
             vec.push(T::default());
         }
-        Ok(Box::new(vec.try_into().unwrap()))
+        Ok(vec.try_into().unwrap())
     }
 }
 
-pub fn serialize<S, T: Serialize + Default + PartialEq, const N: usize>(t: &Box<[T; N]>, serializer: S) -> Result<S::Ok, S::Error>
+pub fn serialize<S, T: Serialize + Default + PartialEq, const N: usize>(t: &[T; N], serializer: S) -> Result<S::Ok, S::Error>
 where S: serde::Serializer
 {
     let mut vec: Vec<&T> = t.iter().collect();

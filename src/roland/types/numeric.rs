@@ -9,8 +9,8 @@ pub struct Parameter(pub i16); // 12768-52768 (-20000 - +20000)
 
 impl Parameter {
     const ZERO: u16 = 32768;
-    const MIN: i16 = -20000;
-    const MAX: i16 = 20000;
+    pub const MIN: i16 = -20000;
+    pub const MAX: i16 = 20000;
 }
 
 impl From<u16> for Parameter {
@@ -41,7 +41,7 @@ impl Default for Parameter {
 
 impl JsonSchema for Parameter {
     fn schema_name() -> String {
-        type_name_pretty::<Parameter>().into()
+        type_name_pretty::<Self>().into()
     }
 
     fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
@@ -94,7 +94,7 @@ impl<const O: u8, const L: u8, const H: u8> Default for OffsetU8<O, L, H> {
 
 impl<const O: u8, const L: u8, const H: u8> JsonSchema for OffsetU8<O, L, H> {
     fn schema_name() -> String {
-        type_name_pretty::<OffsetU8<O, L, H>>().into()
+        type_name_pretty::<Self>().into()
     }
 
     fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
@@ -141,7 +141,7 @@ impl Default for OneIndexedU16 {
 
 impl JsonSchema for OneIndexedU16 {
     fn schema_name() -> String {
-        type_name_pretty::<OneIndexedU16>().into()
+        type_name_pretty::<Self>().into()
     }
 
     fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
@@ -186,7 +186,7 @@ impl<const M: u8> Default for OneIndexedU8<M> {
 
 impl<const M: u8> JsonSchema for OneIndexedU8<M> {
     fn schema_name() -> String {
-        type_name_pretty::<OneIndexedU8::<M>>().into()
+        type_name_pretty::<Self>().into()
     }
 
     fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
@@ -231,7 +231,7 @@ impl<const O: u16, const L: u16, const H: u16> Default for Offset1Dp<O, L, H> {
 
 impl<const O: u16, const L: u16, const H: u16> JsonSchema for Offset1Dp<O, L, H> {
     fn schema_name() -> String {
-        type_name_pretty::<Offset1Dp<O, L, H>>().into()
+        type_name_pretty::<Self>().into()
     }
 
     fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {

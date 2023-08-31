@@ -112,7 +112,7 @@ impl Validate for ToneNumber {
 
 impl JsonSchema for ToneNumber {
     fn schema_name() -> String {
-        type_name_pretty::<ToneNumber>().into()
+        type_name_pretty::<Self>().into()
     }
 
     fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
@@ -220,7 +220,7 @@ impl<'de> Deserialize<'de> for PianoToneNumber {
 
 impl JsonSchema for PianoToneNumber {
     fn schema_name() -> String {
-        type_name_pretty::<PianoToneNumber>().into()
+        type_name_pretty::<Self>().into()
     }
 
     fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
