@@ -309,3 +309,23 @@ fn validate(rds_filename: &str) -> Result<(), Box<dyn Error>> {
     assert!(rds.validate().is_ok());
     Ok(())
 }
+
+#[test_case("examples/rd300nx/MFX0-59.RDS", 60)]
+#[test_case("examples/rd300nx/MFX60-78.RDS", 19)]
+fn mfx_default_values(rds_filename: &str, user_set_count: usize) -> Result<(), Box<dyn Error>> {
+    let mut rds_bytes = Vec::new();
+    let mut f = fs::File::options().read(true).open(&rds_filename)?;
+    f.read_to_end(&mut rds_bytes)?;
+    let rds = rd300nx::RD300NX::from_bytes(rds_bytes.try_into().unwrap())?;
+    for ls in rds.user_sets.iter().take(user_set_count) {
+        let found = &ls.mfx.mfx_type;
+        let expected = found.default();
+        let f = found.parameters();
+        let e = expected.parameters();
+        assert_eq!(f.len(), e.len());
+        for i in 0..f.len() {
+            assert_eq!(f[i], e[i], "MFX{}({}), Parameter #{}", found.number(), found.name(), i + 1);
+        }
+    }
+    Ok(())
+}

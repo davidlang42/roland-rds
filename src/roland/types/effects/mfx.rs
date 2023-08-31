@@ -7,11 +7,10 @@ use crate::json::validation::unused_by_rd300nx_err;
 use crate::roland::types::enums::Pan;
 use crate::roland::types::numeric::Parameter;
 use super::{UnusedParameters, Parameters};
-use super::discrete::{LogFrequency, QFactor, FineFrequency, LinearFrequency, FilterSlope, EvenPercent, StepLinearFrequency, Balance, LogMilliseconds, LogFrequencyOrByPass, HumFrequency, Feedback, ByPassOrLogFrequency, LogFrequencyOrByPassOffByOne};
-use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode, ModWave, SlicerMode, Speed, FilterType, OutputMode, AmpType, MicSetting, PreAmpType, PreAmpGain, CompressionRatio, PostGain, GateMode, DelayMode, LinearMilliseconds, PhaseType, FeedbackMode, TapeHeads, LofiType, NoiseType, DiscType, DiscTypeWithRandom, Semitones, ReverbOnlyCharacter, GateType};
+use super::discrete::{LogFrequency, QFactor, FineFrequency, LinearFrequency, FilterSlope, EvenPercent, StepLinearFrequency, Balance, LogMilliseconds, LogFrequencyOrByPass, HumFrequency, Feedback, ByPassOrLogFrequency, LogFrequencyOrByPassOffByOne, Phase, GateTime};
+use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode, ModWave, SlicerMode, Speed, FilterType, OutputMode, AmpType, MicSetting, PreAmpType, PreAmpGain, CompressionRatio, PostGain, GateMode, DelayMode, LinearMilliseconds, PhaseType, FeedbackMode, TapeHeads, LofiType, NoiseType, DiscType, DiscTypeWithRandom, Semitones, ReverbOnlyCharacter, GateType};
 
 //TODO validate all fields of all Parameters types
-//TODO add tests for default chorus, mfx, reverb
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
 pub enum MfxType { // 0-255
     Thru(UnusedParameters<32>),
@@ -80,10 +79,10 @@ pub enum MfxType { // 0-255
     StepPitchShifter(StepPitchShifterParameters),
     Reverb(ReverbParameters),
     GatedReverb(GatedReverbParameters),
-    OverdriveChorus(DriveChorusParameters<80>),
-    OverdriveFlanger(DriveFlangerParameters<80>),
-    OverdriveDelay(DriveDelayParameters<80>),
-    DistortionChorus(DriveChorusParameters<127>),
+    OverdriveChorus(DriveChorusParameters<64, 80>),
+    OverdriveFlanger(DriveFlangerParameters<64>),
+    OverdriveDelay(DriveDelayParameters<64>),
+    DistortionChorus(DriveChorusParameters<127, 70>),
     DistortionFlanger(DriveFlangerParameters<127>),
     DistortionDelay(DriveDelayParameters<127>),
     EnhancerChorus(EnhancerChorusParameters),
@@ -472,6 +471,99 @@ impl MfxType {
         }
     }
 
+    #[allow(dead_code)] // used by tests, potentially useful if using this as a library
+    pub fn default(&self) -> Self {
+        match self {
+            Self::Thru(_) => Self::Thru(Default::default()),
+            Self::Equalizer(_) => Self::Equalizer(Default::default()),
+            Self::Spectrum(_) => Self::Spectrum(Default::default()),
+            Self::Isolator(_) => Self::Isolator(Default::default()),
+            Self::LowBoost(_) => Self::LowBoost(Default::default()),
+            Self::SuperFilter(_) => Self::SuperFilter(Default::default()),
+            Self::StepFilter(_) => Self::StepFilter(Default::default()),
+            Self::Enhancer(_) => Self::Enhancer(Default::default()),
+            Self::AutoWah(_) => Self::AutoWah(Default::default()),
+            Self::Humanizer(_) => Self::Humanizer(Default::default()),
+            Self::SpeakerSimulator(_) => Self::SpeakerSimulator(Default::default()),
+            Self::Phaser(_) => Self::Phaser(Default::default()),
+            Self::StepPhaser(_) => Self::StepPhaser(Default::default()),
+            Self::MultiStagePhaser(_) => Self::MultiStagePhaser(Default::default()),
+            Self::InfinitePhaser(_) => Self::InfinitePhaser(Default::default()),
+            Self::RingModulator(_) => Self::RingModulator(Default::default()),
+            Self::StepRingModulator(_) => Self::StepRingModulator(Default::default()),
+            Self::Tremolo(_) => Self::Tremolo(Default::default()),
+            Self::AutoPan(_) => Self::AutoPan(Default::default()),
+            Self::StepPan(_) => Self::StepPan(Default::default()),
+            Self::Slicer(_) => Self::Slicer(Default::default()),
+            Self::Rotary(_) => Self::Rotary(Default::default()),
+            Self::VkRotary(_) => Self::VkRotary(Default::default()),
+            Self::Chorus(_) => Self::Chorus(Default::default()),
+            Self::Flanger(_) => Self::Flanger(Default::default()),
+            Self::StepFlanger(_) => Self::StepFlanger(Default::default()),
+            Self::HexaChorus(_) => Self::HexaChorus(Default::default()),
+            Self::TremoloChorus(_) => Self::TremoloChorus(Default::default()),
+            Self::SpaceD(_) => Self::SpaceD(Default::default()),
+            Self::Chorus3D(_) => Self::Chorus3D(Default::default()),
+            Self::Flanger3D(_) => Self::Flanger3D(Default::default()),
+            Self::StepFlanger3D(_) => Self::StepFlanger3D(Default::default()),
+            Self::TwoBandChorus(_) => Self::TwoBandChorus(Default::default()),
+            Self::TwoBandFlanger(_) => Self::TwoBandFlanger(Default::default()),
+            Self::TwoBandStepFlanger(_) => Self::TwoBandStepFlanger(Default::default()),
+            Self::Overdrive(_) => Self::Overdrive(Default::default()),
+            Self::Distortion(_) => Self::Distortion(Default::default()),
+            Self::VsOverdrive(_) => Self::VsOverdrive(Default::default()),
+            Self::VsDistortion(_) => Self::VsDistortion(Default::default()),
+            Self::GuitarAmpSimulator(_) => Self::GuitarAmpSimulator(Default::default()),
+            Self::Compressor(_) => Self::Compressor(Default::default()),
+            Self::Limiter(_) => Self::Limiter(Default::default()),
+            Self::Gate(_) => Self::Gate(Default::default()),
+            Self::Delay(_) => Self::Delay(Default::default()),
+            Self::LongDelay(_) => Self::LongDelay(Default::default()),
+            Self::SerialDelay(_) => Self::SerialDelay(Default::default()),
+            Self::ModulationDelay(_) => Self::ModulationDelay(Default::default()),
+            Self::ThreeTapPanDelay(_) => Self::ThreeTapPanDelay(Default::default()),
+            Self::FourTapPanDelay(_) => Self::FourTapPanDelay(Default::default()),
+            Self::MultiTapDelay(_) => Self::MultiTapDelay(Default::default()),
+            Self::ReverseDelay(_) => Self::ReverseDelay(Default::default()),
+            Self::ShuffleDelay(_) => Self::ShuffleDelay(Default::default()),
+            Self::Delay3D(_) => Self::Delay3D(Default::default()),
+            Self::TimeCtrlDelay(_) => Self::TimeCtrlDelay(Default::default()),
+            Self::LongTimeCtrlDelay(_) => Self::LongTimeCtrlDelay(Default::default()),
+            Self::TapeEcho(_) => Self::TapeEcho(Default::default()),
+            Self::LofiNoise(_) => Self::LofiNoise(Default::default()),
+            Self::LofiCompress(_) => Self::LofiCompress(Default::default()),
+            Self::LofiRadio(_) => Self::LofiRadio(Default::default()),
+            Self::Telephone(_) => Self::Telephone(Default::default()),
+            Self::Phonograph(_) => Self::Phonograph(Default::default()),
+            Self::PitchShifter(_) => Self::PitchShifter(Default::default()),
+            Self::TwoVoicePitchShifter(_) => Self::TwoVoicePitchShifter(Default::default()),
+            Self::StepPitchShifter(_) => Self::StepPitchShifter(Default::default()),
+            Self::Reverb(_) => Self::Reverb(Default::default()),
+            Self::GatedReverb(_) => Self::GatedReverb(Default::default()),
+            Self::OverdriveChorus(_) => Self::OverdriveChorus(Default::default()),
+            Self::OverdriveFlanger(_) => Self::OverdriveFlanger(Default::default()),
+            Self::OverdriveDelay(_) => Self::OverdriveDelay(Default::default()),
+            Self::DistortionChorus(_) => Self::DistortionChorus(Default::default()),
+            Self::DistortionFlanger(_) => Self::DistortionFlanger(Default::default()),
+            Self::DistortionDelay(_) => Self::DistortionDelay(Default::default()),
+            Self::EnhancerChorus(_) => Self::EnhancerChorus(Default::default()),
+            Self::EnhancerFlanger(_) => Self::EnhancerFlanger(Default::default()),
+            Self::EnhancerDelay(_) => Self::EnhancerDelay(Default::default()),
+            Self::ChorusDelay(_) => Self::ChorusDelay(Default::default()),
+            Self::FlangerDelay(_) => Self::FlangerDelay(Default::default()),
+            Self::ChorusFlanger(_) => Self::ChorusFlanger(Default::default()),
+            Self::UnusedVrChorus(_) => Self::UnusedVrChorus(Default::default()),
+            Self::UnusedVrTremolo(_) => Self::UnusedVrTremolo(Default::default()),
+            Self::UnusedVrAutoWah(_) => Self::UnusedVrAutoWah(Default::default()),
+            Self::UnusedVrPhaser(_) => Self::UnusedVrPhaser(Default::default()),
+            Self::UnusedOrganMulti(_) => Self::UnusedOrganMulti(Default::default()),
+            Self::UnusedLinedrive(_) => Self::UnusedLinedrive(Default::default()),
+            Self::UnusedSmallPhaser(_) => Self::UnusedSmallPhaser(Default::default()),
+            Self::SympatheticResonance(_) => Self::SympatheticResonance(Default::default()),
+            Self::Other(p) => Self::Other(OtherMfxParameters { mfx_number: p.mfx_number, unknown: [Default::default(); 32] })
+        }
+    }
+
     pub fn is_off(&self) -> bool {
         match self {
             Self::Thru(_) => true,
@@ -704,7 +796,7 @@ impl Default for IsolatorParameters {
             a_phase_mid_sw: Switch(false),
             a_phase_mid_level: UInt(127),
             low_boost_sw: Switch(false),
-            low_boost_level: UInt(127),
+            low_boost_level: UInt(64),
             level: UInt(127),
             unused_parameters: Default::default()
         }
@@ -911,7 +1003,7 @@ impl Default for AutoWahParameters {
             rate_hz: LinearFrequency(2.0),
             rate_note: NoteLength::QuarterNote,
             depth: UInt(60),
-            phase: UInt(0),
+            phase: Phase(0),
             low_gain: Int(0),
             high_gain: Int(0),
             level: UInt(100),
@@ -984,7 +1076,7 @@ pub struct SpeakerSimulatorParameters {
 impl Default for SpeakerSimulatorParameters {
     fn default() -> Self {
         Self {
-            speaker: SpeakerType::BuiltIn2,
+            speaker: SpeakerType::BuiltIn3,
             mic_setting: Int(2),
             mic_level: UInt(127),
             direct_level: UInt(0),
@@ -1246,7 +1338,7 @@ impl Default for StepRingModulatorParameters {
             rate_mode: RateMode::Note,
             rate_hz: LinearFrequency(0.5),
             rate_note: NoteLength::WholeNote,
-            attack: UInt(127),
+            attack: UInt(50),
             low_gain: Int(0),
             high_gain: Int(0),
             balance: Balance(50),
@@ -1279,7 +1371,7 @@ impl Default for CyclicalParameters {
             mod_wave: ModWave::Triangle,
             rate_mode: RateMode::Note,
             rate_hz: LinearFrequency(4.0),
-            rate_note: NoteLength::QuarterNote,
+            rate_note: NoteLength::EighthNote,
             depth: UInt(96),
             low_gain: Int(0),
             high_gain: Int(0),
@@ -1345,7 +1437,7 @@ impl Default for StepPanParameters {
             rate_note: NoteLength::DoubleNote,
             attack: UInt(50),
             input_sync_sw: Switch(false),
-            input_sync_threshold: UInt(50),
+            input_sync_threshold: UInt(60),
             level: UInt(127),
             unused_parameters: Default::default()
         }
@@ -1538,7 +1630,7 @@ impl Default for ChorusParameters {
             rate_hz: LinearFrequency(0.5),
             rate_note: NoteLength::WholeNote,
             depth: UInt(20),
-            phase: UInt(180),
+            phase: Phase(180),
             low_gain: Int(0),
             high_gain: Int(0),
             balance: Balance(50),
@@ -1580,7 +1672,7 @@ impl Default for FlangerParameters {
             rate_hz: LinearFrequency(0.5),
             rate_note: NoteLength::WholeNote,
             depth: UInt(40),
-            phase: UInt(180),
+            phase: Phase(180),
             feedback: EvenPercent(60),
             low_gain: Int(0),
             high_gain: Int(0),
@@ -1626,7 +1718,7 @@ impl Default for StepFlangerParameters {
             rate_hz: LinearFrequency(1.5),
             rate_note: NoteLength::HalfNoteTriplet,
             depth: UInt(40),
-            phase: UInt(180),
+            phase: Phase(180),
             feedback: EvenPercent(60),
             step_rate_mode: RateMode::Note,
             step_rate_hz: StepLinearFrequency(8.0),
@@ -1710,7 +1802,7 @@ impl Default for TremoloChorusParameters {
             trem_rate_hz: LinearFrequency(2.0),
             trem_rate_note: NoteLength::QuarterNote,
             trem_separation: UInt(127),
-            trem_phase: UInt(180),
+            trem_phase: Phase(180),
             balance: Balance(50),
             level: UInt(127),
             unused_parameters: Default::default()
@@ -1745,9 +1837,9 @@ impl Default for SpaceDParameters {
             rate_hz: LinearFrequency(0.5),
             rate_note: NoteLength::WholeNote,
             depth: UInt(20),
-            phase: UInt(180),
+            phase: Phase(180),
             low_gain: Int(0),
-            high_gain: Int(6),
+            high_gain: Int(0),
             balance: Balance(50),
             level: UInt(127),
             unused_parameters: Default::default()
@@ -1787,7 +1879,7 @@ impl Default for Chorus3DParameters {
             rate_hz: LinearFrequency(0.5),
             rate_note: NoteLength::WholeNote,
             depth: UInt(20),
-            phase: UInt(180),
+            phase: Phase(180),
             output_mode: OutputMode::Speaker,
             low_gain: Int(0),
             high_gain: Int(0),
@@ -1831,7 +1923,7 @@ impl Default for Flanger3DParameters {
             rate_hz: LinearFrequency(0.5),
             rate_note: NoteLength::WholeNote,
             depth: UInt(40),
-            phase: UInt(180),
+            phase: Phase(180),
             feedback: EvenPercent(60),
             output_mode: OutputMode::Speaker,
             low_gain: Int(0),
@@ -1879,7 +1971,7 @@ impl Default for StepFlanger3DParameters {
             rate_hz: LinearFrequency(1.5),
             rate_note: NoteLength::HalfNoteTriplet,
             depth: UInt(40),
-            phase: UInt(180),
+            phase: Phase(180),
             feedback: EvenPercent(60),
             step_rate_mode: RateMode::Note,
             step_rate_hz: StepLinearFrequency(8.0),
@@ -1927,13 +2019,13 @@ impl Default for TwoBandChorusParameters {
             low_rate_hz: LinearFrequency(0.25),
             low_rate_note: NoteLength::DoubleNote,
             low_depth: UInt(20),
-            low_phase: UInt(180),
+            low_phase: Phase(180),
             high_pre_delay: LogMilliseconds(1.0),
             high_rate_mode: RateMode::Hertz,
             high_rate_hz: LinearFrequency(0.5),
             high_rate_note: NoteLength::WholeNote,
             high_depth: UInt(20),
-            high_phase: UInt(180),
+            high_phase: Phase(180),
             balance: Balance(50),
             level: UInt(127),
             unused_parameters: Default::default()
@@ -1976,14 +2068,14 @@ impl Default for TwoBandFlangerParameters {
             low_rate_hz: LinearFrequency(0.25),
             low_rate_note: NoteLength::DoubleNote,
             low_depth: UInt(40),
-            low_phase: UInt(180),
+            low_phase: Phase(180),
             low_feedback: EvenPercent(60),
             high_pre_delay: LogMilliseconds(1.0),
             high_rate_mode: RateMode::Note,
             high_rate_hz: LinearFrequency(0.5),
             high_rate_note: NoteLength::WholeNote,
             high_depth: UInt(40),
-            high_phase: UInt(180),
+            high_phase: Phase(180),
             high_feedback: EvenPercent(40),
             balance: Balance(50),
             level: UInt(127),
@@ -2033,17 +2125,17 @@ impl Default for TwoBandStepFlangerParameters {
             low_rate_hz: LinearFrequency(3.0),
             low_rate_note: NoteLength::QuarterNoteTriplet,
             low_depth: UInt(40),
-            low_phase: UInt(180),
+            low_phase: Phase(180),
             low_feedback: EvenPercent(60),
             low_step_rate_mode: RateMode::Note,
             low_step_rate_hz: StepLinearFrequency(4.0),
-            low_step_rate_note: NoteLength::QuarterNote,
+            low_step_rate_note: NoteLength::EighthNote,
             high_pre_delay: LogMilliseconds(1.0),
             high_rate_mode: RateMode::Note,
             high_rate_hz: LinearFrequency(1.5),
             high_rate_note: NoteLength::HalfNoteTriplet,
             high_depth: UInt(40),
-            high_phase: UInt(180),
+            high_phase: Phase(180),
             high_feedback: EvenPercent(40),
             high_step_rate_mode: RateMode::Note,
             high_step_rate_hz: StepLinearFrequency(8.0),
@@ -2435,7 +2527,7 @@ impl Default for ModulationDelayParameters {
             rate_hz: LinearFrequency(0.5),
             rate_note: NoteLength::WholeNote,
             depth: UInt(20),
-            phase: UInt(180),
+            phase: Phase(180),
             low_gain: Int(0),
             high_gain: Int(0),
             balance: Balance(10),
@@ -2688,8 +2780,8 @@ impl Default for ReverseDelayParameters {
             delay_hf_damp: LogFrequencyOrByPass::ByPass,
             delay_1_pan: Pan::Left(64),
             delay_2_pan: Pan::Right(63),
-            delay_1_level: UInt(127),
-            delay_2_level: UInt(127),
+            delay_1_level: UInt(0),
+            delay_2_level: UInt(0),
             low_gain: Int(0),
             high_gain: Int(0),
             balance: Balance(20),
@@ -3315,7 +3407,7 @@ impl Default for ReverbParameters {
 pub struct GatedReverbParameters {
     gate_type: GateType,
     pre_delay: LogMilliseconds,
-    gate_time_ms: Int<5, 500>,
+    gate_time: GateTime,
     low_gain: Gain,
     high_gain: Gain,
     balance: Balance,
@@ -3332,7 +3424,7 @@ impl Default for GatedReverbParameters {
         Self {
             gate_type: GateType::Normal,
             pre_delay: LogMilliseconds(1.0),
-            gate_time_ms: Int(400),
+            gate_time: GateTime(400),
             low_gain: Int(0),
             high_gain: Int(0),
             balance: Balance(50),
@@ -3343,7 +3435,7 @@ impl Default for GatedReverbParameters {
 }
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
-pub struct DriveChorusParameters<const DEFAULT_LEVEL: u16> {
+pub struct DriveChorusParameters<const DEFAULT_DRIVE: u16, const DEFAULT_LEVEL: u16> {
     drive: Level,
     pan: Pan,
     chorus_pre_delay: LogMilliseconds,
@@ -3360,10 +3452,10 @@ pub struct DriveChorusParameters<const DEFAULT_LEVEL: u16> {
     unused_parameters: [Parameter; 23]
 }
 
-impl<const DL: u16> Default for DriveChorusParameters<DL> {
+impl<const DD: u16, const DL: u16> Default for DriveChorusParameters<DD, DL> {
     fn default() -> Self {
         Self {
-            drive: UInt(64),
+            drive: UInt(DD),
             pan: Pan::Centre,
             chorus_pre_delay: LogMilliseconds(2.0),
             chorus_rate_mode: RateMode::Hertz,
@@ -3378,7 +3470,7 @@ impl<const DL: u16> Default for DriveChorusParameters<DL> {
 }
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
-pub struct DriveFlangerParameters<const DEFAULT_LEVEL: u16> {
+pub struct DriveFlangerParameters<const DEFAULT_DRIVE: u16> {
     drive: Level,
     pan: Pan,
     flanger_pre_delay: LogMilliseconds,
@@ -3396,10 +3488,10 @@ pub struct DriveFlangerParameters<const DEFAULT_LEVEL: u16> {
     unused_parameters: [Parameter; 22]
 }
 
-impl<const DL: u16> Default for DriveFlangerParameters<DL> {
+impl<const DD: u16> Default for DriveFlangerParameters<DD> {
     fn default() -> Self {
         Self {
-            drive: UInt(64),
+            drive: UInt(DD),
             pan: Pan::Centre,
             flanger_pre_delay: LogMilliseconds(2.0),
             flanger_rate_mode: RateMode::Note,
@@ -3408,14 +3500,14 @@ impl<const DL: u16> Default for DriveFlangerParameters<DL> {
             flanger_depth: UInt(40),
             flanger_feedback: EvenPercent(60),
             flanger_balance: Balance(50),
-            level: UInt(DL),
+            level: UInt(80),
             unused_parameters: Default::default()
         }
     }
 }
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
-pub struct DriveDelayParameters<const DEFAULT_LEVEL: u16> {
+pub struct DriveDelayParameters<const DEFAULT_DRIVE: u16> {
     drive: Level,
     pan: Pan,
     delay_mode: DelayMode,
@@ -3432,10 +3524,10 @@ pub struct DriveDelayParameters<const DEFAULT_LEVEL: u16> {
     unused_parameters: [Parameter; 23]
 }
 
-impl<const DL: u16> Default for DriveDelayParameters<DL> {
+impl<const DD: u16> Default for DriveDelayParameters<DD> {
     fn default() -> Self {
         Self {
-            drive: UInt(64),
+            drive: UInt(DD),
             pan: Pan::Centre,
             delay_mode: DelayMode::Note,
             delay_ms: UInt(600),
@@ -3443,7 +3535,7 @@ impl<const DL: u16> Default for DriveDelayParameters<DL> {
             delay_feedback: EvenPercent(20),
             delay_hf_damp: LogFrequencyOrByPass::ByPass,
             delay_balance: Balance(10),
-            level: UInt(DL),
+            level: UInt(80),
             unused_parameters: Default::default()
         }
     }
@@ -3734,7 +3826,7 @@ impl Default for SympatheticResonanceParameters {
             p_sft_lpf: LogFrequencyOrByPassOffByOne::Frequency(LogFrequency(10000)),
             p_sft_hpf: ByPassOrLogFrequency::ByPass,
             p_sft_to_rev: UInt(127),
-            damper_offset: UInt(34), //TODO actually 0
+            damper_offset: UInt(0), // but 34 is the value used by the default Grand Piano
             unused_parameters: Default::default()
         }
     }

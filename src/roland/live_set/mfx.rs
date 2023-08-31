@@ -14,7 +14,7 @@ pub struct Mfx {
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<8>::zero")]
     unused1: Bits<8>, //TODO I think this is actually the MFX control choice (which depends on type, so should probably be part of mfx_type)
     #[validate]
-    mfx_type: MfxType,
+    pub mfx_type: MfxType,
     #[serde(skip_serializing_if="Bits::is_unit", default="Bits::<8>::unit")]
     padding1: Bits<8>,
     #[serde(skip_serializing_if="Bits::is_unit", default="Bits::<14>::unit")]

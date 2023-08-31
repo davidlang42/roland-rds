@@ -427,7 +427,6 @@ impl<const MIN: u16, const MAX: u16> Validate for UInt<MIN, MAX> {
 
 pub type Level = UInt<0, 127>;
 pub type LinearMilliseconds<const MAX: u16> = UInt<1, MAX>;
-pub type Phase = UInt<0, 180>;
 pub type PreLpf = UInt<0, 7>;
 
 /// Parameter(0-(MAX-MIN)) === Int(MIN-MAX)

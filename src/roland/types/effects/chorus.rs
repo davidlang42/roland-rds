@@ -1,7 +1,7 @@
 use super::{UnusedParameters, Parameters};
-use super::parameters::{FilterType, RateMode, NoteLength, DelayMode, Level, Phase, LinearMilliseconds, PreLpf, UInt};
+use super::parameters::{FilterType, RateMode, NoteLength, DelayMode, Level, LinearMilliseconds, PreLpf, UInt};
 use super::super::numeric::Parameter;
-use super::discrete::{LogFrequency, LogMilliseconds, LinearFrequency, LogFrequencyOrByPass, EvenPercent, Feedback};
+use super::discrete::{LogFrequency, LogMilliseconds, LinearFrequency, LogFrequencyOrByPass, EvenPercent, Feedback, Phase};
 use crate::json::serialize_default_terminated_array;
 use schemars::JsonSchema;
 use validator::Validate;
@@ -86,7 +86,7 @@ pub struct ChorusParameters {
     rate_hz: LinearFrequency,
     rate_note: NoteLength,
     depth: Level,
-    phase_degrees: Phase,
+    phase: Phase,
     feedback: Level,
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
     #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
@@ -105,7 +105,7 @@ impl Default for ChorusParameters {
             rate_hz: LinearFrequency(1.0),
             rate_note: NoteLength::WholeNote,
             depth: UInt(40),
-            phase_degrees: UInt(180),
+            phase: Phase(180),
             feedback: UInt(8),
             unused_parameters: Default::default() }
     }

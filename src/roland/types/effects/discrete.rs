@@ -23,11 +23,15 @@ pub trait DiscreteValues<T: PartialEq + Display, const OFFSET: i16> {
     }
 
     fn into_parameter(value: T) -> Parameter {
-        if let Some(position) = Self::values().iter().position(|v| *v == value) {
+        if let Some(position) = Self::values().iter().position(|v| Self::equal(v, &value)) {
             return Parameter(position as i16 + OFFSET);
         } else {
             panic!("Invalid discrete value: {}", value);
         }
+    }
+
+    fn equal(a: &T, b: &T) -> bool {
+        a == b
     }
 }
 
@@ -404,6 +408,10 @@ impl DiscreteValues<f64, 1> for LinearFrequency {
     fn format(value: f64) -> String {
         format!("{:.2}ms", value)
     }
+
+    fn equal(a: &f64, b: &f64) -> bool {
+        (a - b).abs() < EPSILON
+    }
 }
 
 impl JsonSchema for LinearFrequency {
@@ -464,6 +472,10 @@ impl DiscreteValues<f64, 1> for StepLinearFrequency {
 
     fn format(value: f64) -> String {
         format!("{:.1}ms", value)
+    }
+
+    fn equal(a: &f64, b: &f64) -> bool {
+        (a - b).abs() < EPSILON
     }
 }
 
@@ -531,6 +543,10 @@ impl DiscreteValues<f64, 0> for LogMilliseconds {
     fn format(value: f64) -> String {
         format!("{:.1}ms", value)
     }
+
+    fn equal(a: &f64, b: &f64) -> bool {
+        (a - b).abs() < EPSILON
+    }
 }
 
 impl JsonSchema for LogMilliseconds {
@@ -568,11 +584,12 @@ impl<'de> Deserialize<'de> for LogMilliseconds {
     }
 }
 
+const EPSILON: f64 = 0.000001;
+
 fn enumerate_f64(start: f64, end: f64, step: f64) -> Vec<f64> {
     let mut values = Vec::new();
     let mut i: usize = 0;
     let mut v = start;
-    const EPSILON: f64 = 0.000001;
     while v <= end + EPSILON {
         values.push(v);
         i += 1;
@@ -796,6 +813,128 @@ impl From<Parameter> for HumFrequency {
 }
 
 impl Into<Parameter> for HumFrequency {
+    fn into(self) -> Parameter {
+        Self::into_parameter(self.0)
+    }
+}
+
+/// Parameter(0-90) === Phase(0-180)
+#[derive(Debug, Copy, Clone)]
+pub struct Phase(pub u8);
+
+impl DiscreteValues<u8, 0> for Phase {
+    fn values() -> Vec<u8> {
+        enumerate(0, 180, 2)
+    }
+
+    fn format(value: u8) -> String {
+        format!("{}deg", value)
+    }
+}
+
+impl JsonSchema for Phase {
+    fn schema_name() -> String {
+        type_name_pretty::<Self>().into()
+    }
+
+    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        enum_schema(Self::values().into_iter().map(Self::format).collect())
+    }
+}
+
+impl Serialize for Phase {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where S: serde::Serializer {
+        Self::format(self.0).serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for Phase {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where D: serde::Deserializer<'de> {
+        let value: Value = Deserialize::deserialize(deserializer)?;
+        match value {
+            Value::String(s) => {
+                for v in Self::values().into_iter() {
+                    if s == Self::format(v) {
+                        return Ok(Self(v));
+                    }
+                }
+                Err(de::Error::custom(format!("String is not a valid discrete value: {}", s)))
+            }
+            _ => Err(de::Error::custom(format!("Expected string")))
+        }
+    }
+}
+
+impl From<Parameter> for Phase {
+    fn from(parameter: Parameter) -> Self {
+        Self(Self::value_from(parameter))
+    }
+}
+
+impl Into<Parameter> for Phase {
+    fn into(self) -> Parameter {
+        Self::into_parameter(self.0)
+    }
+}
+
+/// Parameter(0-?) === GateTime(5-500)
+#[derive(Debug, Copy, Clone)]
+pub struct GateTime(pub u16);
+
+impl DiscreteValues<u16, 0> for GateTime {
+    fn values() -> Vec<u16> {
+        enumerate(5, 500, 5)
+    }
+
+    fn format(value: u16) -> String {
+        format!("{}ms", value)
+    }
+}
+
+impl JsonSchema for GateTime {
+    fn schema_name() -> String {
+        type_name_pretty::<Self>().into()
+    }
+
+    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        enum_schema(Self::values().into_iter().map(Self::format).collect())
+    }
+}
+
+impl Serialize for GateTime {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where S: serde::Serializer {
+        Self::format(self.0).serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for GateTime {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where D: serde::Deserializer<'de> {
+        let value: Value = Deserialize::deserialize(deserializer)?;
+        match value {
+            Value::String(s) => {
+                for v in Self::values().into_iter() {
+                    if s == Self::format(v) {
+                        return Ok(Self(v));
+                    }
+                }
+                Err(de::Error::custom(format!("String is not a valid discrete value: {}", s)))
+            }
+            _ => Err(de::Error::custom(format!("Expected string")))
+        }
+    }
+}
+
+impl From<Parameter> for GateTime {
+    fn from(parameter: Parameter) -> Self {
+        Self(Self::value_from(parameter))
+    }
+}
+
+impl Into<Parameter> for GateTime {
     fn into(self) -> Parameter {
         Self::into_parameter(self.0)
     }
