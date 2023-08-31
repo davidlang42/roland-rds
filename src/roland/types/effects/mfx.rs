@@ -10,7 +10,6 @@ use super::{UnusedParameters, Parameters};
 use super::discrete::{LogFrequency, QFactor, FineFrequency, LinearFrequency, FilterSlope, EvenPercent, StepLinearFrequency, Balance, LogMilliseconds, LogFrequencyOrByPass, HumFrequency, Feedback, ByPassOrLogFrequency, LogFrequencyOrByPassOffByOne, Phase, GateTime};
 use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode, ModWave, SlicerMode, Speed, FilterType, OutputMode, AmpType, MicSetting, PreAmpType, PreAmpGain, CompressionRatio, PostGain, GateMode, DelayMode, LinearMilliseconds, PhaseType, FeedbackMode, TapeHeads, LofiType, NoiseType, DiscType, DiscTypeWithRandom, Semitones, ReverbOnlyCharacter, GateType};
 
-//TODO validate all fields of all Parameters types
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
 pub enum MfxType { // 0-255
     Thru(UnusedParameters<32>),
