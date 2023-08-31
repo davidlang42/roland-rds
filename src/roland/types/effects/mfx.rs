@@ -80,12 +80,12 @@ pub enum MfxType { // 0-255
     StepPitchShifter(StepPitchShifterParameters),
     Reverb(ReverbParameters),
     GatedReverb(GatedReverbParameters),
-    OverdriveChorus(DriveChorusParameters),
-    OverdriveFlanger(DriveFlangerParameters),
-    OverdriveDelay(DriveDelayParameters),
-    DistortionChorus(UnusedParameters<32>), //TODO implement parameters
-    DistortionFlanger(UnusedParameters<32>), //TODO implement parameters
-    DistortionDelay(UnusedParameters<32>), //TODO implement parameters
+    OverdriveChorus(DriveChorusParameters<80>),
+    OverdriveFlanger(DriveFlangerParameters<80>),
+    OverdriveDelay(DriveDelayParameters<80>),
+    DistortionChorus(DriveChorusParameters<127>),
+    DistortionFlanger(DriveChorusParameters<127>),
+    DistortionDelay(DriveChorusParameters<127>),
     EnhancerChorus(UnusedParameters<32>), //TODO implement parameters
     EnhancerFlanger(UnusedParameters<32>), //TODO implement parameters
     EnhancerDelay(UnusedParameters<32>), //TODO implement parameters
@@ -3343,7 +3343,7 @@ impl Default for GatedReverbParameters {
 }
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
-pub struct DriveChorusParameters {
+pub struct DriveChorusParameters<const DEFAULT_LEVEL: u16> {
     drive: Level,
     pan: Pan,
     chorus_pre_delay: LogMilliseconds,
@@ -3360,7 +3360,7 @@ pub struct DriveChorusParameters {
     unused_parameters: [Parameter; 23]
 }
 
-impl Default for DriveChorusParameters {
+impl<const DL: u16> Default for DriveChorusParameters<DL> {
     fn default() -> Self {
         Self {
             drive: UInt(64),
@@ -3371,14 +3371,14 @@ impl Default for DriveChorusParameters {
             chorus_rate_note: NoteLength::WholeNote,
             chorus_depth: UInt(20),
             chorus_balance: Balance(50),
-            level: UInt(80),
+            level: UInt(DL),
             unused_parameters: Default::default()
         }
     }
 }
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
-pub struct DriveFlangerParameters {
+pub struct DriveFlangerParameters<const DEFAULT_LEVEL: u16> {
     drive: Level,
     pan: Pan,
     flanger_pre_delay: LogMilliseconds,
@@ -3396,7 +3396,7 @@ pub struct DriveFlangerParameters {
     unused_parameters: [Parameter; 22]
 }
 
-impl Default for DriveFlangerParameters {
+impl<const DL: u16> Default for DriveFlangerParameters<DL> {
     fn default() -> Self {
         Self {
             drive: UInt(64),
@@ -3408,14 +3408,14 @@ impl Default for DriveFlangerParameters {
             flanger_depth: UInt(40),
             flanger_feedback: EvenPercent(60),
             flanger_balance: Balance(50),
-            level: UInt(80),
+            level: UInt(DL),
             unused_parameters: Default::default()
         }
     }
 }
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
-pub struct DriveDelayParameters {
+pub struct DriveDelayParameters<const DEFAULT_LEVEL: u16> {
     drive: Level,
     pan: Pan,
     delay_mode: DelayMode,
@@ -3432,7 +3432,7 @@ pub struct DriveDelayParameters {
     unused_parameters: [Parameter; 23]
 }
 
-impl Default for DriveDelayParameters {
+impl<const DL: u16> Default for DriveDelayParameters<DL> {
     fn default() -> Self {
         Self {
             drive: UInt(64),
@@ -3443,7 +3443,7 @@ impl Default for DriveDelayParameters {
             delay_feedback: EvenPercent(20),
             delay_hf_damp: LogFrequencyOrByPass::ByPass,
             delay_balance: Balance(10),
-            level: UInt(80),
+            level: UInt(DL),
             unused_parameters: Default::default()
         }
     }
