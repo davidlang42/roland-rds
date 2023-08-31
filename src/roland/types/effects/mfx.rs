@@ -8,7 +8,7 @@ use crate::roland::types::enums::Pan;
 use crate::roland::types::numeric::Parameter;
 use super::{UnusedParameters, Parameters};
 use super::discrete::{LogFrequency, QFactor, FineFrequency, LinearFrequency, FilterSlope, EvenPercent, StepLinearFrequency, Balance, LogMilliseconds, LogFrequencyOrByPass, HumFrequency};
-use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode, ModWave, SlicerMode, Speed, FilterType, OutputMode, AmpType, MicSetting, PreAmpType, PreAmpGain, CompressionRatio, PostGain, GateMode, DelayMode, LinearMilliseconds, PhaseType, FeedbackMode, TapeHeads, LofiType, NoiseType, DiscType};
+use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode, ModWave, SlicerMode, Speed, FilterType, OutputMode, AmpType, MicSetting, PreAmpType, PreAmpGain, CompressionRatio, PostGain, GateMode, DelayMode, LinearMilliseconds, PhaseType, FeedbackMode, TapeHeads, LofiType, NoiseType, DiscType, DiscTypeWithRandom};
 
 //TODO validate all fields of all Parameters types
 //TODO add tests for default chorus, mfx, reverb
@@ -74,7 +74,7 @@ pub enum MfxType { // 0-255
     LofiCompress(LofiCompressParameters),
     LofiRadio(LofiRadioParameters),
     Telephone(TelephoneParameters),
-    Photograph(UnusedParameters<32>), //TODO implement parameters
+    Phonograph(PhonographParameters),
     PitchShifter(UnusedParameters<32>), //TODO implement parameters
     TwoVoicePitchShifter(UnusedParameters<32>), //TODO implement parameters
     StepPitchShifter(UnusedParameters<32>), //TODO implement parameters
@@ -166,7 +166,7 @@ impl MfxType {
             57 => Self::LofiCompress(parameters.into()),
             58 => Self::LofiRadio(parameters.into()),
             59 => Self::Telephone(parameters.into()),
-            60 => Self::Photograph(parameters.into()),
+            60 => Self::Phonograph(parameters.into()),
             61 => Self::PitchShifter(parameters.into()),
             62 => Self::TwoVoicePitchShifter(parameters.into()),
             63 => Self::StepPitchShifter(parameters.into()),
@@ -258,7 +258,7 @@ impl MfxType {
             Self::LofiCompress(_) => 57,
             Self::LofiRadio(_) => 58,
             Self::Telephone(_) => 59,
-            Self::Photograph(_) => 60,
+            Self::Phonograph(_) => 60,
             Self::PitchShifter(_) => 61,
             Self::TwoVoicePitchShifter(_) => 62,
             Self::StepPitchShifter(_) => 63,
@@ -350,7 +350,7 @@ impl MfxType {
             Self::LofiCompress(_) => "LofiCompress".into(),
             Self::LofiRadio(_) => "LofiRadio".into(),
             Self::Telephone(_) => "Telephone".into(),
-            Self::Photograph(_) => "Photograph".into(),
+            Self::Phonograph(_) => "Photograph".into(),
             Self::PitchShifter(_) => "PitchShifter".into(),
             Self::TwoVoicePitchShifter(_) => "TwoVoicePitchShifter".into(),
             Self::StepPitchShifter(_) => "StepPitchShifter".into(),
@@ -442,7 +442,7 @@ impl MfxType {
             Self::LofiCompress(p) => p.parameters(),
             Self::LofiRadio(p) => p.parameters(),
             Self::Telephone(p) => p.parameters(),
-            Self::Photograph(p) => p.parameters(),
+            Self::Phonograph(p) => p.parameters(),
             Self::PitchShifter(p) => p.parameters(),
             Self::TwoVoicePitchShifter(p) => p.parameters(),
             Self::StepPitchShifter(p) => p.parameters(),
@@ -549,7 +549,7 @@ impl Validate for MfxType {
             Self::LofiCompress(p) => p.validate(),
             Self::LofiRadio(p) => p.validate(),
             Self::Telephone(p) => p.validate(),
-            Self::Photograph(p) => p.validate(),
+            Self::Phonograph(p) => p.validate(),
             Self::PitchShifter(p) => p.validate(),
             Self::TwoVoicePitchShifter(p) => p.validate(),
             Self::StepPitchShifter(p) => p.validate(),
@@ -2930,7 +2930,7 @@ pub struct LofiNoiseParameters {
     noise_type: NoiseType,
     noise_lpf: LogFrequencyOrByPass<200, 8000>,
     noise_level: Level,
-    disc_noise_type: DiscType,
+    disc_noise_type: DiscTypeWithRandom,
     disc_noise_lpf: LogFrequencyOrByPass<200, 8000>,
     disc_noise_level: Level,
     hum_noise_type: HumFrequency,
@@ -2956,7 +2956,7 @@ impl Default for LofiNoiseParameters {
             noise_type: NoiseType::White,
             noise_lpf: LogFrequencyOrByPass::Frequency(LogFrequency(2000)),
             noise_level: UInt(0),
-            disc_noise_type: DiscType::RND,
+            disc_noise_type: DiscTypeWithRandom::RND,
             disc_noise_lpf: LogFrequencyOrByPass::Frequency(LogFrequency(2000)),
             disc_noise_level: UInt(0),
             hum_noise_type: HumFrequency(50),
@@ -3057,6 +3057,49 @@ impl Default for TelephoneParameters {
         Self {
             voice_quality: UInt(3),
             treble: Int(0),
+            balance: Balance(100),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct PhonographParameters {
+    signal_distortion: Level,
+    frequencey_range: Level,
+    disc_type: DiscType,
+    scartch_noise_level: Level,
+    dust_noise_level: Level,
+    hiss_noise_level: Level,
+    total_noise_level: Level,
+    wow: Level,
+    flutter: Level,
+    random: Level,
+    total_wf: Level,
+    balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 19>")]
+    #[validate]
+    unused_parameters: [Parameter; 19]
+}
+
+impl Default for PhonographParameters {
+    fn default() -> Self {
+        Self {
+            signal_distortion: UInt(10),
+            frequencey_range: UInt(90),
+            disc_type: DiscType::LP,
+            scartch_noise_level: UInt(64),
+            dust_noise_level: UInt(64),
+            hiss_noise_level: UInt(64),
+            total_noise_level: UInt(0),
+            wow: UInt(80),
+            flutter: UInt(80),
+            random: UInt(80),
+            total_wf: UInt(50),
             balance: Balance(100),
             level: UInt(127),
             unused_parameters: Default::default()

@@ -310,13 +310,21 @@ pub enum NoiseType {
     Pink
 }
 
-/// Parameter(0-3) === DiscType(LP - RND)
+/// Parameter(0-3) === DiscTypeWithRandom(LP - RND)
 #[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
-pub enum DiscType {
+pub enum DiscTypeWithRandom {
     LP,
     EP,
     SP,
     RND
+}
+
+/// Parameter(0-2) === DiscType(LP - SP)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
+pub enum DiscType {
+    LP,
+    EP,
+    SP
 }
 
 /// Parameter(0-1) === Switch(False, True)
