@@ -557,11 +557,14 @@ impl Into<Parameter> for LogMilliseconds {
 
 /// Parameter(0-?) === EvenPercent(-98% to 98% by 2)
 #[derive(Debug, Copy, Clone)]
-pub struct EvenPercent(pub i8);
+pub struct EvenPercent<const LIMIT: u8>(pub i8);
 
-impl DiscreteValues<i8, 0> for EvenPercent {
+impl<const LIMIT: u8> DiscreteValues<i8, 0> for EvenPercent<LIMIT> {
     fn values() -> Vec<i8> {
-        enumerate(-98, 98, 2)
+        if LIMIT > i8::MAX as u8 {
+            panic!("Invalid EvenPercent limit: {}", LIMIT);
+        }
+        enumerate(-(LIMIT as i8), LIMIT as i8, 2)
     }
 
     fn format(value: i8) -> String {
@@ -569,7 +572,7 @@ impl DiscreteValues<i8, 0> for EvenPercent {
     }
 }
 
-impl JsonSchema for EvenPercent {
+impl<const LIMIT: u8> JsonSchema for EvenPercent<LIMIT> {
     fn schema_name() -> String {
         type_name_pretty::<Self>().into()
     }
@@ -579,14 +582,14 @@ impl JsonSchema for EvenPercent {
     }
 }
 
-impl Serialize for EvenPercent {
+impl<const LIMIT: u8> Serialize for EvenPercent<LIMIT> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where S: serde::Serializer {
         Self::format(self.0).serialize(serializer)
     }
 }
 
-impl<'de> Deserialize<'de> for EvenPercent {
+impl<'de, const LIMIT: u8> Deserialize<'de> for EvenPercent<LIMIT> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where D: serde::Deserializer<'de> {
         let value: Value = Deserialize::deserialize(deserializer)?;
@@ -604,17 +607,19 @@ impl<'de> Deserialize<'de> for EvenPercent {
     }
 }
 
-impl From<Parameter> for EvenPercent {
+impl<const LIMIT: u8> From<Parameter> for EvenPercent<LIMIT> {
     fn from(parameter: Parameter) -> Self {
         Self(Self::value_from(parameter))
     }
 }
 
-impl Into<Parameter> for EvenPercent {
+impl<const LIMIT: u8> Into<Parameter> for EvenPercent<LIMIT> {
     fn into(self) -> Parameter {
         Self::into_parameter(self.0)
     }
 }
+
+pub type Feedback = EvenPercent<98>;
 
 /// Parameter(0-4) === QFactor(0.5, 1.0, 2.0, 4.0, 8.0)
 #[derive(Debug, Copy, Clone)]

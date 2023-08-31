@@ -1,7 +1,7 @@
 use super::{UnusedParameters, Parameters};
 use super::parameters::{FilterType, RateMode, NoteLength, DelayMode, Level, Phase, LinearMilliseconds, PreLpf, UInt};
 use super::super::numeric::Parameter;
-use super::discrete::{LogFrequency, LogMilliseconds, LinearFrequency, LogFrequencyOrByPass, EvenPercent};
+use super::discrete::{LogFrequency, LogMilliseconds, LinearFrequency, LogFrequencyOrByPass, EvenPercent, Feedback};
 use crate::json::serialize_default_terminated_array;
 use schemars::JsonSchema;
 use validator::Validate;
@@ -122,7 +122,7 @@ pub struct DelayParameters {
     delay_centre_mode: DelayMode,
     delay_centre_ms: LinearMilliseconds<1000>,
     delay_centre_note: NoteLength,
-    centre_feedback_percent: EvenPercent,
+    centre_feedback_percent: Feedback,
     hf_damp: LogFrequencyOrByPass<200, 8000>,
     left_level: Level,
     right_level: Level,

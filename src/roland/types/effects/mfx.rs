@@ -7,7 +7,7 @@ use crate::json::validation::unused_by_rd300nx_err;
 use crate::roland::types::enums::Pan;
 use crate::roland::types::numeric::Parameter;
 use super::{UnusedParameters, Parameters};
-use super::discrete::{LogFrequency, QFactor, FineFrequency, LinearFrequency, FilterSlope, EvenPercent, StepLinearFrequency, Balance, LogMilliseconds, LogFrequencyOrByPass, HumFrequency};
+use super::discrete::{LogFrequency, QFactor, FineFrequency, LinearFrequency, FilterSlope, EvenPercent, StepLinearFrequency, Balance, LogMilliseconds, LogFrequencyOrByPass, HumFrequency, Feedback};
 use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode, ModWave, SlicerMode, Speed, FilterType, OutputMode, AmpType, MicSetting, PreAmpType, PreAmpGain, CompressionRatio, PostGain, GateMode, DelayMode, LinearMilliseconds, PhaseType, FeedbackMode, TapeHeads, LofiType, NoiseType, DiscType, DiscTypeWithRandom};
 
 //TODO validate all fields of all Parameters types
@@ -75,7 +75,7 @@ pub enum MfxType { // 0-255
     LofiRadio(LofiRadioParameters),
     Telephone(TelephoneParameters),
     Phonograph(PhonographParameters),
-    PitchShifter(UnusedParameters<32>), //TODO implement parameters
+    PitchShifter(PitchShifterParameters),
     TwoVoicePitchShifter(UnusedParameters<32>), //TODO implement parameters
     StepPitchShifter(UnusedParameters<32>), //TODO implement parameters
     Reverb(UnusedParameters<32>), //TODO implement parameters
@@ -1004,7 +1004,7 @@ pub struct PhaserParameters {
     depth: Level,
     polarity: PhaserPolarity,
     resonance: Level,
-    cross_feedback: EvenPercent,
+    cross_feedback: Feedback,
     mix: Level,
     low_gain: Gain,
     high_gain: Gain,
@@ -1047,7 +1047,7 @@ pub struct StepPhaserParameters {
     depth: Level,
     polarity: PhaserPolarity,
     resonance: Level,
-    cross_feedback: EvenPercent,
+    cross_feedback: Feedback,
     step_rate_mode: RateMode,
     step_rate_hz: StepLinearFrequency,
     step_rate_note: NoteLength,
@@ -1558,7 +1558,7 @@ pub struct FlangerParameters {
     rate_note: NoteLength,
     depth: Level,
     phase: Phase,
-    feedback: EvenPercent,
+    feedback: Feedback,
     low_gain: Gain,
     high_gain: Gain,
     balance: Balance,
@@ -1601,7 +1601,7 @@ pub struct StepFlangerParameters {
     rate_note: NoteLength,
     depth: Level,
     phase: Phase,
-    feedback: EvenPercent,
+    feedback: Feedback,
     step_rate_mode: RateMode,
     step_rate_hz: StepLinearFrequency,
     step_rate_note: NoteLength,
@@ -1808,7 +1808,7 @@ pub struct Flanger3DParameters {
     rate_note: NoteLength,
     depth: Level,
     phase: Phase,
-    feedback: EvenPercent,
+    feedback: Feedback,
     output_mode: OutputMode,
     low_gain: Gain,
     high_gain: Gain,
@@ -1853,7 +1853,7 @@ pub struct StepFlanger3DParameters {
     rate_note: NoteLength,
     depth: Level,
     phase: Phase,
-    feedback: EvenPercent,
+    feedback: Feedback,
     step_rate_mode: RateMode,
     step_rate_hz: StepLinearFrequency,
     step_rate_note: NoteLength,
@@ -1950,14 +1950,14 @@ pub struct TwoBandFlangerParameters {
     low_rate_note: NoteLength,
     low_depth: Level,
     low_phase: Phase,
-    low_feedback: EvenPercent,
+    low_feedback: Feedback,
     high_pre_delay: LogMilliseconds,
     high_rate_mode: RateMode,
     high_rate_hz: LinearFrequency,
     high_rate_note: NoteLength,
     high_depth: Level,
     high_phase: Phase,
-    high_feedback: EvenPercent,
+    high_feedback: Feedback,
     balance: Balance,
     level: Level,
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
@@ -2001,7 +2001,7 @@ pub struct TwoBandStepFlangerParameters {
     low_rate_note: NoteLength,
     low_depth: Level,
     low_phase: Phase,
-    low_feedback: EvenPercent,
+    low_feedback: Feedback,
     low_step_rate_mode: RateMode,
     low_step_rate_hz: StepLinearFrequency,
     low_step_rate_note: NoteLength,
@@ -2011,7 +2011,7 @@ pub struct TwoBandStepFlangerParameters {
     high_rate_note: NoteLength,
     high_depth: Level,
     high_phase: Phase,
-    high_feedback: EvenPercent,
+    high_feedback: Feedback,
     high_step_rate_mode: RateMode,
     high_step_rate_hz: StepLinearFrequency,
     high_step_rate_note: NoteLength,
@@ -2270,7 +2270,7 @@ pub struct DelayParameters {
     phase_left: PhaseType,
     phase_right: PhaseType,
     feedback_mode: FeedbackMode,
-    feedback_percent: EvenPercent,
+    feedback_percent: Feedback,
     hf_damp: LogFrequencyOrByPass<200, 8000>,
     low_gain: Gain,
     high_gain: Gain,
@@ -2312,7 +2312,7 @@ pub struct LongDelayParameters {
     delay_ms: LinearMilliseconds<2600>,
     delay_note: NoteLength,
     phase_type: PhaseType,
-    feedback_percent: EvenPercent,
+    feedback_percent: Feedback,
     hf_damp: LogFrequencyOrByPass<200, 8000>,
     pan: Pan,
     low_gain: Gain,
@@ -2350,12 +2350,12 @@ pub struct SerialDelayParameters {
     delay_1_mode: DelayMode,
     delay_1_ms: LinearMilliseconds<1300>,
     delay_1_note: NoteLength,
-    delay_1_feedback: EvenPercent,
+    delay_1_feedback: Feedback,
     delay_1_hf_damp: LogFrequencyOrByPass<200, 8000>,
     delay_2_mode: DelayMode,
     delay_2_ms: LinearMilliseconds<1300>,
     delay_2_note: NoteLength,
-    delay_2_feedback: EvenPercent,
+    delay_2_feedback: Feedback,
     delay_2_hf_damp: LogFrequencyOrByPass<200, 8000>,
     pan: Pan,
     low_gain: Gain,
@@ -2401,7 +2401,7 @@ pub struct ModulationDelayParameters {
     delay_right_ms: LinearMilliseconds<1300>,
     delay_right_note: NoteLength,
     feedback_mode: FeedbackMode,
-    feedback_percent: EvenPercent,
+    feedback_percent: Feedback,
     hf_damp: LogFrequencyOrByPass<200, 8000>,
     rate_mode: RateMode,
     rate_hz: LinearFrequency,
@@ -2456,7 +2456,7 @@ pub struct ThreeTapPanDelayParameters {
     delay_centre_mode: DelayMode,
     delay_centre_ms: LinearMilliseconds<2600>,
     delay_centre_note: NoteLength,
-    centre_feedback: EvenPercent,
+    centre_feedback: Feedback,
     hf_damp: LogFrequencyOrByPass<200, 8000>,
     left_level: Level,
     right_level: Level,
@@ -2512,7 +2512,7 @@ pub struct FourTapPanDelayParameters {
     delay_4_mode: DelayMode,
     delay_4_ms: LinearMilliseconds<2600>,
     delay_4_note: NoteLength,
-    delay_1_feedback: EvenPercent,
+    delay_1_feedback: Feedback,
     hf_damp: LogFrequencyOrByPass<200, 8000>,
     delay_1_level: Level,
     delay_2_level: Level,
@@ -2573,7 +2573,7 @@ pub struct MultiTapDelayParameters {
     delay_4_mode: DelayMode,
     delay_4_ms: LinearMilliseconds<2600>,
     delay_4_note: NoteLength,
-    delay_1_feedback: EvenPercent,
+    delay_1_feedback: Feedback,
     hf_damp: LogFrequencyOrByPass<200, 8000>,
     delay_1_pan: Pan,
     delay_2_pan: Pan,
@@ -2634,7 +2634,7 @@ pub struct ReverseDelayParameters {
     rev_delay_mode: DelayMode,
     rev_delay_ms: LinearMilliseconds<1300>,
     rev_delay_note: NoteLength,
-    rev_delay_feedback: EvenPercent,
+    rev_delay_feedback: Feedback,
     rev_delay_hf_damp: LogFrequencyOrByPass<200, 8000>,
     rev_delay_pan: Pan,
     rev_delay_level: Level,
@@ -2647,7 +2647,7 @@ pub struct ReverseDelayParameters {
     delay_3_mode: DelayMode,
     delay_3_ms: LinearMilliseconds<1300>,
     delay_3_note: NoteLength,
-    delay_3_feedback: EvenPercent,
+    delay_3_feedback: Feedback,
     delay_hf_damp: LogFrequencyOrByPass<200, 8000>,
     delay_1_pan: Pan,
     delay_2_pan: Pan,
@@ -2706,7 +2706,7 @@ pub struct ShuffleDelayParameters {
     delay_note: NoteLength,
     shuffle_rate: UInt<0, 100>,
     acceleration: UInt<0, 15>,
-    feedback: EvenPercent,
+    feedback: Feedback,
     hf_damp: LogFrequencyOrByPass<200, 8000>,
     pan_a: Pan,
     pan_b: Pan,
@@ -2757,7 +2757,7 @@ pub struct Delay3DParameters {
     delay_centre_mode: DelayMode,
     delay_centre_ms: LinearMilliseconds<2600>,
     delay_centre_note: NoteLength,
-    centre_feedback: EvenPercent,
+    centre_feedback: Feedback,
     hf_damp: LogFrequencyOrByPass<200, 8000>,
     left_level: Level,
     right_level: Level,
@@ -2807,7 +2807,7 @@ pub struct TimeCtrlDelayParameters {
     delay_ms: LinearMilliseconds<1300>,
     delay_note: NoteLength,
     acceleration: UInt<0, 15>,
-    feedback: EvenPercent,
+    feedback: Feedback,
     hf_damp: LogFrequencyOrByPass<200, 8000>,
     low_gain: Gain,
     high_gain: Gain,
@@ -2844,7 +2844,7 @@ pub struct LongTimeCtrlDelayParameters {
     delay_ms: LinearMilliseconds<2600>,
     delay_note: NoteLength,
     acceleration: UInt<0, 15>,
-    feedback: EvenPercent,
+    feedback: Feedback,
     hf_damp: LogFrequencyOrByPass<200, 8000>,
     pan: Pan,
     low_gain: Gain,
@@ -3101,6 +3101,43 @@ impl Default for PhonographParameters {
             random: UInt(80),
             total_wf: UInt(50),
             balance: Balance(100),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct PitchShifterParameters {
+    coarse_semitones: Int<-24, 12>,
+    fine_percent: EvenPercent<100>,
+    delay_mode: DelayMode,
+    delay_ms: LinearMilliseconds<1300>,
+    delay_note: NoteLength,
+    feedback: Feedback,
+    low_gain: Gain,
+    high_gain: Gain,
+    balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 22>")]
+    #[validate]
+    unused_parameters: [Parameter; 22]
+}
+
+impl Default for PitchShifterParameters {
+    fn default() -> Self {
+        Self {
+            coarse_semitones: Int(0),
+            fine_percent: EvenPercent(20),
+            delay_mode: DelayMode::Milliseconds,
+            delay_ms: UInt(1),
+            delay_note: NoteLength::QuarterNote,
+            feedback: EvenPercent(0),
+            low_gain: Int(0),
+            high_gain: Int(0),
+            balance: Balance(50),
             level: UInt(127),
             unused_parameters: Default::default()
         }
