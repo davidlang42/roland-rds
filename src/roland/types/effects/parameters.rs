@@ -469,6 +469,7 @@ pub type PostGain = Int<0, 18>;
 pub type Size = Int<1, 8>;
 pub type MicSetting = Int<1, 3>;
 pub type LofiType = Int<1, 9>;
+pub type Semitones = Int<-24, 12>;
 
 // Parameter(0-127) === Pan(L64-63R)
 impl Into<Parameter> for Pan {

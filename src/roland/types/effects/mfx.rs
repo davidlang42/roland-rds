@@ -8,7 +8,7 @@ use crate::roland::types::enums::Pan;
 use crate::roland::types::numeric::Parameter;
 use super::{UnusedParameters, Parameters};
 use super::discrete::{LogFrequency, QFactor, FineFrequency, LinearFrequency, FilterSlope, EvenPercent, StepLinearFrequency, Balance, LogMilliseconds, LogFrequencyOrByPass, HumFrequency, Feedback};
-use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode, ModWave, SlicerMode, Speed, FilterType, OutputMode, AmpType, MicSetting, PreAmpType, PreAmpGain, CompressionRatio, PostGain, GateMode, DelayMode, LinearMilliseconds, PhaseType, FeedbackMode, TapeHeads, LofiType, NoiseType, DiscType, DiscTypeWithRandom};
+use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode, ModWave, SlicerMode, Speed, FilterType, OutputMode, AmpType, MicSetting, PreAmpType, PreAmpGain, CompressionRatio, PostGain, GateMode, DelayMode, LinearMilliseconds, PhaseType, FeedbackMode, TapeHeads, LofiType, NoiseType, DiscType, DiscTypeWithRandom, Semitones};
 
 //TODO validate all fields of all Parameters types
 //TODO add tests for default chorus, mfx, reverb
@@ -76,8 +76,8 @@ pub enum MfxType { // 0-255
     Telephone(TelephoneParameters),
     Phonograph(PhonographParameters),
     PitchShifter(PitchShifterParameters),
-    TwoVoicePitchShifter(UnusedParameters<32>), //TODO implement parameters
-    StepPitchShifter(UnusedParameters<32>), //TODO implement parameters
+    TwoVoicePitchShifter(TwoVoicePitchShifterParameters),
+    StepPitchShifter(StepPitchShifterParameters),
     Reverb(UnusedParameters<32>), //TODO implement parameters
     GatedReverb(UnusedParameters<32>), //TODO implement parameters
     ChorusOverdrive(UnusedParameters<32>), //TODO implement parameters
@@ -3109,7 +3109,7 @@ impl Default for PhonographParameters {
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
 pub struct PitchShifterParameters {
-    coarse_semitones: Int<-24, 12>,
+    coarse_semitones: Semitones,
     fine_percent: EvenPercent<100>,
     delay_mode: DelayMode,
     delay_ms: LinearMilliseconds<1300>,
@@ -3138,6 +3138,140 @@ impl Default for PitchShifterParameters {
             low_gain: Int(0),
             high_gain: Int(0),
             balance: Balance(50),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct TwoVoicePitchShifterParameters {
+    pitch_1_coarse_semitones: Semitones,
+    pitch_1_fine_percent: EvenPercent<100>,
+    pitch_1_delay_mode: DelayMode,
+    pitch_1_delay_ms: LinearMilliseconds<1300>,
+    pitch_1_delay_note: NoteLength,
+    pitch_1_feedback: Feedback,
+    pitch_1_pan: Pan,
+    pitch_1_level: Level,
+    pitch_2_coarse_semitones: Semitones,
+    pitch_2_fine_percent: EvenPercent<100>,
+    pitch_2_delay_mode: DelayMode,
+    pitch_2_delay_ms: LinearMilliseconds<1300>,
+    pitch_2_delay_note: NoteLength,
+    pitch_2_feedback: Feedback,
+    pitch_2_pan: Pan,
+    pitch_2_level: Level,
+    low_gain: Gain,
+    high_gain: Gain,
+    balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 12>")]
+    #[validate]
+    unused_parameters: [Parameter; 12]
+}
+
+impl Default for TwoVoicePitchShifterParameters {
+    fn default() -> Self {
+        Self {
+            pitch_1_coarse_semitones: Int(4),
+            pitch_1_fine_percent: EvenPercent(0),
+            pitch_1_delay_mode: DelayMode::Note,
+            pitch_1_delay_ms: UInt(300),
+            pitch_1_delay_note: NoteLength::EighthNote,
+            pitch_1_feedback: EvenPercent(0),
+            pitch_1_pan: Pan::Centre,
+            pitch_1_level: UInt(127),
+            pitch_2_coarse_semitones: Int(7),
+            pitch_2_fine_percent: EvenPercent(0),
+            pitch_2_delay_mode: DelayMode::Note,
+            pitch_2_delay_ms: UInt(600),
+            pitch_2_delay_note: NoteLength::QuarterNote,
+            pitch_2_feedback: EvenPercent(0),
+            pitch_2_pan: Pan::Centre,
+            pitch_2_level: UInt(127),
+            low_gain: Int(0),
+            high_gain: Int(0),
+            balance: Balance(50),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct StepPitchShifterParameters {
+    step1: Semitones,
+    step2: Semitones,
+    step3: Semitones,
+    step4: Semitones,
+    step5: Semitones,
+    step6: Semitones,
+    step7: Semitones,
+    step8: Semitones,
+    step9: Semitones,
+    step10: Semitones,
+    step11: Semitones,
+    step12: Semitones,
+    step13: Semitones,
+    step14: Semitones,
+    step15: Semitones,
+    step16: Semitones,
+    rate_mode: RateMode,
+    rate_hz: LinearFrequency,
+    rate_note: NoteLength,
+    attack: Level,
+    gate_time: Level,
+    fine_percent: EvenPercent<100>,
+    delay_mode: DelayMode,
+    delay_ms: LinearMilliseconds<1300>,
+    delay_note: NoteLength,
+    feedback: Feedback,
+    low_gain: Gain,
+    high_gain: Gain,
+    balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 2>")]
+    #[validate]
+    unused_parameters: [Parameter; 2]
+}
+
+impl Default for StepPitchShifterParameters {
+    fn default() -> Self {
+        Self {
+            step1: Int(2),
+            step2: Int(0),
+            step3: Int(0),
+            step4: Int(0),
+            step5: Int(3),
+            step6: Int(0),
+            step7: Int(0),
+            step8: Int(3),
+            step9: Int(0),
+            step10: Int(3),
+            step11: Int(0),
+            step12: Int(3),
+            step13: Int(0),
+            step14: Int(0),
+            step15: Int(2),
+            step16: Int(0),
+            rate_mode: RateMode::Note,
+            rate_hz: LinearFrequency(0.5),
+            rate_note: NoteLength::WholeNote,
+            attack: UInt(100),
+            gate_time: UInt(100),
+            fine_percent: EvenPercent(0),
+            delay_mode: DelayMode::Milliseconds,
+            delay_ms: UInt(1),
+            delay_note: NoteLength::WholeNote,
+            feedback: EvenPercent(0),
+            low_gain: Int(0),
+            high_gain: Int(0),
+            balance: Balance(100),
             level: UInt(127),
             unused_parameters: Default::default()
         }
