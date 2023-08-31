@@ -3,7 +3,7 @@ use strum_macros::EnumIter;
 use strum::IntoEnumIterator;
 use validator::Validate;
 
-use crate::{json::{type_name_pretty, validation::out_of_range_err, schema::{u16_schema, i8_schema}}, roland::types::enums::Pan};
+use crate::{json::{type_name_pretty, validation::out_of_range_err, schema::{u16_schema, i16_schema}}, roland::types::enums::Pan};
 
 use super::super::numeric::Parameter;
 
@@ -74,7 +74,7 @@ pub enum NoteLength {
 
 /// Parameter(0-5) === ReverbOnlyCharacter(Room1 - Hall2)
 #[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
-pub enum ReverbOnlyCharacter {//TODO rename
+pub enum ReverbOnlyCharacter {
     Room1,
     Room2,
     Stage1,
@@ -85,7 +85,7 @@ pub enum ReverbOnlyCharacter {//TODO rename
 
 /// Parameter(0-7) === ReverbCharacter(Room1 - PanDelay)
 #[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
-pub enum ReverbCharacter {//TODO rename
+pub enum ReverbCharacter {
     Room1,
     Room2,
     Stage1,
@@ -338,6 +338,15 @@ pub enum DiscType {
     SP
 }
 
+/// Parameter(0-3) === GateType(Normal - Sweep2)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
+pub enum GateType {
+    Normal,
+    Reverse,
+    Sweep1,
+    Sweep2
+}
+
 /// Parameter(0-1) === Switch(False, True)
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct Switch(pub bool);
@@ -423,9 +432,9 @@ pub type PreLpf = UInt<0, 7>;
 
 /// Parameter(0-(MAX-MIN)) === Int(MIN-MAX)
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
-pub struct Int<const MIN: i8, const MAX: i8>(pub i8);
+pub struct Int<const MIN: isize, const MAX: isize>(pub isize);
 
-impl<const MIN: i8, const MAX: i8> Int<MIN, MAX> {
+impl<const MIN: isize, const MAX: isize> Int<MIN, MAX> {
     fn validate_generic_range() -> () {
         if MIN > MAX {
             panic!("Invalid Int range: MIN({}) > MAX({})", MIN, MAX);
@@ -433,7 +442,7 @@ impl<const MIN: i8, const MAX: i8> Int<MIN, MAX> {
     }
 }
 
-impl<const MIN: i8, const MAX: i8> Into<Parameter> for Int<MIN, MAX> {
+impl<const MIN: isize, const MAX: isize> Into<Parameter> for Int<MIN, MAX> {
     fn into(self) -> Parameter {
         Self::validate_generic_range();
         if self.0 < MIN || self.0 > MAX {
@@ -443,27 +452,27 @@ impl<const MIN: i8, const MAX: i8> Into<Parameter> for Int<MIN, MAX> {
     }
 }
 
-impl<const MIN: i8, const MAX: i8> From<Parameter> for Int<MIN, MAX> {
+impl<const MIN: isize, const MAX: isize> From<Parameter> for Int<MIN, MAX> {
     fn from(value: Parameter) -> Self {
         Self::validate_generic_range();
         if value.0 < 0 || value.0 > (MAX as i16 - MIN as i16) {
             panic!("Invalid Int<{},{}>: Parameter({})", MIN, MAX, value.0);
         }
-        Self((value.0 + MIN as i16) as i8)
+        Self((value.0 + MIN as i16) as isize)
     }
 }
 
-impl<const MIN: i8, const MAX: i8> JsonSchema for Int<MIN, MAX> {
+impl<const MIN: isize, const MAX: isize> JsonSchema for Int<MIN, MAX> {
     fn schema_name() -> String {
         type_name_pretty::<Self>().into()
     }
 
     fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-        i8_schema(MIN, MAX)
+        i16_schema(MIN as i16, MAX as i16)
     }
 }
 
-impl<const MIN: i8, const MAX: i8> Validate for Int<MIN, MAX> {
+impl<const MIN: isize, const MAX: isize> Validate for Int<MIN, MAX> {
     fn validate(&self) -> Result<(), validator::ValidationErrors> {
         if self.0 < MIN || self.0 > MAX {
             Err(out_of_range_err("0", &MIN, &MAX))
