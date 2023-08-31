@@ -84,11 +84,11 @@ pub enum MfxType { // 0-255
     OverdriveFlanger(DriveFlangerParameters<80>),
     OverdriveDelay(DriveDelayParameters<80>),
     DistortionChorus(DriveChorusParameters<127>),
-    DistortionFlanger(DriveFlangerParameters<127>),
-    DistortionDelay(DriveDelayParameters<127>),
-    EnhancerChorus(UnusedParameters<32>), //TODO implement parameters
-    EnhancerFlanger(UnusedParameters<32>), //TODO implement parameters
-    EnhancerDelay(UnusedParameters<32>), //TODO implement parameters
+    DistortionFlanger(DriveChorusParameters<127>),
+    DistortionDelay(DriveChorusParameters<127>),
+    EnhancerChorus(EnhancerChorusParameters),
+    EnhancerFlanger(EnhancerFlangerParameters),
+    EnhancerDelay(EnhancerDelayParameters),
     ChorusDelay(UnusedParameters<32>), //TODO implement parameters
     FlangerDelay(UnusedParameters<32>), //TODO implement parameters
     ChorusFlanger(UnusedParameters<32>), //TODO implement parameters
@@ -3444,6 +3444,113 @@ impl<const DL: u16> Default for DriveDelayParameters<DL> {
             delay_hf_damp: LogFrequencyOrByPass::ByPass,
             delay_balance: Balance(10),
             level: UInt(DL),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct EnhancerChorusParameters {
+    enhancer_sensitivity: Level,
+    enhancer_mix: Level,
+    chorus_pre_delay: LogMilliseconds,
+    chorus_rate_mode: RateMode,
+    chorus_rate_hz: LinearFrequency,
+    chorus_rate_note: NoteLength,
+    chorus_depth: Level,
+    chorus_balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 23>")]
+    #[validate]
+    unused_parameters: [Parameter; 23]
+}
+
+impl Default for EnhancerChorusParameters {
+    fn default() -> Self {
+        Self {
+            enhancer_sensitivity: UInt(64),
+            enhancer_mix: UInt(64),
+            chorus_pre_delay: LogMilliseconds(2.0),
+            chorus_rate_mode: RateMode::Hertz,
+            chorus_rate_hz: LinearFrequency(0.5),
+            chorus_rate_note: NoteLength::WholeNote,
+            chorus_depth: UInt(20),
+            chorus_balance: Balance(50),
+            level: UInt(100),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct EnhancerFlangerParameters {
+    enhancer_sensitivity: Level,
+    enhancer_mix: Level,
+    flanger_pre_delay: LogMilliseconds,
+    flanger_rate_mode: RateMode,
+    flanger_rate_hz: LinearFrequency,
+    flanger_rate_note: NoteLength,
+    flanger_depth: Level,
+    flanger_feedback: Feedback,
+    flanger_balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 22>")]
+    #[validate]
+    unused_parameters: [Parameter; 22]
+}
+
+impl Default for EnhancerFlangerParameters {
+    fn default() -> Self {
+        Self {
+            enhancer_sensitivity: UInt(64),
+            enhancer_mix: UInt(64),
+            flanger_pre_delay: LogMilliseconds(2.0),
+            flanger_rate_mode: RateMode::Note,
+            flanger_rate_hz: LinearFrequency(0.5),
+            flanger_rate_note: NoteLength::WholeNote,
+            flanger_depth: UInt(40),
+            flanger_feedback: EvenPercent(60),
+            flanger_balance: Balance(50),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct EnhancerDelayParameters {
+    enhancer_sensitivity: Level,
+    enhancer_mix: Level,
+    delay_mode: DelayMode,
+    delay_ms: LinearMilliseconds<2600>,
+    delay_note: NoteLength,
+    delay_feedback: Feedback,
+    delay_hf_damp: LogFrequencyOrByPass<200, 8000>,
+    delay_balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 23>")]
+    #[validate]
+    unused_parameters: [Parameter; 23]
+}
+
+impl Default for EnhancerDelayParameters {
+    fn default() -> Self {
+        Self {
+            enhancer_sensitivity: UInt(64),
+            enhancer_mix: UInt(64),
+            delay_mode: DelayMode::Note,
+            delay_ms: UInt(600),
+            delay_note: NoteLength::QuarterNote,
+            delay_feedback: EvenPercent(20),
+            delay_hf_damp: LogFrequencyOrByPass::ByPass,
+            delay_balance: Balance(10),
+            level: UInt(127),
             unused_parameters: Default::default()
         }
     }
