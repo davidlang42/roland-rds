@@ -7,7 +7,7 @@ use crate::json::validation::unused_by_rd300nx_err;
 use crate::roland::types::enums::Pan;
 use crate::roland::types::numeric::Parameter;
 use super::{UnusedParameters, Parameters};
-use super::discrete::{LogFrequency, QFactor, FineFrequency, LinearFrequency, FilterSlope, EvenPercent, StepLinearFrequency, Balance, LogMilliseconds, LogFrequencyOrByPass, HumFrequency, Feedback, ByPassOrLogFrequency};
+use super::discrete::{LogFrequency, QFactor, FineFrequency, LinearFrequency, FilterSlope, EvenPercent, StepLinearFrequency, Balance, LogMilliseconds, LogFrequencyOrByPass, HumFrequency, Feedback, ByPassOrLogFrequency, LogFrequencyOrByPassOffByOne};
 use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode, ModWave, SlicerMode, Speed, FilterType, OutputMode, AmpType, MicSetting, PreAmpType, PreAmpGain, CompressionRatio, PostGain, GateMode, DelayMode, LinearMilliseconds, PhaseType, FeedbackMode, TapeHeads, LofiType, NoiseType, DiscType, DiscTypeWithRandom, Semitones, ReverbOnlyCharacter, GateType};
 
 //TODO validate all fields of all Parameters types
@@ -3693,18 +3693,18 @@ impl Default for ChorusFlangerParameters {
 pub struct SympatheticResonanceParameters {
     depth: Level,
     damper: Level,
-    pre_lpf: LogFrequencyOrByPass<16, 16000>, // technically this mislabels 15000 as 16000, but it really doesn't matter
+    pre_lpf: LogFrequencyOrByPassOffByOne<16, 16000>, // technically this mislabels 15000 as 16000, but it really doesn't matter
     pre_hpf: ByPassOrLogFrequency<16, 16000>, // technically this mislabels 15000 as 16000, but it really doesn't matter
     peaking_freq: LogFrequency<200, 8000>,
     peaking_gain: Gain,
     peaking_q: QFactor,
-    hf_damp: LogFrequencyOrByPass<16, 16000>, // technically this mislabels 15000 as 16000, but it really doesn't matter
+    hf_damp: LogFrequencyOrByPassOffByOne<16, 16000>, // technically this mislabels 15000 as 16000, but it really doesn't matter
     lf_damp: ByPassOrLogFrequency<16, 16000>, // technically this mislabels 15000 as 16000, but it really doesn't matter
     lid_open: Int<1, 7>,
     level: Level,
     p_sft_amount: Level,
     p_sft_level: Level,
-    p_sft_lpf: LogFrequencyOrByPass<16, 16000>, // technically this mislabels 15000 as 16000, but it really doesn't matter
+    p_sft_lpf: LogFrequencyOrByPassOffByOne<16, 16000>, // technically this mislabels 15000 as 16000, but it really doesn't matter
     p_sft_hpf: ByPassOrLogFrequency<16, 16000>, // technically this mislabels 15000 as 16000, but it really doesn't matter
     p_sft_to_rev: Level,
     damper_offset: UInt<0, 64>,
@@ -3720,18 +3720,18 @@ impl Default for SympatheticResonanceParameters {
         Self {
             depth: UInt(52),
             damper: UInt(0),
-            pre_lpf: LogFrequencyOrByPass::Frequency(LogFrequency(5000)),
+            pre_lpf: LogFrequencyOrByPassOffByOne::Frequency(LogFrequency(5000)),
             pre_hpf: ByPassOrLogFrequency::ByPass,
             peaking_freq: LogFrequency(250),
             peaking_gain: Int(3),
             peaking_q: QFactor(0.5),
-            hf_damp: LogFrequencyOrByPass::Frequency(LogFrequency(3150)),
+            hf_damp: LogFrequencyOrByPassOffByOne::Frequency(LogFrequency(3150)),
             lf_damp: ByPassOrLogFrequency::Frequency(LogFrequency(200)),
             lid_open: Int(5),
             level: UInt(127),
             p_sft_amount: UInt(23),
             p_sft_level: UInt(99),
-            p_sft_lpf: LogFrequencyOrByPass::Frequency(LogFrequency(10000)),
+            p_sft_lpf: LogFrequencyOrByPassOffByOne::Frequency(LogFrequency(10000)),
             p_sft_hpf: ByPassOrLogFrequency::ByPass,
             p_sft_to_rev: UInt(127),
             damper_offset: UInt(34), //TODO actually 0

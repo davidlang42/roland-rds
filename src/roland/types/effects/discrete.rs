@@ -334,6 +334,35 @@ impl<const L: u16, const H: u16> Into<Parameter> for LogFrequencyOrByPass<L, H> 
     }
 }
 
+/// Parameter(1-18) === LogFrequencyOrByPassOffByOne(200-8000Hz, BYPASS)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Copy, Clone)]
+pub enum LogFrequencyOrByPassOffByOne<const MIN: u16, const MAX: u16> {
+    Frequency(LogFrequency<MIN, MAX>),
+    ByPass
+}
+
+impl<const L: u16, const H: u16> From<Parameter> for LogFrequencyOrByPassOffByOne<L, H> {
+    fn from(value: Parameter) -> Self {
+        let values = LogFrequency::<L, H>::values();
+        if value.0 < LogFrequency::<L, H>::OFFSET + 1 || value.0 > LogFrequency::<L, H>::OFFSET + values.len() as i16 + 1 {
+            panic!("Parameter out of range: {} (expected {}-{})", value.0, LogFrequency::<L, H>::OFFSET + 1, LogFrequency::<L, H>::OFFSET + values.len() as i16 + 1)
+        } else if value.0 == values.len() as i16 + 1 {
+            Self::ByPass
+        } else {
+            Self::Frequency(Parameter(value.0 - 1).into())
+        }
+    }
+}
+
+impl<const L: u16, const H: u16> Into<Parameter> for LogFrequencyOrByPassOffByOne<L, H> {
+    fn into(self) -> Parameter {
+        match self {
+            Self::Frequency(f) => Parameter(Into::<Parameter>::into(f).0 + 1),
+            Self::ByPass => Parameter(LogFrequency::<L, H>::OFFSET + LogFrequency::<L, H>::values().len() as i16 + 1)
+        }
+    }
+}
+
 /// Parameter(0-17) === ByPassOrLogFrequency(BYPASS, 200-8000Hz)
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Copy, Clone)]
 pub enum ByPassOrLogFrequency<const MIN: u16, const MAX: u16> {
