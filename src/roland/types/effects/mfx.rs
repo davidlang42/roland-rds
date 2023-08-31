@@ -73,7 +73,7 @@ pub enum MfxType { // 0-255
     LofiNoise(LofiNoiseParameters),
     LofiCompress(LofiCompressParameters),
     LofiRadio(LofiRadioParameters),
-    Telephone(UnusedParameters<32>), //TODO implement parameters
+    Telephone(TelephoneParameters),
     Photograph(UnusedParameters<32>), //TODO implement parameters
     PitchShifter(UnusedParameters<32>), //TODO implement parameters
     TwoVoicePitchShifter(UnusedParameters<32>), //TODO implement parameters
@@ -3032,6 +3032,31 @@ impl Default for LofiRadioParameters {
             radio_noise_level: UInt(64),
             low_gain: Int(0),
             high_gain: Int(0),
+            balance: Balance(100),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct TelephoneParameters {
+    voice_quality: UInt<0, 15>,
+    treble: Gain,
+    balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 28>")]
+    #[validate]
+    unused_parameters: [Parameter; 28]
+}
+
+impl Default for TelephoneParameters {
+    fn default() -> Self {
+        Self {
+            voice_quality: UInt(3),
+            treble: Int(0),
             balance: Balance(100),
             level: UInt(127),
             unused_parameters: Default::default()
