@@ -61,7 +61,7 @@ pub enum MfxType { // 0-255
     LongDelay(LongDelayParameters),
     SerialDelay(SerialDelayParameters),
     ModulationDelay(ModulationDelayParameters),
-    ThreeTapPanDelay(UnusedParameters<32>), //TODO implement parameters
+    ThreeTapPanDelay(ThreeTapPanDelayParameters),
     FourTapPanDelay(UnusedParameters<32>), //TODO implement parameters
     MultiTapDelay(UnusedParameters<32>), //TODO implement parameters
     ReverseDelay(UnusedParameters<32>), //TODO implement parameters
@@ -2436,6 +2436,59 @@ impl Default for ModulationDelayParameters {
             rate_note: NoteLength::WholeNote,
             depth: UInt(20),
             phase: UInt(180),
+            low_gain: Int(0),
+            high_gain: Int(0),
+            balance: Balance(10),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct ThreeTapPanDelayParameters {
+    delay_left_mode: DelayMode,
+    delay_left_ms: LinearMilliseconds<2600>,
+    delay_left_note: NoteLength,
+    delay_right_mode: DelayMode,
+    delay_right_ms: LinearMilliseconds<2600>,
+    delay_right_note: NoteLength,
+    delay_centre_mode: DelayMode,
+    delay_centre_ms: LinearMilliseconds<2600>,
+    delay_centre_note: NoteLength,
+    centre_feedback: EvenPercent,
+    hf_damp: LogFrequencyOrByPass<200, 8000>,
+    left_level: Level,
+    right_level: Level,
+    centre_level: Level,
+    low_gain: Gain,
+    high_gain: Gain,
+    balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 14>")]
+    #[validate]
+    unused_parameters: [Parameter; 14]
+}
+
+impl Default for ThreeTapPanDelayParameters {
+    fn default() -> Self {
+        Self {
+            delay_left_mode: DelayMode::Note,
+            delay_left_ms: UInt(400),
+            delay_left_note: NoteLength::QuarterNoteTriplet,
+            delay_right_mode: DelayMode::Note,
+            delay_right_ms: UInt(800),
+            delay_right_note: NoteLength::HalfNoteTriplet,
+            delay_centre_mode: DelayMode::Note,
+            delay_centre_ms: UInt(1200),
+            delay_centre_note: NoteLength::HalfNote,
+            centre_feedback: EvenPercent(20),
+            hf_damp: LogFrequencyOrByPass::ByPass,
+            left_level: UInt(127),
+            right_level: UInt(127),
+            centre_level: UInt(127),
             low_gain: Int(0),
             high_gain: Int(0),
             balance: Balance(10),
