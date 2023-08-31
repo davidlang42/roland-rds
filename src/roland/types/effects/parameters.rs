@@ -72,9 +72,20 @@ pub enum NoteLength {
     DoubleNote
 }
 
+/// Parameter(0-5) === ReverbOnlyCharacter(Room1 - Hall2)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
+pub enum ReverbOnlyCharacter {//TODO rename
+    Room1,
+    Room2,
+    Stage1,
+    Stage2,
+    Hall1,
+    Hall2
+}
+
 /// Parameter(0-7) === ReverbCharacter(Room1 - PanDelay)
 #[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
-pub enum ReverbCharacter {
+pub enum ReverbCharacter {//TODO rename
     Room1,
     Room2,
     Stage1,

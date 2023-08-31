@@ -8,7 +8,7 @@ use crate::roland::types::enums::Pan;
 use crate::roland::types::numeric::Parameter;
 use super::{UnusedParameters, Parameters};
 use super::discrete::{LogFrequency, QFactor, FineFrequency, LinearFrequency, FilterSlope, EvenPercent, StepLinearFrequency, Balance, LogMilliseconds, LogFrequencyOrByPass, HumFrequency, Feedback};
-use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode, ModWave, SlicerMode, Speed, FilterType, OutputMode, AmpType, MicSetting, PreAmpType, PreAmpGain, CompressionRatio, PostGain, GateMode, DelayMode, LinearMilliseconds, PhaseType, FeedbackMode, TapeHeads, LofiType, NoiseType, DiscType, DiscTypeWithRandom, Semitones};
+use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode, ModWave, SlicerMode, Speed, FilterType, OutputMode, AmpType, MicSetting, PreAmpType, PreAmpGain, CompressionRatio, PostGain, GateMode, DelayMode, LinearMilliseconds, PhaseType, FeedbackMode, TapeHeads, LofiType, NoiseType, DiscType, DiscTypeWithRandom, Semitones, ReverbOnlyCharacter};
 
 //TODO validate all fields of all Parameters types
 //TODO add tests for default chorus, mfx, reverb
@@ -78,7 +78,7 @@ pub enum MfxType { // 0-255
     PitchShifter(PitchShifterParameters),
     TwoVoicePitchShifter(TwoVoicePitchShifterParameters),
     StepPitchShifter(StepPitchShifterParameters),
-    Reverb(UnusedParameters<32>), //TODO implement parameters
+    Reverb(ReverbParameters),
     GatedReverb(UnusedParameters<32>), //TODO implement parameters
     ChorusOverdrive(UnusedParameters<32>), //TODO implement parameters
     OverdriveFlanger(UnusedParameters<32>), //TODO implement parameters
@@ -3272,6 +3272,39 @@ impl Default for StepPitchShifterParameters {
             low_gain: Int(0),
             high_gain: Int(0),
             balance: Balance(100),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct ReverbParameters {
+    character: ReverbOnlyCharacter,
+    pre_delay: LogMilliseconds,
+    time: Level,
+    hf_damp: LogFrequencyOrByPass<200, 8000>,
+    low_gain: Gain,
+    high_gain: Gain,
+    balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 24>")]
+    #[validate]
+    unused_parameters: [Parameter; 24]
+}
+
+impl Default for ReverbParameters {
+    fn default() -> Self {
+        Self {
+            character: ReverbOnlyCharacter::Stage1,
+            pre_delay: LogMilliseconds(1.0),
+            time: UInt(64),
+            hf_damp: LogFrequencyOrByPass::ByPass,
+            low_gain: Int(0),
+            high_gain: Int(0),
+            balance: Balance(50),
             level: UInt(127),
             unused_parameters: Default::default()
         }
