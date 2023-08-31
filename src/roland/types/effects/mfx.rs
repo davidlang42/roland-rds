@@ -80,9 +80,9 @@ pub enum MfxType { // 0-255
     StepPitchShifter(StepPitchShifterParameters),
     Reverb(ReverbParameters),
     GatedReverb(GatedReverbParameters),
-    ChorusOverdrive(UnusedParameters<32>), //TODO implement parameters
-    OverdriveFlanger(UnusedParameters<32>), //TODO implement parameters
-    OverdriveDelay(UnusedParameters<32>), //TODO implement parameters
+    OverdriveChorus(DriveChorusParameters),
+    OverdriveFlanger(DriveFlangerParameters),
+    OverdriveDelay(DriveDelayParameters),
     DistortionChorus(UnusedParameters<32>), //TODO implement parameters
     DistortionFlanger(UnusedParameters<32>), //TODO implement parameters
     DistortionDelay(UnusedParameters<32>), //TODO implement parameters
@@ -172,7 +172,7 @@ impl MfxType {
             63 => Self::StepPitchShifter(parameters.into()),
             64 => Self::Reverb(parameters.into()),
             65 => Self::GatedReverb(parameters.into()),
-            66 => Self::ChorusOverdrive(parameters.into()),
+            66 => Self::OverdriveChorus(parameters.into()),
             67 => Self::OverdriveFlanger(parameters.into()),
             68 => Self::OverdriveDelay(parameters.into()),
             69 => Self::DistortionChorus(parameters.into()),
@@ -264,7 +264,7 @@ impl MfxType {
             Self::StepPitchShifter(_) => 63,
             Self::Reverb(_) => 64,
             Self::GatedReverb(_) => 65,
-            Self::ChorusOverdrive(_) => 66,
+            Self::OverdriveChorus(_) => 66,
             Self::OverdriveFlanger(_) => 67,
             Self::OverdriveDelay(_) => 68,
             Self::DistortionChorus(_) => 69,
@@ -356,7 +356,7 @@ impl MfxType {
             Self::StepPitchShifter(_) => "StepPitchShifter".into(),
             Self::Reverb(_) => "Reverb".into(),
             Self::GatedReverb(_) => "GatedReverb".into(),
-            Self::ChorusOverdrive(_) => "ChorusOverdrive".into(),
+            Self::OverdriveChorus(_) => "ChorusOverdrive".into(),
             Self::OverdriveFlanger(_) => "OverdriveFlanger".into(),
             Self::OverdriveDelay(_) => "OverdriveDelay".into(),
             Self::DistortionChorus(_) => "DistortionChorus".into(),
@@ -448,7 +448,7 @@ impl MfxType {
             Self::StepPitchShifter(p) => p.parameters(),
             Self::Reverb(p) => p.parameters(),
             Self::GatedReverb(p) => p.parameters(),
-            Self::ChorusOverdrive(p) => p.parameters(),
+            Self::OverdriveChorus(p) => p.parameters(),
             Self::OverdriveFlanger(p) => p.parameters(),
             Self::OverdriveDelay(p) => p.parameters(),
             Self::DistortionChorus(p) => p.parameters(),
@@ -555,7 +555,7 @@ impl Validate for MfxType {
             Self::StepPitchShifter(p) => p.validate(),
             Self::Reverb(p) => p.validate(),
             Self::GatedReverb(p) => p.validate(),
-            Self::ChorusOverdrive(p) => p.validate(),
+            Self::OverdriveChorus(p) => p.validate(),
             Self::OverdriveFlanger(p) => p.validate(),
             Self::OverdriveDelay(p) => p.validate(),
             Self::DistortionChorus(p) => p.validate(),
@@ -3337,6 +3337,113 @@ impl Default for GatedReverbParameters {
             high_gain: Int(0),
             balance: Balance(50),
             level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct DriveChorusParameters {
+    drive: Level,
+    pan: Pan,
+    chorus_pre_delay: LogMilliseconds,
+    chorus_rate_mode: RateMode,
+    chorus_rate_hz: LinearFrequency,
+    chorus_rate_note: NoteLength,
+    chorus_depth: Level,
+    chorus_balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 23>")]
+    #[validate]
+    unused_parameters: [Parameter; 23]
+}
+
+impl Default for DriveChorusParameters {
+    fn default() -> Self {
+        Self {
+            drive: UInt(64),
+            pan: Pan::Centre,
+            chorus_pre_delay: LogMilliseconds(2.0),
+            chorus_rate_mode: RateMode::Hertz,
+            chorus_rate_hz: LinearFrequency(0.5),
+            chorus_rate_note: NoteLength::WholeNote,
+            chorus_depth: UInt(20),
+            chorus_balance: Balance(50),
+            level: UInt(80),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct DriveFlangerParameters {
+    drive: Level,
+    pan: Pan,
+    flanger_pre_delay: LogMilliseconds,
+    flanger_rate_mode: RateMode,
+    flanger_rate_hz: LinearFrequency,
+    flanger_rate_note: NoteLength,
+    flanger_depth: Level,
+    flanger_feedback: Feedback,
+    flanger_balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 22>")]
+    #[validate]
+    unused_parameters: [Parameter; 22]
+}
+
+impl Default for DriveFlangerParameters {
+    fn default() -> Self {
+        Self {
+            drive: UInt(64),
+            pan: Pan::Centre,
+            flanger_pre_delay: LogMilliseconds(2.0),
+            flanger_rate_mode: RateMode::Note,
+            flanger_rate_hz: LinearFrequency(0.5),
+            flanger_rate_note: NoteLength::WholeNote,
+            flanger_depth: UInt(40),
+            flanger_feedback: EvenPercent(60),
+            flanger_balance: Balance(50),
+            level: UInt(80),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct DriveDelayParameters {
+    drive: Level,
+    pan: Pan,
+    delay_mode: DelayMode,
+    delay_ms: LinearMilliseconds<2600>,
+    delay_note: NoteLength,
+    delay_feedback: Feedback,
+    delay_hf_damp: LogFrequencyOrByPass<200, 8000>,
+    delay_balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 23>")]
+    #[validate]
+    unused_parameters: [Parameter; 23]
+}
+
+impl Default for DriveDelayParameters {
+    fn default() -> Self {
+        Self {
+            drive: UInt(64),
+            pan: Pan::Centre,
+            delay_mode: DelayMode::Note,
+            delay_ms: UInt(600),
+            delay_note: NoteLength::QuarterNote,
+            delay_feedback: EvenPercent(20),
+            delay_hf_damp: LogFrequencyOrByPass::ByPass,
+            delay_balance: Balance(10),
+            level: UInt(80),
             unused_parameters: Default::default()
         }
     }
