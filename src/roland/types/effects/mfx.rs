@@ -64,11 +64,11 @@ pub enum MfxType { // 0-255
     ThreeTapPanDelay(ThreeTapPanDelayParameters),
     FourTapPanDelay(FourTapPanDelayParameters),
     MultiTapDelay(MultiTapDelayParameters),
-    ReverseDelay(UnusedParameters<32>), //TODO implement parameters
-    ShuffleDelay(UnusedParameters<32>), //TODO implement parameters
-    Delay3D(UnusedParameters<32>), //TODO implement parameters
-    TimeCtrlDelay(UnusedParameters<32>), //TODO implement parameters
-    LongTimeCtrlDelay(UnusedParameters<32>), //TODO implement parameters
+    ReverseDelay(ReverseDelayParameters),
+    ShuffleDelay(ShuffleDelayParameters),
+    Delay3D(Delay3DParameters),
+    TimeCtrlDelay(TimeCtrlDelayParameters),
+    LongTimeCtrlDelay(LongTimeCtrlDelayParameters),
     TapeEcho(UnusedParameters<32>), //TODO implement parameters
     LofiNoise(UnusedParameters<32>), //TODO implement parameters
     LofiCompress(UnusedParameters<32>), //TODO implement parameters
@@ -2619,6 +2619,255 @@ impl Default for MultiTapDelayParameters {
             delay_2_level: UInt(127),
             delay_3_level: UInt(127),
             delay_4_level: UInt(127),
+            low_gain: Int(0),
+            high_gain: Int(0),
+            balance: Balance(10),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct ReverseDelayParameters {
+    threshold: Level,
+    rev_delay_mode: DelayMode,
+    rev_delay_ms: LinearMilliseconds<1300>,
+    rev_delay_note: NoteLength,
+    rev_delay_feedback: EvenPercent,
+    rev_delay_hf_damp: LogFrequencyOrByPass<200, 8000>,
+    rev_delay_pan: Pan,
+    rev_delay_level: Level,
+    delay_1_mode: DelayMode,
+    delay_1_ms: LinearMilliseconds<1300>,
+    delay_1_note: NoteLength,
+    delay_2_mode: DelayMode,
+    delay_2_ms: LinearMilliseconds<1300>,
+    delay_2_note: NoteLength,
+    delay_3_mode: DelayMode,
+    delay_3_ms: LinearMilliseconds<1300>,
+    delay_3_note: NoteLength,
+    delay_3_feedback: EvenPercent,
+    delay_hf_damp: LogFrequencyOrByPass<200, 8000>,
+    delay_1_pan: Pan,
+    delay_2_pan: Pan,
+    delay_1_level: Level,
+    delay_2_level: Level,
+    low_gain: Gain,
+    high_gain: Gain,
+    balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 5>")]
+    #[validate]
+    unused_parameters: [Parameter; 5]
+}
+
+impl Default for ReverseDelayParameters {
+    fn default() -> Self {
+        Self {
+            threshold: UInt(30),
+            rev_delay_mode: DelayMode::Note,
+            rev_delay_ms: UInt(600),
+            rev_delay_note: NoteLength::QuarterNote,
+            rev_delay_feedback: EvenPercent(0),
+            rev_delay_hf_damp: LogFrequencyOrByPass::ByPass,
+            rev_delay_pan: Pan::Centre,
+            rev_delay_level: UInt(127),
+            delay_1_mode: DelayMode::Note,
+            delay_1_ms: UInt(300),
+            delay_1_note: NoteLength::EighthNote,
+            delay_2_mode: DelayMode::Note,
+            delay_2_ms: UInt(600),
+            delay_2_note: NoteLength::QuarterNote,
+            delay_3_mode: DelayMode::Note,
+            delay_3_ms: UInt(600),
+            delay_3_note: NoteLength::QuarterNote,
+            delay_3_feedback: EvenPercent(0),
+            delay_hf_damp: LogFrequencyOrByPass::ByPass,
+            delay_1_pan: Pan::Left(64),
+            delay_2_pan: Pan::Right(63),
+            delay_1_level: UInt(127),
+            delay_2_level: UInt(127),
+            low_gain: Int(0),
+            high_gain: Int(0),
+            balance: Balance(20),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct ShuffleDelayParameters {
+    delay_mode: DelayMode,
+    delay_ms: LinearMilliseconds<2600>,
+    delay_note: NoteLength,
+    shuffle_rate: UInt<0, 100>,
+    acceleration: UInt<0, 15>,
+    feedback: EvenPercent,
+    hf_damp: LogFrequencyOrByPass<200, 8000>,
+    pan_a: Pan,
+    pan_b: Pan,
+    level_a: Level,
+    level_b: Level,
+    low_gain: Gain,
+    high_gain: Gain,
+    balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 17>")]
+    #[validate]
+    unused_parameters: [Parameter; 17]
+}
+
+impl Default for ShuffleDelayParameters {
+    fn default() -> Self {
+        Self {
+            delay_mode: DelayMode::Note,
+            delay_ms: UInt(600),
+            delay_note: NoteLength::QuarterNote,
+            shuffle_rate: UInt(67),
+            acceleration: UInt(10),
+            feedback: EvenPercent(20),
+            hf_damp: LogFrequencyOrByPass::ByPass,
+            pan_a: Pan::Left(64),
+            pan_b: Pan::Right(63),
+            level_a: UInt(127),
+            level_b: UInt(127),
+            low_gain: Int(0),
+            high_gain: Int(0),
+            balance: Balance(10),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct Delay3DParameters {
+    delay_left_mode: DelayMode,
+    delay_left_ms: LinearMilliseconds<2600>,
+    delay_left_note: NoteLength,
+    delay_right_mode: DelayMode,
+    delay_right_ms: LinearMilliseconds<2600>,
+    delay_right_note: NoteLength,
+    delay_centre_mode: DelayMode,
+    delay_centre_ms: LinearMilliseconds<2600>,
+    delay_centre_note: NoteLength,
+    centre_feedback: EvenPercent,
+    hf_damp: LogFrequencyOrByPass<200, 8000>,
+    left_level: Level,
+    right_level: Level,
+    centre_level: Level,
+    output_mode: OutputMode,
+    low_gain: Gain,
+    high_gain: Gain,
+    balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 13>")]
+    #[validate]
+    unused_parameters: [Parameter; 13]
+}
+
+impl Default for Delay3DParameters {
+    fn default() -> Self {
+        Self {
+            delay_left_mode: DelayMode::Note,
+            delay_left_ms: UInt(400),
+            delay_left_note: NoteLength::QuarterNoteTriplet,
+            delay_right_mode: DelayMode::Note,
+            delay_right_ms: UInt(800),
+            delay_right_note: NoteLength::HalfNoteTriplet,
+            delay_centre_mode: DelayMode::Note,
+            delay_centre_ms: UInt(1200),
+            delay_centre_note: NoteLength::HalfNote,
+            centre_feedback: EvenPercent(20),
+            hf_damp: LogFrequencyOrByPass::ByPass,
+            left_level: UInt(64),
+            right_level: UInt(64),
+            centre_level: UInt(40),
+            output_mode: OutputMode::Speaker,
+            low_gain: Int(0),
+            high_gain: Int(0),
+            balance: Balance(20),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct TimeCtrlDelayParameters {
+    delay_mode: DelayMode,
+    delay_ms: LinearMilliseconds<1300>,
+    delay_note: NoteLength,
+    acceleration: UInt<0, 15>,
+    feedback: EvenPercent,
+    hf_damp: LogFrequencyOrByPass<200, 8000>,
+    low_gain: Gain,
+    high_gain: Gain,
+    balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 22>")]
+    #[validate]
+    unused_parameters: [Parameter; 22]
+}
+
+impl Default for TimeCtrlDelayParameters {
+    fn default() -> Self {
+        Self {
+            delay_mode: DelayMode::Milliseconds,
+            delay_ms: UInt(600),
+            delay_note: NoteLength::QuarterNote,
+            acceleration: UInt(10),
+            feedback: EvenPercent(20),
+            hf_damp: LogFrequencyOrByPass::ByPass,
+            low_gain: Int(0),
+            high_gain: Int(0),
+            balance: Balance(10),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct LongTimeCtrlDelayParameters {
+    delay_mode: DelayMode,
+    delay_ms: LinearMilliseconds<2600>,
+    delay_note: NoteLength,
+    acceleration: UInt<0, 15>,
+    feedback: EvenPercent,
+    hf_damp: LogFrequencyOrByPass<200, 8000>,
+    pan: Pan,
+    low_gain: Gain,
+    high_gain: Gain,
+    balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 21>")]
+    #[validate]
+    unused_parameters: [Parameter; 21]
+}
+
+impl Default for LongTimeCtrlDelayParameters {
+    fn default() -> Self {
+        Self {
+            delay_mode: DelayMode::Milliseconds,
+            delay_ms: UInt(1200),
+            delay_note: NoteLength::HalfNote,
+            acceleration: UInt(10),
+            feedback: EvenPercent(20),
+            hf_damp: LogFrequencyOrByPass::ByPass,
+            pan: Pan::Centre,
             low_gain: Int(0),
             high_gain: Int(0),
             balance: Balance(10),
