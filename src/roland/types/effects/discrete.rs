@@ -36,7 +36,7 @@ pub trait DiscreteValues<T: PartialEq + Display, const OFFSET: i16> {
 pub struct LogFrequency<const MIN: u16, const MAX: u16>(pub u16);
 
 impl<const L: u16, const H: u16> LogFrequency<L, H> {
-    const PRE_VALUES: [u16; 3] = [20, 25, 32];
+    const PRE_VALUES: [u16; 4] = [16, 20, 25, 32];
     const BASE_VALUES: [u16; 10] = [40, 50, 63, 80, 100, 125, 160, 200, 250, 315];
     const MIN: u16 = L;
     const MAX: u16 = H;
@@ -330,6 +330,35 @@ impl<const L: u16, const H: u16> Into<Parameter> for LogFrequencyOrByPass<L, H> 
         match self {
             Self::Frequency(f) => f.into(),
             Self::ByPass => Parameter(LogFrequency::<L, H>::OFFSET + LogFrequency::<L, H>::values().len() as i16)
+        }
+    }
+}
+
+/// Parameter(0-17) === ByPassOrLogFrequency(BYPASS, 200-8000Hz)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Copy, Clone)]
+pub enum ByPassOrLogFrequency<const MIN: u16, const MAX: u16> {
+    ByPass,
+    Frequency(LogFrequency<MIN, MAX>)
+}
+
+impl<const L: u16, const H: u16> From<Parameter> for ByPassOrLogFrequency<L, H> {
+    fn from(value: Parameter) -> Self {
+        let values = LogFrequency::<L, H>::values();
+        if value.0 == 0 {
+            Self::ByPass
+        } else if value.0 < LogFrequency::<L, H>::OFFSET + 1 || value.0 > LogFrequency::<L, H>::OFFSET + values.len() as i16 + 1 {
+            panic!("Parameter out of range: {} (expected {}-{})", value.0, LogFrequency::<L, H>::OFFSET + 1, LogFrequency::<L, H>::OFFSET + values.len() as i16 + 1)
+        } else {
+            Self::Frequency(Parameter(value.0 - 1).into())
+        }
+    }
+}
+
+impl<const L: u16, const H: u16> Into<Parameter> for ByPassOrLogFrequency<L, H> {
+    fn into(self) -> Parameter {
+        match self {
+            Self::ByPass => Parameter(0),
+            Self::Frequency(f) => Parameter(Into::<Parameter>::into(f).0 + 1),
         }
     }
 }
