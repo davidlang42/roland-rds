@@ -777,7 +777,7 @@ impl Default for SuperFilterParameters {
             rate_note: NoteLength::WholeNote,
             depth: UInt(40),
             attack: UInt(50),
-            level: UInt(127), //TODO confirm on keyboard
+            level: UInt(127),
             unused_parameters: Default::default()
         }
     }
