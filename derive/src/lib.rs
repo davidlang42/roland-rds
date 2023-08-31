@@ -103,13 +103,21 @@ pub fn discrete_values_serialization(input: proc_macro::TokenStream) -> proc_mac
 
         impl #impl_generics From<Parameter> for #name #ty_generics #where_clause {
             fn from(parameter: Parameter) -> Self {
-                Self(Self::value_from(parameter))
+                let values = Self::values();
+                if parameter.0 < Self::OFFSET || parameter.0 >= Self::OFFSET + values.len() as i16 {
+                    panic!("Parameter out of range: {} (expected {}-{})", parameter.0, Self::OFFSET, Self::OFFSET + values.len() as i16 - 1)
+                }
+                Self(values.into_iter().nth((parameter.0 as i16 - Self::OFFSET) as usize).unwrap())
             }
         }
 
         impl #impl_generics Into<Parameter> for #name #ty_generics #where_clause {
             fn into(self) -> Parameter {
-                Self::into_parameter(self.0)
+                if let Some(position) = Self::values().iter().position(|v| Self::equal(v, &self.0)) {
+                    return Parameter(position as i16 + Self::OFFSET);
+                } else {
+                    panic!("Invalid discrete value: {}", self.0);
+                }
             }
         }
     }.into()

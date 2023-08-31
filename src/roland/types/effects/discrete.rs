@@ -13,22 +13,6 @@ pub trait DiscreteValues<T: PartialEq + Display, const OFFSET: i16> {
 
     fn format(value: T) -> String;
 
-    fn value_from(parameter: Parameter) -> T {
-        let values = Self::values();
-        if parameter.0 < OFFSET || parameter.0 >= OFFSET + values.len() as i16 {
-            panic!("Parameter out of range: {} (expected {}-{})", parameter.0, OFFSET, OFFSET + values.len() as i16 - 1)
-        }
-        values.into_iter().nth((parameter.0 as i16 - OFFSET) as usize).unwrap()
-    }
-
-    fn into_parameter(value: T) -> Parameter {
-        if let Some(position) = Self::values().iter().position(|v| Self::equal(v, &value)) {
-            return Parameter(position as i16 + OFFSET);
-        } else {
-            panic!("Invalid discrete value: {}", value);
-        }
-    }
-
     fn equal(a: &T, b: &T) -> bool {
         a == b
     }
