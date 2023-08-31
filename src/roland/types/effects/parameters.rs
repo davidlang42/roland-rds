@@ -303,6 +303,22 @@ pub enum TapeHeads {
     ShortMiddleLong
 }
 
+/// Parameter(0-1) === NoiseType(White, Pink)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
+pub enum NoiseType {
+    White,
+    Pink
+}
+
+/// Parameter(0-3) === DiscType(LP - RND)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
+pub enum DiscType {
+    LP,
+    EP,
+    SP,
+    RND
+}
+
 /// Parameter(0-1) === Switch(False, True)
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct Switch(pub bool);
@@ -444,6 +460,7 @@ pub type BoostGain = Int<-60, 4>;
 pub type PostGain = Int<0, 18>;
 pub type Size = Int<1, 8>;
 pub type MicSetting = Int<1, 3>;
+pub type LofiType = Int<1, 9>;
 
 // Parameter(0-127) === Pan(L64-63R)
 impl Into<Parameter> for Pan {

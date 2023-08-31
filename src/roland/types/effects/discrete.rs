@@ -676,3 +676,64 @@ impl Into<Parameter> for QFactor {
         Self::into_parameter(self.0)
     }
 }
+
+/// Parameter(0-1) === HumFrequency(50, 60)
+#[derive(Debug, Copy, Clone)]
+pub struct HumFrequency(pub u8);
+
+impl DiscreteValues<u8, 0> for HumFrequency {
+    fn values() -> Vec<u8> {
+        vec![50, 60]
+    }
+
+    fn format(value: u8) -> String {
+        format!("{}Hz", value)
+    }
+}
+
+impl JsonSchema for HumFrequency {
+    fn schema_name() -> String {
+        type_name_pretty::<Self>().into()
+    }
+
+    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        enum_schema(Self::values().into_iter().map(Self::format).collect())
+    }
+}
+
+impl Serialize for HumFrequency {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where S: serde::Serializer {
+        Self::format(self.0).serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for HumFrequency {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where D: serde::Deserializer<'de> {
+        let value: Value = Deserialize::deserialize(deserializer)?;
+        match value {
+            Value::String(s) => {
+                for v in Self::values().into_iter() {
+                    if s == Self::format(v) {
+                        return Ok(Self(v));
+                    }
+                }
+                Err(de::Error::custom(format!("String is not a valid discrete value: {}", s)))
+            }
+            _ => Err(de::Error::custom(format!("Expected string")))
+        }
+    }
+}
+
+impl From<Parameter> for HumFrequency {
+    fn from(parameter: Parameter) -> Self {
+        Self(Self::value_from(parameter))
+    }
+}
+
+impl Into<Parameter> for HumFrequency {
+    fn into(self) -> Parameter {
+        Self::into_parameter(self.0)
+    }
+}

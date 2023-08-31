@@ -7,8 +7,8 @@ use crate::json::validation::unused_by_rd300nx_err;
 use crate::roland::types::enums::Pan;
 use crate::roland::types::numeric::Parameter;
 use super::{UnusedParameters, Parameters};
-use super::discrete::{LogFrequency, QFactor, FineFrequency, LinearFrequency, FilterSlope, EvenPercent, StepLinearFrequency, Balance, LogMilliseconds, LogFrequencyOrByPass};
-use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode, ModWave, SlicerMode, Speed, FilterType, OutputMode, AmpType, MicSetting, PreAmpType, PreAmpGain, CompressionRatio, PostGain, GateMode, DelayMode, LinearMilliseconds, PhaseType, FeedbackMode, TapeHeads};
+use super::discrete::{LogFrequency, QFactor, FineFrequency, LinearFrequency, FilterSlope, EvenPercent, StepLinearFrequency, Balance, LogMilliseconds, LogFrequencyOrByPass, HumFrequency};
+use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode, ModWave, SlicerMode, Speed, FilterType, OutputMode, AmpType, MicSetting, PreAmpType, PreAmpGain, CompressionRatio, PostGain, GateMode, DelayMode, LinearMilliseconds, PhaseType, FeedbackMode, TapeHeads, LofiType, NoiseType, DiscType};
 
 //TODO validate all fields of all Parameters types
 //TODO add tests for default chorus, mfx, reverb
@@ -70,9 +70,9 @@ pub enum MfxType { // 0-255
     TimeCtrlDelay(TimeCtrlDelayParameters),
     LongTimeCtrlDelay(LongTimeCtrlDelayParameters),
     TapeEcho(TapeEchoParameters),
-    LofiNoise(UnusedParameters<32>), //TODO implement parameters
-    LofiCompress(UnusedParameters<32>), //TODO implement parameters
-    LofiRadio(UnusedParameters<32>), //TODO implement parameters
+    LofiNoise(LofiNoiseParameters),
+    LofiCompress(LofiCompressParameters),
+    LofiRadio(LofiRadioParameters),
     Telephone(UnusedParameters<32>), //TODO implement parameters
     Photograph(UnusedParameters<32>), //TODO implement parameters
     PitchShifter(UnusedParameters<32>), //TODO implement parameters
@@ -2916,6 +2916,123 @@ impl Default for TapeEchoParameters {
             wow_flutter_depth: UInt(20),
             echo_level: UInt(64),
             direct_level: UInt(127),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct LofiNoiseParameters {
+    lofi_type: LofiType,
+    post_filter_type: FilterType,
+    post_filter_cutoff: LogFrequency<200, 8000>,
+    noise_type: NoiseType,
+    noise_lpf: LogFrequencyOrByPass<200, 8000>,
+    noise_level: Level,
+    disc_noise_type: DiscType,
+    disc_noise_lpf: LogFrequencyOrByPass<200, 8000>,
+    disc_noise_level: Level,
+    hum_noise_type: HumFrequency,
+    hum_noise_lpf: LogFrequencyOrByPass<200, 8000>,
+    hum_noise_level: Level,
+    low_gain: Gain,
+    high_gain: Gain,
+    balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 16>")]
+    #[validate]
+    unused_parameters: [Parameter; 16]
+}
+
+impl Default for LofiNoiseParameters {
+    fn default() -> Self {
+        Self {
+            lofi_type: Int(5),
+            post_filter_type: FilterType::LowPassFilter,
+            post_filter_cutoff: LogFrequency(4000),
+            noise_type: NoiseType::White,
+            noise_lpf: LogFrequencyOrByPass::Frequency(LogFrequency(2000)),
+            noise_level: UInt(0),
+            disc_noise_type: DiscType::RND,
+            disc_noise_lpf: LogFrequencyOrByPass::Frequency(LogFrequency(2000)),
+            disc_noise_level: UInt(0),
+            hum_noise_type: HumFrequency(50),
+            hum_noise_lpf: LogFrequencyOrByPass::Frequency(LogFrequency(2000)),
+            hum_noise_level: UInt(0),
+            low_gain: Int(0),
+            high_gain: Int(0),
+            balance: Balance(100),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct LofiCompressParameters {
+    pre_filter_type: Int<1, 6>,
+    lofi_type: LofiType,
+    post_filter_type: FilterType,
+    post_filter_cutoff: LogFrequency<200, 8000>,
+    low_gain: Gain,
+    high_gain: Gain,
+    balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 24>")]
+    #[validate]
+    unused_parameters: [Parameter; 24]
+}
+
+impl Default for LofiCompressParameters {
+    fn default() -> Self {
+        Self {
+            pre_filter_type: Int(2),
+            lofi_type: Int(5),
+            post_filter_type: FilterType::LowPassFilter,
+            post_filter_cutoff: LogFrequency(4000),
+            low_gain: Int(0),
+            high_gain: Int(0),
+            balance: Balance(100),
+            level: UInt(100),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct LofiRadioParameters {
+    lofi_type: LofiType,
+    post_filter_type: FilterType,
+    post_filter_cutoff: LogFrequency<200, 8000>,
+    radio_detune: Level,
+    radio_noise_level: Level,
+    low_gain: Gain,
+    high_gain: Gain,
+    balance: Balance,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 23>")]
+    #[validate]
+    unused_parameters: [Parameter; 23]
+}
+
+impl Default for LofiRadioParameters {
+    fn default() -> Self {
+        Self {
+            lofi_type: Int(5),
+            post_filter_type: FilterType::LowPassFilter,
+            post_filter_cutoff: LogFrequency(4000),
+            radio_detune: UInt(0),
+            radio_noise_level: UInt(64),
+            low_gain: Int(0),
+            high_gain: Int(0),
+            balance: Balance(100),
             level: UInt(127),
             unused_parameters: Default::default()
         }
