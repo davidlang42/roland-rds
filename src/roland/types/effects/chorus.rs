@@ -52,6 +52,16 @@ impl ChorusType {
         }
     }
 
+    #[allow(dead_code)] // used by tests, potentially useful if using this as a library
+    pub fn default(&self) -> Self {
+        match self {
+            Self::Off(_) => Self::Off(Default::default()),
+            Self::Chorus(_) => Self::Chorus(Default::default()),
+            Self::Delay(_) => Self::Delay(Default::default()),
+            Self::Gm2Chorus(_) => Self::Gm2Chorus(Default::default())
+        }
+    }
+
     pub fn is_off(&self) -> bool {
         match self {
             Self::Off(_) => true,

@@ -68,6 +68,19 @@ impl ReverbType {
         }
     }
 
+    #[allow(dead_code)] // used by tests, potentially useful if using this as a library
+    pub fn default(&self) -> Self {
+        match self {
+            Self::Off(_) => Self::Off(Default::default()),
+            Self::Reverb(_) => Self::Reverb(Default::default()),
+            Self::Room(_) => Self::Room(Default::default()),
+            Self::Hall(_) => Self::Hall(Default::default()),
+            Self::Plate(_) => Self::Plate(Default::default()),
+            Self::Gm2Reverb(_) => Self::Gm2Reverb(Default::default()),
+            Self::Cathedral(_) => Self::Cathedral(Default::default())
+        }
+    }
+
     pub fn is_off(&self) -> bool {
         match self {
             Self::Off(_) => true,
