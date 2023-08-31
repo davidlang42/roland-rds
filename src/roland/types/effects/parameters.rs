@@ -291,6 +291,18 @@ pub enum FeedbackMode {
     Cross
 }
 
+/// Parameter(0-6) === TapeHeads(Short - ShortMiddleLong)
+#[derive(Serialize, Deserialize, Debug, JsonSchema, EnumIter, EnumParameter, PartialEq, Copy, Clone)]
+pub enum TapeHeads {
+    Short,
+    Middle,
+    Long,
+    ShortMiddle,
+    ShortLong,
+    MiddleLong,
+    ShortMiddleLong
+}
+
 /// Parameter(0-1) === Switch(False, True)
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct Switch(pub bool);

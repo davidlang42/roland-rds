@@ -8,7 +8,7 @@ use crate::roland::types::enums::Pan;
 use crate::roland::types::numeric::Parameter;
 use super::{UnusedParameters, Parameters};
 use super::discrete::{LogFrequency, QFactor, FineFrequency, LinearFrequency, FilterSlope, EvenPercent, StepLinearFrequency, Balance, LogMilliseconds, LogFrequencyOrByPass};
-use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode, ModWave, SlicerMode, Speed, FilterType, OutputMode, AmpType, MicSetting, PreAmpType, PreAmpGain, CompressionRatio, PostGain, GateMode, DelayMode, LinearMilliseconds, PhaseType, FeedbackMode};
+use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Phase, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode, ModWave, SlicerMode, Speed, FilterType, OutputMode, AmpType, MicSetting, PreAmpType, PreAmpGain, CompressionRatio, PostGain, GateMode, DelayMode, LinearMilliseconds, PhaseType, FeedbackMode, TapeHeads};
 
 //TODO validate all fields of all Parameters types
 //TODO add tests for default chorus, mfx, reverb
@@ -69,7 +69,7 @@ pub enum MfxType { // 0-255
     Delay3D(Delay3DParameters),
     TimeCtrlDelay(TimeCtrlDelayParameters),
     LongTimeCtrlDelay(LongTimeCtrlDelayParameters),
-    TapeEcho(UnusedParameters<32>), //TODO implement parameters
+    TapeEcho(TapeEchoParameters),
     LofiNoise(UnusedParameters<32>), //TODO implement parameters
     LofiCompress(UnusedParameters<32>), //TODO implement parameters
     LofiRadio(UnusedParameters<32>), //TODO implement parameters
@@ -2871,6 +2871,51 @@ impl Default for LongTimeCtrlDelayParameters {
             low_gain: Int(0),
             high_gain: Int(0),
             balance: Balance(10),
+            level: UInt(127),
+            unused_parameters: Default::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate, Parameters)]
+pub struct TapeEchoParameters {
+    mode: TapeHeads,
+    repeat_rate: Level,
+    intensity: Level,
+    bass: Gain,
+    treble: Gain,
+    head_short_pan: Pan,
+    head_middle_pan: Pan,
+    head_long_pan: Pan,
+    tape_distortion: UInt<0, 5>,
+    wow_flutter_rate: Level,
+    wow_flutter_depth: Level,
+    echo_level: Level,
+    direct_level: Level,
+    level: Level,
+    #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
+    #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, 18>")]
+    #[validate]
+    unused_parameters: [Parameter; 18]
+}
+
+impl Default for TapeEchoParameters {
+    fn default() -> Self {
+        Self {
+            mode: TapeHeads::Long,
+            repeat_rate: UInt(64),
+            intensity: UInt(64),
+            bass: Int(0),
+            treble: Int(0),
+            head_short_pan: Pan::Centre,
+            head_middle_pan: Pan::Centre,
+            head_long_pan: Pan::Centre,
+            tape_distortion: UInt(0),
+            wow_flutter_rate: UInt(20),
+            wow_flutter_depth: UInt(20),
+            echo_level: UInt(64),
+            direct_level: UInt(127),
             level: UInt(127),
             unused_parameters: Default::default()
         }
