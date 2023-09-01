@@ -2,11 +2,12 @@ use super::{UnusedParameters, Parameters};
 use super::parameters::{FilterType, RateMode, NoteLength, DelayMode, Level, LinearMilliseconds, PreLpf, UInt};
 use super::super::numeric::Parameter;
 use super::discrete::{LogFrequency, LogMilliseconds, LinearFrequency, LogFrequencyOrByPass, EvenPercent, Feedback, Phase};
-use crate::json::serialize_default_terminated_array;
+use crate::json::schema::{one_of_schema, single_property_schema_of};
+use crate::json::{serialize_default_terminated_array, type_name_pretty};
 use schemars::JsonSchema;
 use validator::Validate;
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug)]
 pub enum ChorusType { // 0-3
     Off(UnusedParameters<20>),
     Chorus(ChorusParameters),
@@ -84,6 +85,21 @@ impl Validate for ChorusType {
             Self::Delay(d) => d.validate(),
             Self::Gm2Chorus(g) => g.validate()
         }
+    }
+}
+
+impl JsonSchema for ChorusType {
+    fn schema_name() -> String {
+        type_name_pretty::<Self>().into()
+    }
+
+    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        one_of_schema(vec![
+            single_property_schema_of::<UnusedParameters<20>>("Off", gen),
+            single_property_schema_of::<ChorusParameters>("Chorus", gen),
+            single_property_schema_of::<DelayParameters>("Delay", gen),
+            single_property_schema_of::<Gm2ChorusParameters>("Gm2Chorus", gen)
+        ])
     }
 }
 

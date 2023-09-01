@@ -1,13 +1,14 @@
 use schemars::JsonSchema;
 use validator::Validate;
-use crate::json::serialize_default_terminated_array;
+use crate::json::schema::{one_of_schema, single_property_schema_of};
+use crate::json::{serialize_default_terminated_array, type_name_pretty};
 
 use crate::roland::types::numeric::Parameter;
 use super::discrete::{LogMilliseconds, DiscreteValues, LogFrequency, LogFrequencyOrByPass};
 use super::parameters::{ReverbCharacter, Gm2ReverbCharacter, Level, PreLpf, Size, UInt, Int, DampGain};
 use super::{UnusedParameters, Parameters};
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug)]
 pub enum ReverbType { // 0-6
     Off(UnusedParameters<20>),
     Reverb(ReverbParameters),
@@ -106,6 +107,24 @@ impl Validate for ReverbType {
             Self::Gm2Reverb(g) => g.validate(),
             Self::Cathedral(c) => c.validate()
         }
+    }
+}
+
+impl JsonSchema for ReverbType {
+    fn schema_name() -> String {
+        type_name_pretty::<Self>().into()
+    }
+
+    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        one_of_schema(vec![
+            single_property_schema_of::<UnusedParameters<20>>("Off", gen),
+            single_property_schema_of::<ReverbParameters>("Reverb", gen),
+            single_property_schema_of::<CharacterParameters<50, 64>>("Room", gen),
+            single_property_schema_of::<CharacterParameters<76, 70>>("Hall", gen),
+            single_property_schema_of::<CharacterParameters<66, 64>>("Plate", gen),
+            single_property_schema_of::<Gm2ReverbParameters>("Gm2Reverb", gen),
+            single_property_schema_of::<CathedralParameters>("Cathedral", gen)
+        ])
     }
 }
 

@@ -1,7 +1,8 @@
 use schemars::JsonSchema;
 use validator::Validate;
 
-use crate::json::serialize_default_terminated_array;
+use crate::json::schema::{single_property_schema_of, one_of_schema};
+use crate::json::{serialize_default_terminated_array, type_name_pretty};
 use crate::json::validation::unused_by_rd300nx_err;
 
 use crate::roland::types::enums::Pan;
@@ -10,7 +11,7 @@ use super::{UnusedParameters, Parameters};
 use super::discrete::{LogFrequency, QFactor, FineFrequency, LinearFrequency, FilterSlope, EvenPercent, StepLinearFrequency, Balance, LogMilliseconds, LogFrequencyOrByPass, HumFrequency, Feedback, ByPassOrLogFrequency, LogFrequencyOrByPassOffByOne, Phase, GateTime};
 use super::parameters::{Level, Switch, Gain, UInt, Int, BoostGain, BoostWidth, RateMode, SuperFilterType, Wave, NoteLength, SimpleFilterType, Direction, Vowel, SpeakerType, PhaserMode, PhaserPolarity, MultiPhaserMode, ModWave, SlicerMode, Speed, FilterType, OutputMode, AmpType, MicSetting, PreAmpType, PreAmpGain, CompressionRatio, PostGain, GateMode, DelayMode, LinearMilliseconds, PhaseType, FeedbackMode, TapeHeads, LofiType, NoiseType, DiscType, DiscTypeWithRandom, Semitones, ReverbOnlyCharacter, GateType};
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug)]
 pub enum MfxType { // 0-255
     Thru(UnusedParameters<32>),
     Equalizer(EqualizerParameters),
@@ -671,6 +672,104 @@ impl Validate for MfxType {
     }
 }
 
+impl JsonSchema for MfxType {
+    fn schema_name() -> String {
+        type_name_pretty::<Self>().into()
+    }
+
+    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        one_of_schema(vec![
+            single_property_schema_of::<UnusedParameters<32>>("Thru", gen),
+            single_property_schema_of::<EqualizerParameters>("Equalizer", gen),
+            single_property_schema_of::<SpectrumParameters>("Spectrum", gen),
+            single_property_schema_of::<IsolatorParameters>("Isolator", gen),
+            single_property_schema_of::<LowBoostParameters>("LowBoost", gen),
+            single_property_schema_of::<SuperFilterParameters>("SuperFilter", gen),
+            single_property_schema_of::<StepFilterParameters>("StepFilter", gen),
+            single_property_schema_of::<EnhancerParameters>("Enhancer", gen),
+            single_property_schema_of::<AutoWahParameters>("AutoWah", gen),
+            single_property_schema_of::<HumanizerParameters>("Humanizer", gen),
+            single_property_schema_of::<SpeakerSimulatorParameters>("SpeakerSimulator", gen),
+            single_property_schema_of::<PhaserParameters>("Phaser", gen),
+            single_property_schema_of::<StepPhaserParameters>("StepPhaser", gen),
+            single_property_schema_of::<MultiStagePhaserParameters>("MultiStagePhaser", gen),
+            single_property_schema_of::<InfinitePhaserParameters>("InfinitePhaser", gen),
+            single_property_schema_of::<RingModulatorParameters>("RingModulator", gen),
+            single_property_schema_of::<StepRingModulatorParameters>("StepRingModulator", gen),
+            single_property_schema_of::<CyclicalParameters>("Tremolo", gen),
+            single_property_schema_of::<CyclicalParameters>("AutoPan", gen),
+            single_property_schema_of::<StepPanParameters>("StepPan", gen),
+            single_property_schema_of::<SlicerParameters>("Slicer", gen),
+            single_property_schema_of::<RotaryParameters>("Rotary", gen),
+            single_property_schema_of::<VkRotaryParameters>("VkRotary", gen),
+            single_property_schema_of::<ChorusParameters>("Chorus", gen),
+            single_property_schema_of::<FlangerParameters>("Flanger", gen),
+            single_property_schema_of::<StepFlangerParameters>("StepFlanger", gen),
+            single_property_schema_of::<HexaChorusParameters>("HexaChorus", gen),
+            single_property_schema_of::<TremoloChorusParameters>("TremoloChorus", gen),
+            single_property_schema_of::<SpaceDParameters>("SpaceD", gen),
+            single_property_schema_of::<Chorus3DParameters>("Chorus3D", gen),
+            single_property_schema_of::<Flanger3DParameters>("Flanger3D", gen),
+            single_property_schema_of::<StepFlanger3DParameters>("StepFlanger3D", gen),
+            single_property_schema_of::<TwoBandChorusParameters>("TwoBandChorus", gen),
+            single_property_schema_of::<TwoBandFlangerParameters>("TwoBandFlanger", gen),
+            single_property_schema_of::<TwoBandStepFlangerParameters>("TwoBandStepFlanger", gen),
+            single_property_schema_of::<DriveParameters<0, 70>>("Overdrive", gen),
+            single_property_schema_of::<DriveParameters<3, 50>>("Distortion", gen),
+            single_property_schema_of::<VsDriveParameters<0>>("VsOverdrive", gen),
+            single_property_schema_of::<VsDriveParameters<3>>("VsDistortion", gen),
+            single_property_schema_of::<GuitarAmpSimulatorParameters>("GuitarAmpSimulator", gen),
+            single_property_schema_of::<CompressorParameters>("Compressor", gen),
+            single_property_schema_of::<LimiterParameters>("Limiter", gen),
+            single_property_schema_of::<GateParameters>("Gate", gen),
+            single_property_schema_of::<DelayParameters>("Delay", gen),
+            single_property_schema_of::<LongDelayParameters>("LongDelay", gen),
+            single_property_schema_of::<SerialDelayParameters>("SerialDelay", gen),
+            single_property_schema_of::<ModulationDelayParameters>("ModulationDelay", gen),
+            single_property_schema_of::<ThreeTapPanDelayParameters>("ThreeTapPanDelay", gen),
+            single_property_schema_of::<FourTapPanDelayParameters>("FourTapPanDelay", gen),
+            single_property_schema_of::<MultiTapDelayParameters>("MultiTapDelay", gen),
+            single_property_schema_of::<ReverseDelayParameters>("ReverseDelay", gen),
+            single_property_schema_of::<ShuffleDelayParameters>("ShuffleDelay", gen),
+            single_property_schema_of::<Delay3DParameters>("Delay3D", gen),
+            single_property_schema_of::<TimeCtrlDelayParameters>("TimeCtrlDelay", gen),
+            single_property_schema_of::<LongTimeCtrlDelayParameters>("LongTimeCtrlDelay", gen),
+            single_property_schema_of::<TapeEchoParameters>("TapeEcho", gen),
+            single_property_schema_of::<LofiNoiseParameters>("LofiNoise", gen),
+            single_property_schema_of::<LofiCompressParameters>("LofiCompress", gen),
+            single_property_schema_of::<LofiRadioParameters>("LofiRadio", gen),
+            single_property_schema_of::<TelephoneParameters>("Telephone", gen),
+            single_property_schema_of::<PhonographParameters>("Phonograph", gen),
+            single_property_schema_of::<PitchShifterParameters>("PitchShifter", gen),
+            single_property_schema_of::<TwoVoicePitchShifterParameters>("TwoVoicePitchShifter", gen),
+            single_property_schema_of::<StepPitchShifterParameters>("StepPitchShifter", gen),
+            single_property_schema_of::<ReverbParameters>("Reverb", gen),
+            single_property_schema_of::<GatedReverbParameters>("GatedReverb", gen),
+            single_property_schema_of::<DriveChorusParameters<64, 80>>("OverdriveChorus", gen),
+            single_property_schema_of::<DriveFlangerParameters<64>>("OverdriveFlanger", gen),
+            single_property_schema_of::<DriveDelayParameters<64>>("OverdriveDelay", gen),
+            single_property_schema_of::<DriveChorusParameters<127, 70>>("DistortionChorus", gen),
+            single_property_schema_of::<DriveFlangerParameters<127>>("DistortionFlanger", gen),
+            single_property_schema_of::<DriveDelayParameters<127>>("DistortionDelay", gen),
+            single_property_schema_of::<EnhancerChorusParameters>("EnhancerChorus", gen),
+            single_property_schema_of::<EnhancerFlangerParameters>("EnhancerFlanger", gen),
+            single_property_schema_of::<EnhancerDelayParameters>("EnhancerDelay", gen),
+            single_property_schema_of::<ChorusDelayParameters>("ChorusDelay", gen),
+            single_property_schema_of::<FlangerDelayParameters>("FlangerDelay", gen),
+            single_property_schema_of::<ChorusFlangerParameters>("ChorusFlanger", gen),
+            single_property_schema_of::<UnusedParameters<32>>("UnusedVrChorus", gen),
+            single_property_schema_of::<UnusedParameters<32>>("UnusedVrTremolo", gen),
+            single_property_schema_of::<UnusedParameters<32>>("UnusedVrAutoWah", gen),
+            single_property_schema_of::<UnusedParameters<32>>("UnusedVrPhaser", gen),
+            single_property_schema_of::<UnusedParameters<32>>("UnusedOrganMulti", gen),
+            single_property_schema_of::<UnusedParameters<32>>("UnusedLinedrive", gen),
+            single_property_schema_of::<UnusedParameters<32>>("UnusedSmallPhaser", gen),
+            single_property_schema_of::<SympatheticResonanceParameters>("SympatheticResonance", gen),
+            single_property_schema_of::<OtherMfxParameters>("Other", gen)
+        ])
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct OtherMfxParameters {
     #[validate(range(min = 86))]
@@ -686,6 +785,15 @@ pub struct OtherMfxParameters {
 impl OtherMfxParameters {
     fn parameters(&self) -> [Parameter; 32] {
         self.unknown
+    }
+}
+
+impl Default for OtherMfxParameters {
+    fn default() -> Self {
+        Self {
+            mfx_number: 86,
+            unknown: Default::default()
+        }
     }
 }
 
