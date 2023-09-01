@@ -15,21 +15,6 @@ pub enum ChorusType { // 0-3
     Gm2Chorus(Gm2ChorusParameters)
 }
 
-impl JsonSchema for ChorusType {
-    fn schema_name() -> String {
-        type_name_pretty::<Self>().into()
-    }
-
-    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-        one_of_schema(vec![
-            single_property_schema_of::<UnusedParameters<20>>("Off", gen),
-            single_property_schema_of::<ChorusParameters>("Chorus", gen),
-            single_property_schema_of::<DelayParameters>("Delay", gen),
-            single_property_schema_of::<Gm2ChorusParameters>("Gm2Chorus", gen)
-        ])
-    }
-}
-
 impl ChorusType {
     pub fn from(number: u8, parameters: [Parameter; 20]) -> Self {
         match number {
@@ -100,6 +85,21 @@ impl Validate for ChorusType {
             Self::Delay(d) => d.validate(),
             Self::Gm2Chorus(g) => g.validate()
         }
+    }
+}
+
+impl JsonSchema for ChorusType {
+    fn schema_name() -> String {
+        type_name_pretty::<Self>().into()
+    }
+
+    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        one_of_schema(vec![
+            single_property_schema_of::<UnusedParameters<20>>("Off", gen),
+            single_property_schema_of::<ChorusParameters>("Chorus", gen),
+            single_property_schema_of::<DelayParameters>("Delay", gen),
+            single_property_schema_of::<Gm2ChorusParameters>("Gm2Chorus", gen)
+        ])
     }
 }
 

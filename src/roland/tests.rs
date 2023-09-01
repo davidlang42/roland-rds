@@ -1,6 +1,7 @@
 use std::{error::Error, fs, io::Read};
 use crate::{bytes::Bytes, json::Json};
-use super::*;
+use super::{*, rd300nx::RD300NX};
+use schemars::schema_for;
 use test_case::test_case;
 use validator::Validate;
 
@@ -216,5 +217,16 @@ fn chorus_default_values(rds_filename: &str, user_set_count: usize) -> Result<()
             assert_eq!(f[i], e[i], "Chorus{}({}), Parameter #{}", found.number(), found.name(), i + 1);
         }
     }
+    Ok(())
+}
+
+#[test_case("schema/rd300nx.json")]
+fn no_changes_to_schema(schema_filename: &str) -> Result<(), Box<dyn Error>> {
+    let mut bytes = Vec::new();
+    let mut f = fs::File::options().read(true).open(&schema_filename)?;
+    f.read_to_end(&mut bytes)?;
+    let expected_schema: String = bytes.into_iter().map(|u| u as char).collect();
+    let found_schema = serde_json::to_string_pretty(&schema_for!(RD300NX)).unwrap();
+    assert_eq!(expected_schema, found_schema);
     Ok(())
 }
