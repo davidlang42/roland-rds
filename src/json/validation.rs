@@ -118,6 +118,7 @@ pub fn merge_all_fixed(parent: Result<(), ValidationErrors>, field: &'static str
 }
 
 pub trait LayerRanges {
+    fn is_enabled(&self) -> bool;
     fn get_range_upper(&self) -> PianoKey;
     fn get_range_lower(&self) -> PianoKey;
     fn get_velocity_upper(&self) -> u8;

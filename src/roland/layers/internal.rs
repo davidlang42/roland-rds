@@ -159,6 +159,10 @@ impl Bytes<14> for InternalLayer {
 }
 
 impl LayerRanges for InternalLayer {
+    fn is_enabled(&self) -> bool {
+        self.enable
+    }
+
     fn get_range_upper(&self) -> PianoKey {
         self.range_upper
     }

@@ -17,7 +17,7 @@ pub trait Warnings {
 pub fn split_switch_warning<'a, L: LayerRanges + 'a, I: Iterator<Item = &'a L>>(name: &str, enabled: bool, layers: I) -> Option<String> {
     if !enabled {
         let layers: Vec<usize> = layers.enumerate()
-            .filter(|(_, l)| !l.uses_full_range())
+            .filter(|(_, l)| l.is_enabled() && !l.uses_full_range())
             .map(|(i, _)| i).collect();
         if layers.len() > 0 {
             return Some(format!("{} layers {:?} have non-full ranges, but split switch is OFF", name, layers));

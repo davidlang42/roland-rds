@@ -277,6 +277,10 @@ impl Bytes<30> for ExternalLayer {
 }
 
 impl LayerRanges for ExternalLayer {
+    fn is_enabled(&self) -> bool {
+        self.enable
+    }
+
     fn get_range_upper(&self) -> PianoKey {
         self.range_upper
     }
