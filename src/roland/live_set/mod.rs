@@ -212,7 +212,7 @@ impl Warnings for LiveSet {
         if let Some(warning) = split_switch_warning("Internal", self.common.split_switch_internal, self.layers.iter().map(|l| &l.internal)) {
             warnings.push(warning);
         }
-        if let Some(warning) = split_switch_warning("External", self.common.split_switch_internal, self.layers.iter().map(|l| &l.internal)) {
+        if let Some(warning) = split_switch_warning("External", self.common.split_switch_external, self.layers.iter().map(|l| &l.external)) {
             warnings.push(warning);
         }
         warnings
