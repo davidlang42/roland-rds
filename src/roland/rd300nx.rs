@@ -58,17 +58,9 @@ impl Warnings for RD300NX {
                 SettingMode::LiveSet => None,
                 SettingMode::System => Some(self.system.common.fc2_assign)
             };
-            for i in 0..(self.user_sets.len() - 1) {
-                let reasons = tone_remain_warnings(
-                    &self.user_sets[i], 
-                    &self.user_sets[i+1],
-                    fc1,
-                    fc2
-                );
-                for reason in reasons {
-                    warnings.push(format!("User #{}-#{}: Tone remain may malfunction because {}", i+1, i+2, reason));
-                }
-            }
+            warnings.append(&mut tone_remain_warnings("User", self.user_sets.as_slice(), fc1, fc2));
+            warnings.append(&mut tone_remain_warnings("Piano", self.piano.as_slice(), fc1, fc2));
+            warnings.append(&mut tone_remain_warnings("EPiano", self.e_piano.as_slice(), fc1, fc2));
         }
         warnings
     }
