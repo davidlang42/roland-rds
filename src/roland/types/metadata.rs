@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use schemars::JsonSchema;
 use validator::{Validate, ValidationError, ValidationErrors};
-use crate::{roland::rd300nx::RD300NX, json::{schema::{array_schema, u8_schema, object_schema}, validation::out_of_range_err}};
+use crate::{roland::rd300nx::RD300NX, json::{schema::{array_schema, u8_schema, object_schema}, validation::{out_of_range_err, merge_all_fixed}}};
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
 pub enum ToneRemain {
@@ -104,7 +104,14 @@ impl<const N: usize> JsonSchema for ToneRemainIndicies<N> {
 
 impl<const N: usize> Validate for ToneRemainIndicies<N> {
     fn validate(&self) -> Result<(), validator::ValidationErrors> {
-        todo!()//TODO
+        let max = N - 2;
+        merge_all_fixed(Ok(()), "0", self.0.iter().map(|i| {
+            if *i > max {
+                Err(out_of_range_err("0", &0, &max))
+            } else {
+                Ok(())
+            }
+        }).collect())
     }
 }
 
@@ -123,7 +130,7 @@ impl<const N: usize> ToneRemainRanges<N> {
 
 impl<const N: usize> Validate for ToneRemainRanges<N> {
     fn validate(&self) -> Result<(), validator::ValidationErrors> {
-        todo!()//TODO
+        merge_all_fixed(Ok(()), "0", self.0.iter().map(|r| r.validate()).collect())
     }
 }
 
