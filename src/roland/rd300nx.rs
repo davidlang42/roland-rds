@@ -5,6 +5,7 @@ use crate::json::{StructuredJson, Json, StructuredJsonError, serialize_array_as_
 use super::live_set::LiveSet;
 use super::system::System;
 use super::types::enums::SettingMode;
+use super::types::metadata::{ToneRemain, BySet};
 use schemars::JsonSchema;
 use validator::{Validate, ValidationErrors};
 
@@ -49,7 +50,7 @@ impl Warnings for RD300NX {
                 warnings.push(format!("EPiano #{}: {}", i+1, warning));
             }
         }
-        if self.system.common.tone_remain {
+        if self.system.common.tone_remain.any() {
             let fc1 = match self.system.common.pedal_mode {
                 SettingMode::LiveSet => None,
                 SettingMode::System => Some(self.system.common.fc1_assign)
@@ -58,18 +59,23 @@ impl Warnings for RD300NX {
                 SettingMode::LiveSet => None,
                 SettingMode::System => Some(self.system.common.fc2_assign)
             };
-            warnings.append(&mut tone_remain_warnings("User", self.user_sets.as_slice(), fc1, fc2));
-            warnings.append(&mut tone_remain_warnings("Piano", self.piano.as_slice(), fc1, fc2));
-            warnings.append(&mut tone_remain_warnings("EPiano", self.e_piano.as_slice(), fc1, fc2));
+            let (user, piano, e_piano) = match &self.system.common.tone_remain {
+                ToneRemain::Always(true) => (&BySet::Always(true), &BySet::Always(true), &BySet::Always(true)),
+                ToneRemain::Always(false) => panic!("ToneRemain::Bool(false).any() == true"),
+                ToneRemain::BySet(s) => (&s.user_sets, &s.piano, &s.e_piano)
+            };
+            warnings.append(&mut tone_remain_warnings(user, "User", &self.user_sets, fc1, fc2));
+            warnings.append(&mut tone_remain_warnings(piano, "Piano", &self.piano, fc1, fc2));
+            warnings.append(&mut tone_remain_warnings(e_piano, "EPiano", &self.e_piano, fc1, fc2));
         }
         warnings
     }
 }
 
 impl RD300NX {
-    const USER_SETS: usize = 60;
-    const PIANO_SETS: usize = 10;
-    const E_PIANO_SETS: usize = 15;
+    pub const USER_SETS: usize = 60;
+    pub const PIANO_SETS: usize = 10;
+    pub const E_PIANO_SETS: usize = 15;
 
     pub fn all_live_sets(&self) -> Vec<&LiveSet> {
         self.user_sets.iter().chain(self.piano.iter()).chain(self.e_piano.iter()).collect()

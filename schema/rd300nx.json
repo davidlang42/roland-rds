@@ -13603,7 +13603,7 @@
           "$ref": "#/definitions/ButtonFunction"
         },
         "tone_remain": {
-          "type": "boolean"
+          "$ref": "#/definitions/ToneRemain"
         },
         "receive_gm_gm2_system_on": {
           "type": "boolean"
@@ -13648,6 +13648,344 @@
         "LiveSet",
         "System"
       ]
+    },
+    "ToneRemain": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "Always"
+          ],
+          "properties": {
+            "Always": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "BySet"
+          ],
+          "properties": {
+            "BySet": {
+              "$ref": "#/definitions/ToneRemainSets"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "ToneRemainSets": {
+      "default": {
+        "e_piano": {
+          "Always": true
+        },
+        "piano": {
+          "Always": true
+        },
+        "user_sets": {
+          "Always": true
+        }
+      },
+      "type": "object",
+      "required": [
+        "e_piano",
+        "piano",
+        "user_sets"
+      ],
+      "properties": {
+        "user_sets": {
+          "$ref": "#/definitions/BySet_for_60"
+        },
+        "piano": {
+          "$ref": "#/definitions/BySet_for_10"
+        },
+        "e_piano": {
+          "$ref": "#/definitions/BySet_for_15"
+        }
+      },
+      "additionalProperties": false
+    },
+    "BySet_for_60": {
+      "default": {
+        "Always": true
+      },
+      "oneOf": [
+        {
+          "default": {
+            "Always": false
+          },
+          "type": "object",
+          "required": [
+            "Always"
+          ],
+          "properties": {
+            "Always": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "default": {
+            "ByIndex": []
+          },
+          "type": "object",
+          "required": [
+            "ByIndex"
+          ],
+          "properties": {
+            "ByIndex": {
+              "$ref": "#/definitions/ToneRemainIndicies_for_60"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "default": {
+            "ByRange": []
+          },
+          "type": "object",
+          "required": [
+            "ByRange"
+          ],
+          "properties": {
+            "ByRange": {
+              "$ref": "#/definitions/ToneRemainRanges_for_60"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "ToneRemainIndicies_for_60": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "format": "uint8",
+        "maximum": 58.0,
+        "minimum": 0.0
+      }
+    },
+    "ToneRemainRanges_for_60": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/PatchRange_for_60"
+      }
+    },
+    "PatchRange_for_60": {
+      "default": {
+        "from": 1,
+        "to": 60
+      },
+      "type": "object",
+      "required": [
+        "from",
+        "to"
+      ],
+      "properties": {
+        "from": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 60.0,
+          "minimum": 1.0
+        },
+        "to": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 60.0,
+          "minimum": 1.0
+        }
+      },
+      "additionalProperties": false
+    },
+    "BySet_for_10": {
+      "default": {
+        "Always": true
+      },
+      "oneOf": [
+        {
+          "default": {
+            "Always": false
+          },
+          "type": "object",
+          "required": [
+            "Always"
+          ],
+          "properties": {
+            "Always": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "default": {
+            "ByIndex": []
+          },
+          "type": "object",
+          "required": [
+            "ByIndex"
+          ],
+          "properties": {
+            "ByIndex": {
+              "$ref": "#/definitions/ToneRemainIndicies_for_10"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "default": {
+            "ByRange": []
+          },
+          "type": "object",
+          "required": [
+            "ByRange"
+          ],
+          "properties": {
+            "ByRange": {
+              "$ref": "#/definitions/ToneRemainRanges_for_10"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "ToneRemainIndicies_for_10": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "format": "uint8",
+        "maximum": 8.0,
+        "minimum": 0.0
+      }
+    },
+    "ToneRemainRanges_for_10": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/PatchRange_for_10"
+      }
+    },
+    "PatchRange_for_10": {
+      "default": {
+        "from": 1,
+        "to": 10
+      },
+      "type": "object",
+      "required": [
+        "from",
+        "to"
+      ],
+      "properties": {
+        "from": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 10.0,
+          "minimum": 1.0
+        },
+        "to": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 10.0,
+          "minimum": 1.0
+        }
+      },
+      "additionalProperties": false
+    },
+    "BySet_for_15": {
+      "default": {
+        "Always": true
+      },
+      "oneOf": [
+        {
+          "default": {
+            "Always": false
+          },
+          "type": "object",
+          "required": [
+            "Always"
+          ],
+          "properties": {
+            "Always": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "default": {
+            "ByIndex": []
+          },
+          "type": "object",
+          "required": [
+            "ByIndex"
+          ],
+          "properties": {
+            "ByIndex": {
+              "$ref": "#/definitions/ToneRemainIndicies_for_15"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "default": {
+            "ByRange": []
+          },
+          "type": "object",
+          "required": [
+            "ByRange"
+          ],
+          "properties": {
+            "ByRange": {
+              "$ref": "#/definitions/ToneRemainRanges_for_15"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "ToneRemainIndicies_for_15": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "format": "uint8",
+        "maximum": 13.0,
+        "minimum": 0.0
+      }
+    },
+    "ToneRemainRanges_for_15": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/PatchRange_for_15"
+      }
+    },
+    "PatchRange_for_15": {
+      "default": {
+        "from": 1,
+        "to": 15
+      },
+      "type": "object",
+      "required": [
+        "from",
+        "to"
+      ],
+      "properties": {
+        "from": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 15.0,
+          "minimum": 1.0
+        },
+        "to": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 15.0,
+          "minimum": 1.0
+        }
+      },
+      "additionalProperties": false
     },
     "PartMode": {
       "type": "string",
