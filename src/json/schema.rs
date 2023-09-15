@@ -70,6 +70,7 @@ pub fn enum_schema(strings: Vec<String>) -> Schema {
 
 pub fn array_schema(item_schema: Schema) -> Schema {
     SchemaObject {
+        instance_type: Some(InstanceType::Array.into()),
         array: Some(ArrayValidation {
             items: Some(item_schema.into()),
             ..Default::default()
@@ -104,6 +105,25 @@ fn _single_property_schema(property: &str, schema: Schema, default: Option<Value
         })),
         metadata: Some(Box::new(Metadata {
             default,
+            ..Default::default()
+        })),
+        ..Default::default()
+    }.into()
+}
+
+pub fn object_schema(required_properties: Vec<(&str, Schema)>) -> Schema {
+    let mut required = Set::new();
+    let mut properties = Map::new();
+    for (property, schema) in required_properties {
+        required.insert(property.into());
+        properties.insert(property.into(), schema);
+    }
+    SchemaObject {
+        instance_type: Some(InstanceType::Object.into()),
+        object: Some(Box::new(ObjectValidation {
+            required,
+            properties,
+            additional_properties: Some(Box::new(Schema::Bool(false))),
             ..Default::default()
         })),
         ..Default::default()

@@ -29,6 +29,7 @@ pub struct Common {
     pub fc2_assign: PedalFunction, // 0-146
     s1_assign: ButtonFunction, // 0-20
     s2_assign: ButtonFunction, // 0-20
+    #[validate]
     pub tone_remain: ToneRemain,
     receive_gm_gm2_system_on: bool,
     receive_gs_reset: bool,
