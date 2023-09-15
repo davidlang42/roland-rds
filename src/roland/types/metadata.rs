@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use schemars::JsonSchema;
 use validator::{Validate, ValidationError, ValidationErrors};
-use crate::{roland::rd300nx::RD300NX, json::{schema::{array_schema, u8_schema, object_schema}, validation::{out_of_range_err, merge_all_fixed}}};
+use crate::{roland::rd300nx::RD300NX, json::{schema::{array_schema, u8_schema, object_schema, single_property_schema_of, one_of_schema_with_default}, validation::{out_of_range_err, merge_all_fixed}, type_name_pretty}};
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
 pub enum ToneRemain {
@@ -28,7 +28,7 @@ impl Validate for ToneRemain {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
+#[derive(Serialize, Deserialize, Debug, Validate, Default)]
 pub struct ToneRemainSets {
     #[validate]
     pub user_sets: BySet<{RD300NX::USER_SETS}>,
@@ -44,11 +44,31 @@ impl ToneRemainSets {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+impl JsonSchema for ToneRemainSets {
+    fn schema_name() -> String {
+        type_name_pretty::<Self>().into()
+    }
+
+    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        object_schema(vec![
+            ("user_sets", gen.subschema_for::<BySet<{RD300NX::USER_SETS}>>()),
+            ("piano", gen.subschema_for::<BySet<{RD300NX::PIANO_SETS}>>()),
+            ("e_piano", gen.subschema_for::<BySet<{RD300NX::E_PIANO_SETS}>>())
+        ], Some(serde_json::to_value(Self::default()).unwrap()))
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub enum BySet<const N: usize> {
     Always(bool),
     ByIndex(ToneRemainIndicies<N>),
     ByRange(ToneRemainRanges<N>)
+}
+
+impl<const N: usize> Default for BySet<N> {
+    fn default() -> Self {
+        Self::Always(true)
+    }
 }
 
 impl<const N: usize> BySet<N> {
@@ -69,6 +89,20 @@ impl<const N: usize> BySet<N> {
     }
 }
 
+impl<const N: usize> JsonSchema for BySet<N> {
+    fn schema_name() -> String {
+        format!("BySet_for_{}", N)
+    }
+
+    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        one_of_schema_with_default(vec![
+            single_property_schema_of::<bool>("Always", gen),
+            single_property_schema_of::<ToneRemainIndicies<N>>("ByIndex", gen),
+            single_property_schema_of::<ToneRemainRanges<N>>("ByRange", gen)
+        ], Some(serde_json::to_value(Self::default()).unwrap()))
+    }
+}
+
 impl<const N: usize> Validate for BySet<N> {
     fn validate(&self) -> Result<(), validator::ValidationErrors> {
         match self {
@@ -79,7 +113,7 @@ impl<const N: usize> Validate for BySet<N> {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default)]
 pub struct ToneRemainIndicies<const N: usize>(Vec<usize>);
 
 impl<const N: usize> ToneRemainIndicies<N> {
@@ -115,7 +149,7 @@ impl<const N: usize> Validate for ToneRemainIndicies<N> {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Default)]
 pub struct ToneRemainRanges<const N: usize>(Vec<PatchRange<N>>);
 
 impl<const N: usize> ToneRemainRanges<N> {

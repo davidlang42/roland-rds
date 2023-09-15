@@ -6,9 +6,17 @@ use serde::Serialize;
 use strum::IntoEnumIterator;
 
 pub fn one_of_schema(sub_schemas: Vec<Schema>) -> Schema {
+    one_of_schema_with_default(sub_schemas, None)
+}
+
+pub fn one_of_schema_with_default(sub_schemas: Vec<Schema>, default: Option<Value>) -> Schema {
     SchemaObject {
         subschemas: Some(Box::new(SubschemaValidation {
             one_of: Some(sub_schemas),
+            ..Default::default()
+        })),
+        metadata: Some(Box::new(Metadata {
+            default,
             ..Default::default()
         })),
         ..Default::default()

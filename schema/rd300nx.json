@@ -13678,6 +13678,17 @@
       ]
     },
     "ToneRemainSets": {
+      "default": {
+        "e_piano": {
+          "Always": true
+        },
+        "piano": {
+          "Always": true
+        },
+        "user_sets": {
+          "Always": true
+        }
+      },
       "type": "object",
       "required": [
         "e_piano",
@@ -13694,11 +13705,18 @@
         "e_piano": {
           "$ref": "#/definitions/BySet_for_15"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "BySet_for_60": {
+      "default": {
+        "Always": true
+      },
       "oneOf": [
         {
+          "default": {
+            "Always": false
+          },
           "type": "object",
           "required": [
             "Always"
@@ -13711,6 +13729,9 @@
           "additionalProperties": false
         },
         {
+          "default": {
+            "ByIndex": []
+          },
           "type": "object",
           "required": [
             "ByIndex"
@@ -13723,6 +13744,9 @@
           "additionalProperties": false
         },
         {
+          "default": {
+            "ByRange": []
+          },
           "type": "object",
           "required": [
             "ByRange"
@@ -13778,8 +13802,14 @@
       "additionalProperties": false
     },
     "BySet_for_10": {
+      "default": {
+        "Always": true
+      },
       "oneOf": [
         {
+          "default": {
+            "Always": false
+          },
           "type": "object",
           "required": [
             "Always"
@@ -13792,6 +13822,9 @@
           "additionalProperties": false
         },
         {
+          "default": {
+            "ByIndex": []
+          },
           "type": "object",
           "required": [
             "ByIndex"
@@ -13804,6 +13837,9 @@
           "additionalProperties": false
         },
         {
+          "default": {
+            "ByRange": []
+          },
           "type": "object",
           "required": [
             "ByRange"
@@ -13859,8 +13895,14 @@
       "additionalProperties": false
     },
     "BySet_for_15": {
+      "default": {
+        "Always": true
+      },
       "oneOf": [
         {
+          "default": {
+            "Always": false
+          },
           "type": "object",
           "required": [
             "Always"
@@ -13873,6 +13915,9 @@
           "additionalProperties": false
         },
         {
+          "default": {
+            "ByIndex": []
+          },
           "type": "object",
           "required": [
             "ByIndex"
@@ -13885,6 +13930,9 @@
           "additionalProperties": false
         },
         {
+          "default": {
+            "ByRange": []
+          },
           "type": "object",
           "required": [
             "ByRange"
