@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use schemars::{schema::{Schema, SchemaObject, InstanceType, NumberValidation, SubschemaValidation, ObjectValidation, Metadata}, Set, Map, JsonSchema};
+use schemars::{schema::{Schema, SchemaObject, InstanceType, NumberValidation, SubschemaValidation, ObjectValidation, Metadata, ArrayValidation}, Set, Map, JsonSchema};
 use serde_json::Value;
 use serde::Serialize;
 use strum::IntoEnumIterator;
@@ -64,6 +64,16 @@ pub fn enum_schema(strings: Vec<String>) -> Schema {
     SchemaObject {
         instance_type: Some(InstanceType::String.into()),
         enum_values: Some(strings.into_iter().map(Value::String).collect()),
+        ..Default::default()
+    }.into()
+}
+
+pub fn array_schema(item_schema: Schema) -> Schema {
+    SchemaObject {
+        array: Some(ArrayValidation {
+            items: Some(item_schema.into()),
+            ..Default::default()
+        }.into()),
         ..Default::default()
     }.into()
 }

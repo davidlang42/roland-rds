@@ -5,6 +5,7 @@ use validator::Validate;
 use crate::bytes::{Bytes, BytesError, Bits, BitStream};
 use crate::json::{StructuredJson, Json, StructuredJsonError};
 use crate::roland::types::enums::{Polarity, SettingMode, OptionalMidiChannel, PartMode, ButtonFunction, PedalFunction, Temperament};
+use crate::roland::types::metadata::ToneRemain;
 use crate::roland::types::notes::KeyNote;
 use crate::roland::types::numeric::Offset1Dp;
 
@@ -28,7 +29,7 @@ pub struct Common {
     pub fc2_assign: PedalFunction, // 0-146
     s1_assign: ButtonFunction, // 0-20
     s2_assign: ButtonFunction, // 0-20
-    pub tone_remain: bool,
+    pub tone_remain: ToneRemain,
     receive_gm_gm2_system_on: bool,
     receive_gs_reset: bool,
     part_mode: PartMode,
@@ -55,7 +56,7 @@ impl Bytes<10> for Common {
             bs.set_u8::<8>(self.fc2_assign.into(), 0, 146)?;
             bs.set_u8::<5>(self.s1_assign.into(), 0, 20)?;
             bs.set_u8::<5>(self.s2_assign.into(), 0, 20)?;
-            bs.set_bool(self.tone_remain);
+            bs.set_bool(self.tone_remain.any());
             bs.set_bool(self.receive_gm_gm2_system_on);
             bs.set_bool(self.receive_gs_reset);
             bs.set_bool(self.part_mode.into());
@@ -83,7 +84,7 @@ impl Bytes<10> for Common {
                 fc2_assign: bs.get_u8::<8>(0, 146)?.into(),
                 s1_assign: bs.get_u8::<5>(0, 20)?.into(),
                 s2_assign: bs.get_u8::<5>(0, 20)?.into(),
-                tone_remain: bs.get_bool(),
+                tone_remain: ToneRemain::Always(bs.get_bool()),
                 receive_gm_gm2_system_on: bs.get_bool(),
                 receive_gs_reset: bs.get_bool(),
                 part_mode: bs.get_bool().into(),

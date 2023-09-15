@@ -6,7 +6,7 @@
 
 use strum::IntoEnumIterator;
 
-use crate::roland::{live_set::{LiveSet, mfx::Mfx, reverb::Reverb, chorus::Chorus}, layers::InternalLayer, types::enums::{Layer, PedalFunction}};
+use crate::roland::{live_set::{LiveSet, mfx::Mfx, reverb::Reverb, chorus::Chorus}, layers::InternalLayer, types::{enums::{Layer, PedalFunction}, metadata::BySet}};
 
 use super::validation::LayerRanges;
 
@@ -26,17 +26,19 @@ pub fn split_switch_warning<'a, L: LayerRanges + 'a, I: Iterator<Item = &'a L>>(
     None
 }
 
-pub fn tone_remain_warnings(name: &str, live_sets: &[LiveSet], fc1_from_system: Option<PedalFunction>, fc2_from_system: Option<PedalFunction>) -> Vec<String> {
+pub fn tone_remain_warnings<const N: usize>(required: &BySet<N>, name: &str, live_sets: &Box<[LiveSet; N]>, fc1_from_system: Option<PedalFunction>, fc2_from_system: Option<PedalFunction>) -> Vec<String> {
     let mut warnings = Vec::new();
     for i in 0..(live_sets.len() - 1) {
-        let reasons = individual_tone_remain_warnings(
-            &live_sets[i], 
-            &live_sets[i+1],
-            fc1_from_system,
-            fc2_from_system
-        );
-        for reason in reasons {
-            warnings.push(format!("{} #{}-#{}: Tone remain may malfunction because {}", name, i+1, i+2, reason));
+        if required.includes(i) {
+            let reasons = individual_tone_remain_warnings(
+                &live_sets[i], 
+                &live_sets[i+1],
+                fc1_from_system,
+                fc2_from_system
+            );
+            for reason in reasons {
+                warnings.push(format!("{} #{}-#{}: Tone remain may malfunction because {}", name, i+1, i+2, reason));
+            }
         }
     }
     warnings

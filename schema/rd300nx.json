@@ -13603,7 +13603,7 @@
           "$ref": "#/definitions/ButtonFunction"
         },
         "tone_remain": {
-          "type": "boolean"
+          "$ref": "#/definitions/ToneRemain"
         },
         "receive_gm_gm2_system_on": {
           "type": "boolean"
@@ -13648,6 +13648,161 @@
         "LiveSet",
         "System"
       ]
+    },
+    "ToneRemain": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "Always"
+          ],
+          "properties": {
+            "Always": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "BySet"
+          ],
+          "properties": {
+            "BySet": {
+              "$ref": "#/definitions/ToneRemainSets"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "ToneRemainSets": {
+      "type": "object",
+      "required": [
+        "e_piano",
+        "piano",
+        "user_sets"
+      ],
+      "properties": {
+        "user_sets": {
+          "$ref": "#/definitions/BySet_for_60"
+        },
+        "piano": {
+          "$ref": "#/definitions/BySet_for_10"
+        },
+        "e_piano": {
+          "$ref": "#/definitions/BySet_for_15"
+        }
+      }
+    },
+    "BySet_for_60": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "Always"
+          ],
+          "properties": {
+            "Always": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "ByIndex"
+          ],
+          "properties": {
+            "ByIndex": {
+              "$ref": "#/definitions/ToneRemainIndicies_for_60"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "ToneRemainIndicies_for_60": {
+      "items": {
+        "type": "integer",
+        "format": "uint8",
+        "maximum": 58.0,
+        "minimum": 0.0
+      }
+    },
+    "BySet_for_10": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "Always"
+          ],
+          "properties": {
+            "Always": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "ByIndex"
+          ],
+          "properties": {
+            "ByIndex": {
+              "$ref": "#/definitions/ToneRemainIndicies_for_10"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "ToneRemainIndicies_for_10": {
+      "items": {
+        "type": "integer",
+        "format": "uint8",
+        "maximum": 8.0,
+        "minimum": 0.0
+      }
+    },
+    "BySet_for_15": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "Always"
+          ],
+          "properties": {
+            "Always": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "ByIndex"
+          ],
+          "properties": {
+            "ByIndex": {
+              "$ref": "#/definitions/ToneRemainIndicies_for_15"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "ToneRemainIndicies_for_15": {
+      "items": {
+        "type": "integer",
+        "format": "uint8",
+        "maximum": 13.0,
+        "minimum": 0.0
+      }
     },
     "PartMode": {
       "type": "string",
