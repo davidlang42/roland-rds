@@ -83,35 +83,14 @@ pub fn single_property_schema_of<T: Default + Serialize + JsonSchema>(property: 
     let mut map = serde_json::Map::new();
     map.insert(property.to_string(), serde_json::to_value(T::default()).unwrap());
     let value = Value::Object(map);
-    _single_property_schema(property, gen.subschema_for::<T>(), Some(value))
+    object_schema(vec![(property, gen.subschema_for::<T>())], Some(value))
 }
 
 pub fn single_property_schema(property: &str, schema: Schema) -> Schema {
-    _single_property_schema(property, schema, None)
+    object_schema(vec![(property, schema)], None)
 }
 
-fn _single_property_schema(property: &str, schema: Schema, default: Option<Value>) -> Schema {
-    let mut required = Set::new();
-    required.insert(property.into());
-    let mut properties = Map::new();
-    properties.insert(property.into(), schema);
-    SchemaObject {
-        instance_type: Some(InstanceType::Object.into()),
-        object: Some(Box::new(ObjectValidation {
-            required,
-            properties,
-            additional_properties: Some(Box::new(Schema::Bool(false))),
-            ..Default::default()
-        })),
-        metadata: Some(Box::new(Metadata {
-            default,
-            ..Default::default()
-        })),
-        ..Default::default()
-    }.into()
-}
-
-pub fn object_schema(required_properties: Vec<(&str, Schema)>) -> Schema {
+pub fn object_schema(required_properties: Vec<(&str, Schema)>, default: Option<Value>) -> Schema {
     let mut required = Set::new();
     let mut properties = Map::new();
     for (property, schema) in required_properties {
@@ -124,6 +103,10 @@ pub fn object_schema(required_properties: Vec<(&str, Schema)>) -> Schema {
             required,
             properties,
             additional_properties: Some(Box::new(Schema::Bool(false))),
+            ..Default::default()
+        })),
+        metadata: Some(Box::new(Metadata {
+            default,
             ..Default::default()
         })),
         ..Default::default()

@@ -159,6 +159,15 @@ impl<const N: usize> PatchRange<N> {
     }
 }
 
+impl<const N: usize> Default for PatchRange<N> {
+    fn default() -> Self {
+        Self {
+            from: 1,
+            to: N
+        }
+    }
+}
+
 impl<const N: usize> JsonSchema for PatchRange<N> {
     fn schema_name() -> String {
         format!("PatchRange_for_{}", N)
@@ -168,7 +177,7 @@ impl<const N: usize> JsonSchema for PatchRange<N> {
         object_schema(vec![
             ("from", u8_schema(1, N as u8)),
             ("to", u8_schema(1, N as u8))
-        ])
+        ], Some(serde_json::to_value(Self::default()).unwrap()))
     }
 }
 
