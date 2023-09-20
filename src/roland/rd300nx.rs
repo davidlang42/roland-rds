@@ -1,6 +1,6 @@
 use crate::bytes::{Bytes, BytesError, BitStream};
 use crate::json::validation::{validate_boxed_array, merge_all_fixed};
-use crate::json::warnings::{Warnings, tone_remain_warnings};
+use crate::json::warnings::{Warnings, tone_remain_warnings, mfx_state_warnings};
 use crate::json::{StructuredJson, Json, StructuredJsonError, serialize_array_as_vec};
 use super::live_set::LiveSet;
 use super::system::System;
@@ -35,18 +35,32 @@ impl Validate for RD300NX {
 impl Warnings for RD300NX {
     fn warnings(&self) -> Vec<String> {
         let mut warnings = Vec::new();
+        let s1 = match self.system.common.s1_s2_mode {
+            SettingMode::LiveSet => None,
+            SettingMode::System => Some(self.system.common.s1_assign)
+        };
+        let s2 = match self.system.common.s1_s2_mode {
+            SettingMode::LiveSet => None,
+            SettingMode::System => Some(self.system.common.s2_assign)
+        };
         for (i, live_set) in self.user_sets.iter().enumerate() {
-            for warning in live_set.warnings() {
+            let mut ls_warnings = live_set.warnings();
+            ls_warnings.append(&mut mfx_state_warnings(live_set, &s1, &s2));
+            for warning in ls_warnings {
                 warnings.push(format!("User #{}: {}", i+1, warning));
             }
         }
         for (i, live_set) in self.piano.iter().enumerate() {
-            for warning in live_set.warnings() {
+            let mut ls_warnings = live_set.warnings();
+            ls_warnings.append(&mut mfx_state_warnings(live_set, &s1, &s2));
+            for warning in ls_warnings {
                 warnings.push(format!("Piano #{}: {}", i+1, warning));
             }
         }
         for (i, live_set) in self.e_piano.iter().enumerate() {
-            for warning in live_set.warnings() {
+            let mut ls_warnings = live_set.warnings();
+            ls_warnings.append(&mut mfx_state_warnings(live_set, &s1, &s2));
+            for warning in ls_warnings {
                 warnings.push(format!("EPiano #{}: {}", i+1, warning));
             }
         }

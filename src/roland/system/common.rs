@@ -22,13 +22,13 @@ pub struct Common {
     fc2_polarity: Polarity,
     eq_mode: SettingMode,
     pub pedal_mode: SettingMode,
-    s1_s2_mode: SettingMode,
+    pub s1_s2_mode: SettingMode,
     #[validate]
     pub fc1_assign: PedalFunction, // 0-146
     #[validate]
     pub fc2_assign: PedalFunction, // 0-146
-    s1_assign: ButtonFunction, // 0-20
-    s2_assign: ButtonFunction, // 0-20
+    pub s1_assign: ButtonFunction, // 0-20
+    pub s2_assign: ButtonFunction, // 0-20
     #[validate]
     pub tone_remain: ToneRemain,
     receive_gm_gm2_system_on: bool,

@@ -39,11 +39,11 @@ pub struct Common {
     #[validate(range(max = 127))]
     sound_focus_value: u8,
     #[validate(custom = "not_system_only_button_function")]
-    s1_assign: ButtonFunction, // 0-17
+    pub s1_assign: ButtonFunction, // 0-17
     #[validate(custom = "not_system_only_button_function")]
-    s2_assign: ButtonFunction, // 0-17
-    s1_state: bool,
-    s2_state: bool,
+    pub s2_assign: ButtonFunction, // 0-17
+    pub s1_state: bool,
+    pub s2_state: bool,
     unused_eq_settings: Bits<68>,
     #[validate]
     key_touch_velocity: KeyTouchVelocity,

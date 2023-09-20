@@ -6,7 +6,7 @@
 
 use strum::IntoEnumIterator;
 
-use crate::roland::{live_set::{LiveSet, mfx::Mfx, reverb::Reverb, chorus::Chorus}, layers::InternalLayer, types::{enums::{Layer, PedalFunction}, metadata::BySet}};
+use crate::roland::{live_set::{LiveSet, mfx::Mfx, reverb::Reverb, chorus::Chorus}, layers::InternalLayer, types::{enums::{Layer, PedalFunction, ButtonFunction}, metadata::BySet}};
 
 use super::validation::LayerRanges;
 
@@ -86,4 +86,24 @@ fn individual_tone_remain_warnings(a: &LiveSet, b: &LiveSet, fc1_from_system: Op
         }
     }
     reasons
+}
+
+pub fn mfx_state_warnings(ls: &LiveSet, s1_from_system: &Option<ButtonFunction>, s2_from_system: &Option<ButtonFunction>) -> Vec<String> {
+    let mut warnings = Vec::new();
+    if let Some(warning) = individual_mfx_state_warning("S1", s1_from_system.as_ref().unwrap_or(&ls.common.s1_assign), ls.common.s1_state, &ls.mfx) {
+        warnings.push(warning);
+    }
+    if let Some(warning) = individual_mfx_state_warning("S2", s2_from_system.as_ref().unwrap_or(&ls.common.s2_assign), ls.common.s2_state, &ls.mfx) {
+        warnings.push(warning);
+    }
+    warnings
+}
+
+fn individual_mfx_state_warning(s_name: &str, s_assign: &ButtonFunction, s_state: bool, mfx: &Mfx) -> Option<String> {
+    // When s1/s2 is assigned to MfxSwitch, s1/s2_state is ignored and starting state is mfx.enable
+    if *s_assign == ButtonFunction::Mfx1Switch && mfx.enable != s_state {
+        Some(format!("{} is set to {:?}, but state ({}) doesn't match Mfx.Enable ({})", s_name, s_assign, s_state, mfx.enable))
+    } else {
+        None
+    }
 }

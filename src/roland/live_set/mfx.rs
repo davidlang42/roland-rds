@@ -10,7 +10,7 @@ use crate::roland::types::numeric::Parameter;
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Validate)]
 pub struct Mfx {
-    enable: bool,
+    pub enable: bool,
     #[serde(skip_serializing_if="Bits::is_zero", default="Bits::<8>::zero")]
     unused1: Bits<8>,
     #[validate]
