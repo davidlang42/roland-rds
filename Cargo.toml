@@ -1,6 +1,6 @@
 [package]
 name = "roland-rds"
-version = "0.9.2"
+version = "0.9.3"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -15,4 +15,4 @@ strum_macros = "0.24.1"
 test-case = "3.0.0"
 schemars = { version = "0.8.13", features = ["preserve_order"] }
 validator = { version = "0.16.1", features = ["derive"] }
-roland-rds-derive = { version = "0.9.2", path = "derive" }
+roland-rds-derive = { version = "0.9.3", path = "derive" }
