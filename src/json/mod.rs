@@ -57,7 +57,7 @@ pub enum StructuredJson {
 }
 
 impl StructuredJson {
-    const FILE_EXTENSION: &str = "json";
+    const FILE_EXTENSION: &'static str = "json";
 
     pub fn save(&self, path: PathBuf) -> Result<FileCount, io::Error> {
         if path.exists() {
