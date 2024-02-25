@@ -17,7 +17,7 @@ trait Parameters<const N: usize> : Validate + From<[Parameter; N]> + Default {
 pub struct UnusedParameters<const N: usize> {
     #[serde(deserialize_with = "serialize_default_terminated_array::deserialize")]
     #[serde(serialize_with = "serialize_default_terminated_array::serialize")]
-    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, {N}>")]
+    #[schemars(with = "serialize_default_terminated_array::DefaultTerminatedArraySchema::<Parameter, N>")]
     #[validate]
     unused: [Parameter; N]
 }
