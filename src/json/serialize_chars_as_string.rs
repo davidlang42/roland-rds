@@ -12,7 +12,7 @@ where D: serde::Deserializer<'de>
         chars.push(' ');
     }
     if chars.len() != N {
-        Err(de::Error::custom(format!("Expected {} chars, but got {}", N, chars.len())))
+        Err(de::Error::custom(format!("Expected {} chars, but got {} ({})", N, chars.len(), s)))
     } else {
         Ok(chars.try_into().unwrap())
     }
