@@ -58,6 +58,7 @@ pub enum StructuredJson {
 
 impl StructuredJson {
     const FILE_EXTENSION: &'static str = "json";
+    const IGNORE_MAC: &'static str = ".DS_Store";
 
     pub fn save(&self, path: PathBuf) -> Result<FileCount, io::Error> {
         if path.exists() {
@@ -107,6 +108,9 @@ impl StructuredJson {
             for entry in path.read_dir()? {
                 let e = entry?;
                 let mut name = e.file_name().to_string_lossy().to_string();
+                if name == StructuredJson::IGNORE_MAC {
+                    continue;
+                }
                 if name.ends_with(&file_ext_with_dot) {
                     name.truncate(name.len() - file_ext_with_dot.len());
                 }
