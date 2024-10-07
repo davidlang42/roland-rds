@@ -7,7 +7,10 @@ pub fn deserialize<'de, D, const N: usize>(deserializer: D) -> Result<[char; N],
 where D: serde::Deserializer<'de>
 {
     let s = <Cow<'de, str>>::deserialize(deserializer)?; // Cow is required because if the string contains escaped chars (eg. //), you'll get an owned string instead of a borrowed string, but Cow can handle either
-    let chars: Vec<char> = s.chars().collect();
+    let mut chars: Vec<char> = s.chars().collect();
+    while chars.len() < N {
+        chars.push(' ');
+    }
     if chars.len() != N {
         Err(de::Error::custom(format!("Expected {} chars, but got {}", N, chars.len())))
     } else {
